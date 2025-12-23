@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { chartOfAccounts } from '../data/chartOfAccounts';
 
 const STORAGE_KEYS = {
-    EMPLOYEES: 'erp_mock_employees',
+    EMPLOYEES: 'erp_mock_employees_v3_force_fix', // Bumped key to force re-seed
     PRODUCTS: 'erp_mock_products',
     CUSTOMERS: 'erp_mock_customers',
     VENDORS: 'erp_mock_vendors',
@@ -30,7 +30,6 @@ export const mockDataService = {
         const stored = localStorage.getItem(key);
         if (stored) {
             const parsed = JSON.parse(stored);
-            // Auto-recovery for corrupted nested array bug
             if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
                 console.warn('Detected corrupted mock user data, re-seeding...');
                 localStorage.removeItem(key);
@@ -72,20 +71,26 @@ export const mockDataService = {
 
     // Employees
     getEmployees: () => {
-        return getOrSeed(STORAGE_KEYS.EMPLOYEES, () => ({
-            id: faker.string.uuid(),
-            firstName: faker.person.firstName(),
-            lastName: faker.person.lastName(),
-            email: faker.internet.email(),
-            position: faker.person.jobTitle(),
-            department: faker.commerce.department(),
-            salary: faker.finance.amount({ min: 30000, max: 120000, dec: 0 }),
-            joinDate: faker.date.past({ years: 5 }).toISOString(),
-            status: faker.helpers.arrayElement(['Active', 'On Leave', 'Terminated']),
-            avatar: faker.image.url(),
-            phone: faker.phone.number(),
-            address: faker.location.city() + ', ' + faker.location.country(),
-        }), 15);
+        return getOrSeed(STORAGE_KEYS.EMPLOYEES, () => {
+            // Create a fixed set of employees for testing specific departments
+            const fixedDepts = ['Development', 'Ecommerce'];
+            const dept = faker.helpers.arrayElement([...fixedDepts, faker.commerce.department()]);
+
+            return {
+                id: faker.string.uuid(),
+                firstName: faker.person.firstName(),
+                lastName: faker.person.lastName(),
+                email: faker.internet.email(),
+                position: faker.person.jobTitle(),
+                department: dept, // Mix of fixed and random depts
+                salary: faker.finance.amount({ min: 30000, max: 120000, dec: 0 }),
+                joinDate: faker.date.past({ years: 5 }).toISOString(),
+                status: faker.helpers.arrayElement(['Active', 'On Leave', 'Terminated']),
+                avatar: faker.image.url(),
+                phone: faker.phone.number(),
+                address: faker.location.city() + ', ' + faker.location.country(),
+            };
+        }, 20);
     },
 
     // Products
@@ -380,7 +385,6 @@ export const mockDataService = {
         const leads = mockDataService.getLeads();
         const lead = leads.find(l => l.id === id);
         if (lead) {
-            // Add to customers
             mockDataService.addCustomer({
                 name: lead.name,
                 company: lead.company,
@@ -389,7 +393,6 @@ export const mockDataService = {
                 status: 'Active',
                 notes: `Converted from lead. Source: ${lead.source}`
             });
-            // Remove from leads
             return mockDataService.deleteLead(id);
         }
         return { success: false, error: 'Lead not found' };
@@ -424,7 +427,7 @@ export const mockDataService = {
         const newFile = {
             id: faker.string.uuid(),
             date: new Date().toISOString(),
-            uploadedBy: 'Current User', // Mocked
+            uploadedBy: 'Current User',
             size: (Math.random() * 5000 + 500).toFixed(0) + ' KB',
             ...file
         };
@@ -470,7 +473,6 @@ export const mockDataService = {
         const index = attendance.findIndex(p => p.id === id);
         if (index !== -1) {
             attendance[index] = { ...attendance[index], ...updates };
-
             // Persist to localStorage
             const records = JSON.parse(localStorage.getItem('erp_mock_attendance'));
             if (records) {
@@ -489,13 +491,10 @@ export const mockDataService = {
         const attendance = mockDataService.getAttendance();
         const record = {
             id: newRecord.id || Math.floor(Math.random() * 10000),
-            workHours: '8h 0m', // Default or calculated
+            workHours: '8h 0m',
             ...newRecord
         };
-
         attendance.unshift(record);
-
-        // Persist
         localStorage.setItem('erp_mock_attendance', JSON.stringify(attendance));
         return record;
     },
@@ -563,12 +562,12 @@ export const mockDataService = {
                 github: 'github.com/financa-dev',
                 twitter: '@financa_tech'
             }
-        }), 1)[0]; // Return single object
+        }), 1)[0];
     },
 
     // Leave Management
     getAllLeaves: () => {
-        const key = 'erp_mock_all_leaves_v3'; // Increment version to clear broken data
+        const key = 'erp_mock_all_leaves_v3';
         const stored = localStorage.getItem(key);
         if (stored) {
             try {
@@ -578,13 +577,11 @@ export const mockDataService = {
             }
         }
 
-        // Generation Logic
         const employees = mockDataService.getEmployees() || [];
         if (employees.length === 0) return [];
 
         const leaves = [];
 
-        // History
         employees.forEach(emp => {
             const count = faker.number.int({ min: 1, max: 5 });
             for (let i = 0; i < count; i++) {
@@ -603,7 +600,6 @@ export const mockDataService = {
             }
         });
 
-        // Pending
         for (let i = 0; i < 5; i++) {
             const emp = faker.helpers.arrayElement(employees);
             leaves.push({
@@ -626,7 +622,6 @@ export const mockDataService = {
     },
 
     getLeaveRequests: () => {
-        // Return only pending
         const all = mockDataService.getAllLeaves();
         return all.filter(l => l.status === 'Pending');
     },
@@ -647,13 +642,12 @@ export const mockDataService = {
         return null;
     },
 
-    processPayroll: (period) => { // period is YYYY-MM
+    processPayroll: (period) => {
         const salaries = mockDataService.getSalaries();
-        // Generate mock records for the new period
         const newRecords = Array.from({ length: 5 }).map(() => ({
             id: faker.string.uuid(),
             employeeName: faker.person.fullName(),
-            paymentDate: new Date().toISOString(), // Today
+            paymentDate: new Date().toISOString(),
             amount: parseFloat(faker.finance.amount({ min: 3000, max: 10000, dec: 2 })),
             method: 'Bank Transfer',
             status: 'Pending'
@@ -664,7 +658,6 @@ export const mockDataService = {
         return newRecords;
     },
 
-    // Salary History
     getSalaryHistory: (employeeId) => {
         const key = `erp_mock_salary_history_${employeeId || 'default'}`;
         return getOrSeed(key, () => ({
@@ -679,7 +672,6 @@ export const mockDataService = {
     // Accounts (Finance)
     getAccounts: () => {
         return getOrSeed('erp_mock_accounts', null, 0) || (() => {
-            // Initial seed if empty
             localStorage.setItem('erp_mock_accounts', JSON.stringify(chartOfAccounts));
             return chartOfAccounts;
         })();
@@ -699,13 +691,12 @@ export const mockDataService = {
                 amount: parseFloat(faker.finance.amount({ min: 100, max: 10000, dec: 2 })),
                 debit_account_id: debitAccount.id,
                 credit_account_id: creditAccount.id,
-                debitAccount: debitAccount, // Include full object for simpler UI
+                debitAccount: debitAccount,
                 creditAccount: creditAccount
             };
         }, 50);
     },
 
-    // Add Transaction
     addTransaction: (transaction) => {
         const transactions = mockDataService.getTransactions();
         const newTransaction = {
@@ -718,7 +709,6 @@ export const mockDataService = {
         return { success: true, data: newTransaction };
     },
 
-    // Clear all mock data
     resetData: () => {
         Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
         const customKeys = [
@@ -801,15 +791,23 @@ export const mockDataService = {
         return { success: false, error: 'Department not found' };
     },
 
+    deleteDepartment: (id) => {
+        const departments = mockDataService.getDepartments();
+        const newDepartments = departments.filter(d => d.id !== id);
+        localStorage.setItem('erp_mock_departments', JSON.stringify(newDepartments));
+        return { success: true };
+    },
+
     // --- Warehouses ---
     getWarehouses: () => {
         return getOrSeed('erp_mock_warehouses', () => ({
             id: faker.string.uuid(),
             name: faker.location.city() + ' Warehouse',
             location: faker.location.streetAddress(),
-            capacity: faker.number.int({ min: 1000, max: 10000 }) + ' units',
+            capacity: faker.number.int({ min: 1000, max: 10000 }),
             manager: faker.person.fullName(),
-            status: 'Active'
+            status: 'Active',
+            contactNumber: faker.phone.number()
         }), 4);
     },
 
@@ -817,8 +815,8 @@ export const mockDataService = {
         const warehouses = mockDataService.getWarehouses();
         const newWarehouse = {
             id: faker.string.uuid(),
-            ...warehouse,
-            status: 'Active'
+            status: 'Active',
+            ...warehouse
         };
         warehouses.push(newWarehouse);
         localStorage.setItem('erp_mock_warehouses', JSON.stringify(warehouses));
@@ -836,352 +834,41 @@ export const mockDataService = {
         return { success: false, error: 'Warehouse not found' };
     },
 
-    // --- Delete Helpers ---
-    deleteBranch: (id) => {
-        const branches = mockDataService.getBranches();
-        const filtered = branches.filter(b => b.id !== id);
-        if (filtered.length === branches.length) return { success: false, error: 'Not found' };
-        localStorage.setItem('erp_mock_branches', JSON.stringify(filtered));
-        return { success: true };
-    },
-
-    deleteDepartment: (id) => {
-        const departments = mockDataService.getDepartments();
-        const filtered = departments.filter(d => d.id !== id);
-        if (filtered.length === departments.length) return { success: false, error: 'Not found' };
-        localStorage.setItem('erp_mock_departments', JSON.stringify(departments));
-        return { success: true };
-    },
-
     deleteWarehouse: (id) => {
         const warehouses = mockDataService.getWarehouses();
-        const filtered = warehouses.filter(w => w.id !== id);
-        if (filtered.length === warehouses.length) return { success: false, error: 'Not found' };
-        localStorage.setItem('erp_mock_warehouses', JSON.stringify(filtered));
+        const newWarehouses = warehouses.filter(w => w.id !== id);
+        localStorage.setItem('erp_mock_warehouses', JSON.stringify(newWarehouses));
         return { success: true };
     },
 
-    deleteProduct: (id) => {
-        const products = mockDataService.getProducts();
-        const filtered = products.filter(p => p.id !== id);
-        if (filtered.length === products.length) return { success: false, error: 'Not found' };
-        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(filtered));
-        return { success: true };
-    },
-
-    deleteEmployee: (id) => {
-        const employees = mockDataService.getEmployees();
-        const filtered = employees.filter(e => e.id !== id);
-        if (filtered.length === employees.length) return { success: false, error: 'Not found' };
-        localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(filtered));
-        return { success: true };
-    },
-
-    addEmployee: (employee) => {
-        const employees = mockDataService.getEmployees();
-        const newEmployee = {
-            id: faker.string.uuid(),
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(employee.firstName + ' ' + employee.lastName)}&background=random`,
-            joinDate: new Date().toISOString(),
-            status: 'Active',
-            ...employee
-        };
-        employees.unshift(newEmployee);
-        localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-        return { success: true, data: newEmployee };
-    },
-
-    updateEmployee: (id, updates) => {
-        const employees = mockDataService.getEmployees();
-        const index = employees.findIndex(e => e.id === id);
-        if (index !== -1) {
-            employees[index] = { ...employees[index], ...updates };
-            // Update avatar if name changes
-            if (updates.firstName || updates.lastName) {
-                const fname = updates.firstName || employees[index].firstName;
-                const lname = updates.lastName || employees[index].lastName;
-                employees[index].avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(fname + ' ' + lname)}&background=random`;
-            }
-            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-            return { success: true, data: employees[index] };
-        }
-        return { success: false, error: 'Employee not found' };
-    },
-
-    deleteCustomer: (id) => {
-        const customers = mockDataService.getCustomers();
-        const filtered = customers.filter(c => c.id !== id);
-        if (filtered.length === customers.length) return { success: false, error: 'Not found' };
-        localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(filtered));
-        return { success: true };
-    },
-
-    deleteVendor: (id) => {
-        const vendors = mockDataService.getVendors();
-        const filtered = vendors.filter(v => v.id !== id);
-        if (filtered.length === vendors.length) return { success: false, error: 'Not found' };
-        localStorage.setItem(STORAGE_KEYS.VENDORS, JSON.stringify(filtered));
-        return { success: true };
-    },
-
-    deleteInvoice: (id) => {
-        const invoices = mockDataService.getInvoices();
-        const filtered = invoices.filter(i => i.id !== id);
-        if (filtered.length === invoices.length) return { success: false, error: 'Not found' };
-        localStorage.setItem('erp_mock_invoices', JSON.stringify(filtered));
-        return { success: true };
-    },
-
-    deleteOrder: (id) => {
-        const orders = mockDataService.getOrders();
-        const filtered = orders.filter(o => o.id !== id);
-        if (filtered.length === orders.length) return { success: false, error: 'Not found' };
-        localStorage.setItem('erp_mock_orders', JSON.stringify(filtered));
-        return { success: true };
-    },
-
-    updateInvoiceStatus: (id, status) => {
-        const invoices = mockDataService.getInvoices();
-        const index = invoices.findIndex(i => i.id === id);
-        if (index !== -1) {
-            invoices[index].status = status;
-            localStorage.setItem('erp_mock_invoices', JSON.stringify(invoices));
-            return { success: true, data: invoices[index] };
-        }
-        return { success: false, error: 'Not found' };
-    },
-
-    updateOrderStatus: (id, status) => {
-        const orders = mockDataService.getOrders();
-        const index = orders.findIndex(o => o.id === id);
-        if (index !== -1) {
-            orders[index].status = status;
-            localStorage.setItem('erp_mock_orders', JSON.stringify(orders));
-            return { success: true, data: orders[index] };
-        }
-        return { success: false, error: 'Not found' };
-    },
-
-    updateOrderPaymentStatus: (id, status) => {
-        const orders = mockDataService.getOrders();
-        const index = orders.findIndex(o => o.id === id);
-        if (index !== -1) {
-            orders[index].paymentStatus = status;
-            localStorage.setItem('erp_mock_orders', JSON.stringify(orders));
-            return { success: true, data: orders[index] };
-        }
-        return { success: false, error: 'Not found' };
-    },
-
-    addInvoice: (invoice) => {
-        const invoices = mockDataService.getInvoices();
-        const newInvoice = {
-            id: faker.string.uuid(),
-            invoiceNumber: `INV-${faker.string.numeric(5)}`,
-            date: new Date().toISOString(),
-            status: 'Pending',
-            ...invoice
-        };
-        invoices.unshift(newInvoice);
-        localStorage.setItem('erp_mock_invoices', JSON.stringify(invoices));
-        return { success: true, data: newInvoice };
-    },
-
-    addOrder: (order) => {
-        const orders = mockDataService.getOrders();
-        const newOrder = {
-            id: faker.string.uuid(),
-            orderNumber: `ORD-${faker.string.numeric(5)}`,
-            date: new Date().toISOString(),
-            status: 'Pending',
-            ...order
-        };
-        orders.unshift(newOrder);
-        localStorage.setItem('erp_mock_orders', JSON.stringify(orders));
-
-        // Update Customer Stats
-        const customers = mockDataService.getCustomers();
-        const customerIndex = customers.findIndex(c => c.name.toLowerCase() === order.customer?.toLowerCase());
-        if (customerIndex !== -1) {
-            customers[customerIndex].totalOrders = (customers[customerIndex].totalOrders || 0) + 1;
-            customers[customerIndex].lastOrderDate = newOrder.date;
-            localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
-        }
-
-        return { success: true, data: newOrder };
-    },
-
-    // Stock Movements
+    // --- Stock Movements ---
     getStockMovements: () => {
-        return getOrSeed('erp_mock_stock_movements', () => ({
-            id: faker.string.uuid(),
-            productName: faker.commerce.productName(),
-            type: faker.helpers.arrayElement(['In', 'Out']),
-            quantity: faker.number.int({ min: 10, max: 500 }),
-            warehouse: faker.location.city() + ' Warehouse',
-            date: faker.date.recent({ days: 10 }).toISOString(),
-            reference: 'REF-' + faker.string.alphanumeric(6).toUpperCase()
-        }), 30);
-    },
-
-    // Admin Management (RBAC)
-    getAdmins: () => {
-        const stored = localStorage.getItem('erp_mock_admins');
-        if (stored) return JSON.parse(stored);
-
-        const initialAdmins = [
-            {
-                id: '1',
-                name: 'Super Admin',
-                email: 'admin@example.com',
-                role: 'super_admin',
-                password: 'password', // For demo purposes only
-                status: 'Active',
-                createdAt: new Date().toISOString()
-            }
-        ];
-        localStorage.setItem('erp_mock_admins', JSON.stringify(initialAdmins));
-        return initialAdmins;
-    },
-
-    addAdmin: (admin) => {
-        const admins = mockDataService.getAdmins();
-
-        // Role Limits
-        const LIMITS = {
-            'ecommerce_admin': 5,
-            'dev_admin': 5
-        };
-
-        const currentCount = admins.filter(a => a.role === admin.role).length;
-        if (LIMITS[admin.role] && currentCount >= LIMITS[admin.role]) {
-            return { success: false, error: `Limit reached for ${admin.role}. Max allowed: ${LIMITS[admin.role]}` };
-        }
-
-        const newAdmin = {
-            id: faker.string.uuid(),
-            ...admin,
-            password: 'password', // Default password for new users
-            status: 'Active',
-            createdAt: new Date().toISOString()
-        };
-
-        admins.push(newAdmin);
-        localStorage.setItem('erp_mock_admins', JSON.stringify(admins));
-        return { success: true, data: newAdmin };
-    },
-
-    // --- Finance / Accounting ---
-    getReturns: () => {
-        return getOrSeed('erp_mock_returns', () => ({
-            id: faker.string.uuid(),
-            returnNumber: `RET-${faker.string.numeric(5)}`,
-            referenceInvoice: `INV-${faker.string.numeric(5)}`,
-            entityName: faker.company.name(), // Customer or Vendor
-            type: faker.helpers.arrayElement(['Credit Note', 'Debit Note']), // Credit = Sales Return, Debit = Purchase Return
-            date: faker.date.recent({ days: 30 }).toISOString(),
-            amount: parseFloat(faker.finance.amount({ min: 50, max: 1000, dec: 2 })),
-            status: faker.helpers.arrayElement(['Approved', 'Pending', 'Processed']),
-            reason: faker.helpers.arrayElement(['Damaged Goods', 'Incorrect Item', 'Overcharged'])
-        }), 8);
-    },
-
-    addReturn: (returnData) => {
-        const returns = mockDataService.getReturns();
-        const newReturn = {
-            id: faker.string.uuid(),
-            returnNumber: `RET-${faker.string.numeric(5)}`,
-            date: new Date().toISOString(),
-            status: 'Pending',
-            ...returnData
-        };
-        returns.unshift(newReturn);
-        localStorage.setItem('erp_mock_returns', JSON.stringify(returns));
-        return { success: true, data: newReturn };
-    },
-
-    updateReturnStatus: (id, status) => {
-        const returns = mockDataService.getReturns();
-        const index = returns.findIndex(r => r.id === id);
-        if (index !== -1) {
-            returns[index].status = status;
-            localStorage.setItem('erp_mock_returns', JSON.stringify(returns));
-            return { success: true, data: returns[index] };
-        }
-        return { success: false, message: 'Return not found' };
-    },
-
-    getAccounts: () => {
-        // Return static chart of accounts or from local storage if editable
-        return chartOfAccounts;
-    },
-
-    getTransactions: () => {
-        return getOrSeed('erp_mock_journal_entries', () => {
-            // Seed with some initial data using random accounts
-            const account = faker.helpers.arrayElement(chartOfAccounts);
-            const offsetAccount = faker.helpers.arrayElement(chartOfAccounts.filter(a => a.id !== account.id));
-
+        return getOrSeed('erp_mock_stock_movements', () => {
+            const products = mockDataService.getProducts();
+            const product = faker.helpers.arrayElement(products);
             return {
                 id: faker.string.uuid(),
-                date: faker.date.recent({ days: 60 }).toISOString(),
-                description: faker.finance.transactionDescription(),
-                debit_account_id: account.id,
-                credit_account_id: offsetAccount.id,
-                debitAccount: account,
-                creditAccount: offsetAccount,
-                amount: parseFloat(faker.finance.amount({ min: 100, max: 5000, dec: 2 }))
+                productId: product?.id || faker.string.uuid(),
+                productName: product?.name || 'Generic Item',
+                sku: product?.sku || 'SKU-000',
+                type: faker.helpers.arrayElement(['In', 'Out', 'Adjustment']),
+                quantity: faker.number.int({ min: 1, max: 100 }),
+                date: faker.date.recent().toISOString(),
+                reason: faker.helpers.arrayElement(['Purchase', 'Sale', 'Damage', 'Correction']),
+                reference: `REF-${faker.string.alphanumeric(6).toUpperCase()}`
             };
-        }, 15);
+        }, 30);
     },
 
-    addTransaction: (transaction) => {
-        const transactions = mockDataService.getTransactions();
-        const newTransaction = {
+    addStockMovement: (movement) => {
+        const movements = mockDataService.getStockMovements();
+        const newMovement = {
             id: faker.string.uuid(),
-            ...transaction
+            date: new Date().toISOString(),
+            ...movement
         };
-        transactions.unshift(newTransaction);
-        localStorage.setItem('erp_mock_journal_entries', JSON.stringify(transactions));
-        return { success: true, data: newTransaction };
-    },
-
-    deleteAdmin: (id) => {
-        const admins = mockDataService.getAdmins();
-        const filtered = admins.filter(a => a.id !== id);
-        if (filtered.length === admins.length) return { success: false, error: 'Admin not found' };
-
-        localStorage.setItem('erp_mock_admins', JSON.stringify(filtered));
-        return { success: true };
-    },
-
-    updateAdmin: (id, updates) => {
-        const admins = mockDataService.getAdmins();
-        const index = admins.findIndex(a => a.id === id);
-        if (index !== -1) {
-            admins[index] = { ...admins[index], ...updates };
-            localStorage.setItem('erp_mock_admins', JSON.stringify(admins));
-            return { success: true, data: admins[index] };
-        }
-        return { success: false, error: 'Admin not found' };
-    },
-
-    // Compensation Config
-    getCompensationConfig: () => {
-        const stored = localStorage.getItem('erp_mock_compensation_config');
-        if (stored) return JSON.parse(stored);
-
-        const initial = { basePool: 50000 }; // Default base pool
-        localStorage.setItem('erp_mock_compensation_config', JSON.stringify(initial));
-        return initial;
-    },
-
-    updateCompensationConfig: (updates) => {
-        const current = mockDataService.getCompensationConfig();
-        const updated = { ...current, ...updates };
-        localStorage.setItem('erp_mock_compensation_config', JSON.stringify(updated));
-        return updated;
-    },
-
-    // --- Phase 2: New Modules ---
+        movements.unshift(newMovement);
+        localStorage.setItem('erp_mock_stock_movements', JSON.stringify(movements));
+        return { success: true, data: newMovement };
+    }
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mockDataService } from '../../../services/mockDataService';
+import ProductModal from '../components/ProductModal';
 import {
     Package,
     Plus,
@@ -17,12 +18,42 @@ export default function ProductList() {
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('All');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     const queryClient = useQueryClient();
 
     const { data: products, isLoading } = useQuery({
         queryKey: ['products'],
         queryFn: mockDataService.getProducts,
+    });
+
+    const addProductMutation = useMutation({
+        mutationFn: (data) => {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(mockDataService.addProduct(data));
+                }, 300);
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['products']);
+            setIsModalOpen(false);
+        }
+    });
+
+    const updateProductMutation = useMutation({
+        mutationFn: ({ id, data }) => {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(mockDataService.updateProduct(id, data));
+                }, 300);
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['products']);
+            setIsModalOpen(false);
+        }
     });
 
     const deleteProductMutation = useMutation({
@@ -38,6 +69,24 @@ export default function ProductList() {
         }
     });
 
+    const handleEditProduct = (product) => {
+        setSelectedProduct(product);
+        setIsModalOpen(true);
+    };
+
+    const handleAddProduct = () => {
+        setSelectedProduct(null);
+        setIsModalOpen(true);
+    };
+
+    const handleModalSubmit = (data) => {
+        if (selectedProduct) {
+            updateProductMutation.mutate({ id: selectedProduct.id, data });
+        } else {
+            addProductMutation.mutate(data);
+        }
+    };
+
     // Derive unique categories from products
     const categories = ['All', ...new Set(products?.map(p => p.category) || [])];
 
@@ -52,6 +101,12 @@ export default function ProductList() {
 
     return (
         <div className="min-h-screen bg-slate-50">
+            <ProductModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                product={selectedProduct}
+                onSubmit={handleModalSubmit}
+            />
 
             <div className="p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -59,7 +114,9 @@ export default function ProductList() {
                         <h2 className="text-xl font-bold text-slate-900">Products</h2>
                         <p className="text-slate-500 text-sm">Manage inventory items and stock levels</p>
                     </div>
-                    <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-lg flex items-center gap-2 font-medium transition-all shadow-sm">
+                    <button
+                        onClick={handleAddProduct}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-lg flex items-center gap-2 font-medium transition-all shadow-sm">
                         <Plus className="w-4 h-4" />
                         Add Product
                     </button>
@@ -181,7 +238,10 @@ export default function ProductList() {
                                                 >
                                                     <Trash2 className="w-5 h-5" />
                                                 </button>
-                                                <button className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded">
+                                                <button
+                                                    onClick={() => handleEditProduct(product)}
+                                                    className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded"
+                                                >
                                                     <MoreHorizontal className="w-5 h-5" />
                                                 </button>
                                             </div>
@@ -191,11 +251,6 @@ export default function ProductList() {
                             </tbody>
                         </table>
                     </div>
-                    {filteredProducts?.length === 0 && (
-                        <div className="p-8 text-center text-slate-500">
-                            No products found matching your search.
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

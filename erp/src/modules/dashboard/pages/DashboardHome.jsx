@@ -177,7 +177,12 @@ const DashboardHome = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold text-slate-900">Recent Activity</h3>
-                        <button className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All</button>
+                        <button
+                            onClick={() => navigate('/audit')}
+                            className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                        >
+                            View All
+                        </button>
                     </div>
                     <div className="space-y-6">
                         {mockActivities.map((activity) => (
@@ -222,7 +227,12 @@ const DashboardHome = () => {
                                     <p className="text-xs text-orange-700">Approval required for amounts &gt; $1,000</p>
                                 </div>
                             </div>
-                            <button className="px-3 py-1.5 bg-white text-orange-700 text-xs font-bold rounded-lg border border-orange-200 shadow-sm hover:bg-orange-50">Review</button>
+                            <button
+                                onClick={() => navigate('/purchasing/orders')}
+                                className="px-3 py-1.5 bg-white text-orange-700 text-xs font-bold rounded-lg border border-orange-200 shadow-sm hover:bg-orange-50"
+                            >
+                                Review
+                            </button>
                         </div>
                     </div>
 

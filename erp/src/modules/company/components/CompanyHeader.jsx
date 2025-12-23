@@ -5,7 +5,6 @@ import { clsx } from 'clsx';
 
 const CompanyHeader = () => {
     const navItems = [
-        { label: 'Overview', path: '/company', icon: Building2, exact: true },
         { label: 'Profile', path: '/company/profile', icon: Building2 },
         { label: 'Departments', path: '/company/departments', icon: Users },
         { label: 'Branches', path: '/company/branches', icon: Network },

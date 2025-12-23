@@ -49,6 +49,7 @@ export default function CompanyProfile() {
             <div className="max-w-5xl mx-auto space-y-6">
 
                 {/* Header / Hero Section */}
+                {/* Header / Hero Section */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="h-32 bg-gradient-to-r from-indigo-900 to-slate-900 relative">
                         <div className="absolute top-4 right-4 flex gap-2">
@@ -61,7 +62,7 @@ export default function CompanyProfile() {
                         </div>
                     </div>
                     <div className="px-6 pb-6 md:px-8 md:pb-8 relative">
-                        <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start text-center md:text-left">
+                        <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start text-center md:text-left transition-all">
 
                             {/* Avatar - Pulled up to overlap banner */}
                             <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-white p-1.5 shadow-lg border border-slate-100 shrink-0 -mt-12 md:-mt-16 z-10 relative">
@@ -74,7 +75,7 @@ export default function CompanyProfile() {
 
                             {/* Text Content - Stays on white background */}
                             <div className="flex-1 min-w-0 pt-2 md:pt-4">
-                                <div className="flex flex-col md:flex-row items-center md:items-center gap-2 md:gap-3 mb-2 justify-center md:justify-start">
+                                <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 mb-2 justify-center md:justify-start">
                                     <h1 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">{company.name}</h1>
                                     <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] md:text-xs font-bold uppercase tracking-wider rounded border border-blue-100 flex items-center gap-1 shrink-0">
                                         <CheckCircle2 className="w-3 h-3" /> Verified Business

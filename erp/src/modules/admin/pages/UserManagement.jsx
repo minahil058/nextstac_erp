@@ -104,6 +104,11 @@ export default function UserManagement() {
         updateConfigMutation.mutate({ basePool: amount });
     };
 
+    const handleToggleStatus = (id, currentStatus) => {
+        const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+        updateAdminMutation.mutate({ id, updates: { status: newStatus } });
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         addAdminMutation.mutate(formData);
@@ -248,10 +253,20 @@ export default function UserManagement() {
                                         )}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
-                                            <CheckCircle className="w-3 h-3" />
-                                            Active
-                                        </span>
+                                        <button
+                                            onClick={() => handleToggleStatus(admin.id, admin.status)}
+                                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all w-24 ${admin.status === 'Active'
+                                                ? 'bg-green-50 text-green-700 border-green-100 hover:bg-green-100'
+                                                : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                                }`}
+                                        >
+                                            {admin.status === 'Active' ? (
+                                                <CheckCircle className="w-3 h-3" />
+                                            ) : (
+                                                <AlertTriangle className="w-3 h-3" />
+                                            )}
+                                            {admin.status || 'Active'}
+                                        </button>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         {admin.role !== 'super_admin' && (
