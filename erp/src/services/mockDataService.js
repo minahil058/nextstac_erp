@@ -70,30 +70,41 @@ export const mockDataService = {
     },
 
     // Employees
-    getEmployees: () => {
-        return getOrSeed(STORAGE_KEYS.EMPLOYEES, () => {
-            // Create a fixed set of employees for testing specific departments
-            const fixedDepts = ['Development', 'Ecommerce'];
-            const dept = faker.helpers.arrayElement([...fixedDepts, faker.commerce.department()]);
-
-            return {
-                id: faker.string.uuid(),
-                firstName: faker.person.firstName(),
-                lastName: faker.person.lastName(),
-                email: faker.internet.email(),
-                position: faker.person.jobTitle(),
-                department: dept, // Mix of fixed and random depts
-                salary: faker.finance.amount({ min: 30000, max: 120000, dec: 0 }),
-                joinDate: faker.date.past({ years: 5 }).toISOString(),
-                status: faker.helpers.arrayElement(['Active', 'On Leave', 'Terminated']),
-                avatar: faker.image.url(),
-                phone: faker.phone.number(),
-                address: faker.location.city() + ', ' + faker.location.country(),
-            };
-        }, 20);
+    getEmployees: async () => {
+        const response = await fetch('http://localhost:5000/api/hr/employees');
+        if (!response.ok) throw new Error('Failed to fetch employees');
+        return response.json();
     },
 
-    // Products
+    addEmployee: async (employee) => {
+        const response = await fetch('http://localhost:5000/api/hr/employees', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(employee)
+        });
+        if (!response.ok) throw new Error('Failed to add employee');
+        return response.json();
+    },
+
+    updateEmployee: async (id, updates) => {
+        const response = await fetch(`http://localhost:5000/api/hr/employees/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates })
+        });
+        if (!response.ok) throw new Error('Failed to update employee');
+        return response.json();
+    },
+
+    deleteEmployee: async (id) => {
+        const response = await fetch(`http://localhost:5000/api/hr/employees/${id}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('Failed to delete employee');
+        return true;
+    },
+
+    // Products (Kept as Mock for now)
     getProducts: () => {
         return getOrSeed(STORAGE_KEYS.PRODUCTS, () => ({
             id: faker.string.uuid(),
