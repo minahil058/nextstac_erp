@@ -27,6 +27,9 @@ import {
     AlertCircle
 } from 'lucide-react';
 import PendingLeaveWidget from '../components/PendingLeaveWidget';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const DashboardHome = () => {
     const navigate = useNavigate();
@@ -61,7 +64,7 @@ const DashboardHome = () => {
             color: "blue"
         },
         {
-            title: "Low Stock Items",
+            title: "Low Stock Items Shortage", // Renamed for clarity in UI if text improved, but keeping content similar
             value: "12",
             change: "-2",
             trend: "down", // positive in this context actually, but let's keep simple
@@ -103,13 +106,13 @@ const DashboardHome = () => {
                     <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
                     <p className="text-slate-500">Welcome back, Admin. Here's what's happening today.</p>
                 </div>
-                <button
+                <Button
                     onClick={() => navigate('/finance/reports')}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+                    className="gap-2"
                 >
                     <DollarSign className="w-4 h-4" />
                     Generate Report
-                </button>
+                </Button>
             </div>
 
             {/* KPI Grid */}
@@ -117,172 +120,188 @@ const DashboardHome = () => {
                 {mockKPIs.map((kpi, index) => {
                     const Icon = kpi.icon;
                     return (
-                        <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:-translate-y-1 transition-transform duration-200">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className={`p-3 rounded-xl bg-${kpi.color}-50 text-${kpi.color}-600`}>
-                                    <Icon className="w-6 h-6" />
+                        <Card key={index} className="hover:-translate-y-1 transition-transform duration-200">
+                            <CardContent className="p-6">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className={`p-3 rounded-xl bg-${kpi.color}-50 text-${kpi.color}-600`}>
+                                        <Icon className="w-6 h-6" />
+                                    </div>
+                                    <Badge variant={kpi.trend === 'up' ? 'success' : 'destructive'} className="flex items-center gap-1">
+                                        {kpi.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                        {kpi.change}
+                                    </Badge>
                                 </div>
-                                <span className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${kpi.trend === 'up' ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'
-                                    }`}>
-                                    {kpi.trend === 'up' ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                                    {kpi.change}
-                                </span>
-                            </div>
-                            <h3 className="text-slate-500 text-sm font-medium uppercase tracking-wider">{kpi.title}</h3>
-                            <p className="text-2xl font-bold text-slate-900 mt-1">{kpi.value}</p>
-                        </div>
+                                <h3 className="text-slate-500 text-sm font-medium uppercase tracking-wider">{kpi.title}</h3>
+                                <p className="text-2xl font-bold text-slate-900 mt-1">{kpi.value}</p>
+                            </CardContent>
+                        </Card>
                     );
                 })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Financial Chart */}
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold text-slate-900">Revenue Analytics</h3>
+                <Card className="lg:col-span-2">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-lg font-bold">Revenue Analytics</CardTitle>
                         <select className="text-sm border-slate-200 rounded-lg text-slate-500 focus:ring-indigo-500 focus:border-indigo-500">
                             <option>Last 7 Months</option>
                             <option>This Year</option>
                         </select>
-                    </div>
-                    <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={mockRevenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} />
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value) => [`$${value}`, undefined]}
-                                />
-                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#4F46E5" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
-                                <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[300px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={mockRevenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        formatter={(value) => [`$${value}`, undefined]}
+                                    />
+                                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                    <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#4F46E5" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                                    <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* Recent Activities */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold text-slate-900">Recent Activity</h3>
-                        <button
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-lg font-bold">Recent Activity</CardTitle>
+                        <Button
+                            variant="link"
                             onClick={() => navigate('/audit')}
-                            className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                            className="text-indigo-600 hover:text-indigo-700 h-auto p-0"
                         >
                             View All
-                        </button>
-                    </div>
-                    <div className="space-y-6">
-                        {mockActivities.map((activity) => (
-                            <div key={activity.id} className="flex gap-4 relative group">
-                                {/* Timeline line */}
-                                <div className="absolute left-[19px] top-8 bottom-[-24px] w-0.5 bg-slate-100 group-last:hidden"></div>
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-6">
+                            {mockActivities.map((activity) => (
+                                <div key={activity.id} className="flex gap-4 relative group">
+                                    {/* Timeline line */}
+                                    <div className="absolute left-[19px] top-8 bottom-[-24px] w-0.5 bg-slate-100 group-last:hidden"></div>
 
-                                <div className="flex-shrink-0 relative z-10">
-                                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-                                        {activity.type === 'order' && <ShoppingCart className="w-4 h-4 text-blue-600" />}
-                                        {activity.type === 'inventory' && <Package className="w-4 h-4 text-amber-600" />}
-                                        {activity.type === 'system' && <Activity className="w-4 h-4 text-slate-600" />}
-                                        {activity.type === 'hr' && <Users className="w-4 h-4 text-emerald-600" />}
-                                        {activity.type === 'purchasing' && <DollarSign className="w-4 h-4 text-purple-600" />}
+                                    <div className="flex-shrink-0 relative z-10">
+                                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                                            {activity.type === 'order' && <ShoppingCart className="w-4 h-4 text-blue-600" />}
+                                            {activity.type === 'inventory' && <Package className="w-4 h-4 text-amber-600" />}
+                                            {activity.type === 'system' && <Activity className="w-4 h-4 text-slate-600" />}
+                                            {activity.type === 'hr' && <Users className="w-4 h-4 text-emerald-600" />}
+                                            {activity.type === 'purchasing' && <DollarSign className="w-4 h-4 text-purple-600" />}
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 pb-1">
+                                        <p className="text-sm text-slate-900">
+                                            <span className="font-semibold">{activity.user}</span> {activity.action} <span className="font-medium text-slate-700">{activity.target}</span>
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            {activity.time}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="flex-1 pb-1">
-                                    <p className="text-sm text-slate-900">
-                                        <span className="font-semibold">{activity.user}</span> {activity.action} <span className="font-medium text-slate-700">{activity.target}</span>
-                                    </p>
-                                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
-                                        {activity.time}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Pending Actions / Tasks */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 className="text-lg font-bold text-slate-900 mb-4">Pending Actions</h3>
-                    <div className="space-y-3">
-                        <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <AlertCircle className="w-5 h-5 text-orange-600" />
-                                <div>
-                                    <p className="text-sm font-medium text-orange-900">3 Pending Purchase Orders</p>
-                                    <p className="text-xs text-orange-700">Approval required for amounts &gt; $1,000</p>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg font-bold">Pending Actions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-3">
+                            <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <AlertCircle className="w-5 h-5 text-orange-600" />
+                                    <div>
+                                        <p className="text-sm font-medium text-orange-900">3 Pending Purchase Orders</p>
+                                        <p className="text-xs text-orange-700">Approval required for amounts &gt; $1,000</p>
+                                    </div>
                                 </div>
+                                <Button
+                                    onClick={() => navigate('/purchasing/orders')}
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-white text-orange-700 border-orange-200 hover:bg-orange-50 hover:text-orange-800"
+                                >
+                                    Review
+                                </Button>
                             </div>
-                            <button
-                                onClick={() => navigate('/purchasing/orders')}
-                                className="px-3 py-1.5 bg-white text-orange-700 text-xs font-bold rounded-lg border border-orange-200 shadow-sm hover:bg-orange-50"
-                            >
-                                Review
-                            </button>
                         </div>
-                    </div>
 
-                    <div className="mt-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-bold text-slate-900">Leave Requests</h4>
-                            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-medium">Pending Action</span>
+                        <div>
+                            <div className="flex justify-between items-center mb-4">
+                                <h4 className="font-bold text-slate-900">Leave Requests</h4>
+                                <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">Pending Action</Badge>
+                            </div>
+                            <Card className="rounded-xl border border-slate-200 overflow-hidden shadow-none">
+                                <PendingLeaveWidget />
+                            </Card>
                         </div>
-                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                            <PendingLeaveWidget />
-                        </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {/* Quick Links */}
-                <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-2xl shadow-lg text-white">
-                    <h3 className="text-lg font-bold mb-2">Quick Access</h3>
-                    <p className="text-indigo-100 text-sm mb-6">Frequently used tools and modules.</p>
+                <Card className="bg-gradient-to-br from-indigo-600 to-violet-700 text-white border-none shadow-lg">
+                    <CardHeader>
+                        <CardTitle className="text-lg font-bold text-white">Quick Access</CardTitle>
+                        <p className="text-indigo-100 text-sm">Frequently used tools and modules.</p>
+                    </CardHeader>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <button
-                            onClick={() => navigate('/sales/orders')}
-                            className="p-4 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-colors text-center group"
-                        >
-                            <ShoppingCart className="w-6 h-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                            <span className="text-xs font-medium">New Order</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/hr/employees')}
-                            className="p-4 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-colors text-center group"
-                        >
-                            <Users className="w-6 h-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                            <span className="text-xs font-medium">Add Employee</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/inventory/products')}
-                            className="p-4 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-colors text-center group"
-                        >
-                            <Package className="w-6 h-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                            <span className="text-xs font-medium">Add Product</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/finance/journal')}
-                            className="p-4 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-colors text-center group"
-                        >
-                            <DollarSign className="w-6 h-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                            <span className="text-xs font-medium">Record Expense</span>
-                        </button>
-                    </div>
-                </div>
+                    <CardContent>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <button
+                                onClick={() => navigate('/sales/orders')}
+                                className="p-4 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-colors text-center group w-full"
+                            >
+                                <ShoppingCart className="w-6 h-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                <span className="text-xs font-medium">New Order</span>
+                            </button>
+                            <button
+                                onClick={() => navigate('/hr/employees')}
+                                className="p-4 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-colors text-center group w-full"
+                            >
+                                <Users className="w-6 h-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                <span className="text-xs font-medium">Add Employee</span>
+                            </button>
+                            <button
+                                onClick={() => navigate('/inventory/products')}
+                                className="p-4 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-colors text-center group w-full"
+                            >
+                                <Package className="w-6 h-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                <span className="text-xs font-medium">Add Product</span>
+                            </button>
+                            <button
+                                onClick={() => navigate('/finance/journal')}
+                                className="p-4 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-colors text-center group w-full"
+                            >
+                                <DollarSign className="w-6 h-6 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                <span className="text-xs font-medium">Record Expense</span>
+                            </button>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
