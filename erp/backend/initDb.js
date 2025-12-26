@@ -46,6 +46,20 @@ const initDb = () => {
             FOREIGN KEY(department_id) REFERENCES departments(id)
         )`);
 
+        // Leaves
+        db.run(`CREATE TABLE IF NOT EXISTS leaves (
+            id TEXT PRIMARY KEY,
+            employee_id TEXT,
+            employee_name TEXT,
+            type TEXT,
+            start_date DATETIME,
+            end_date DATETIME,
+            reason TEXT,
+            status TEXT DEFAULT 'Pending',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(employee_id) REFERENCES users(id)
+        )`);
+
         // --- Inventory ---
         db.run(`CREATE TABLE IF NOT EXISTS products (
             id TEXT PRIMARY KEY,

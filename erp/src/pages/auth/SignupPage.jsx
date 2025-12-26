@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, User, ArrowRight, AlertCircle, Loader2, Eye, EyeOff, Shield } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, AlertCircle, Loader2, Eye, EyeOff, Shield, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function SignupPage() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [role, setRole] = useState('super_admin'); // Default request
+    const [department, setDepartment] = useState(''); // New State
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,7 +23,7 @@ export default function SignupPage() {
         setIsSubmitting(true);
 
         try {
-            const result = await register(name, email, password);
+            const result = await register(name, email, password, role, department);
             if (result.success) {
                 navigate('/');
             } else {
@@ -78,6 +80,49 @@ export default function SignupPage() {
                         )}
 
                         <div className="space-y-5">
+                            <div className="space-y-1.5 group">
+                                <label className="text-sm font-semibold text-slate-700 ml-1">Account Type</label>
+                                <div className="relative">
+                                    <Briefcase className="absolute left-3.5 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                                    <select
+                                        value={role}
+                                        onChange={(e) => setRole(e.target.value)}
+                                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-slate-800 bg-white shadow-sm appearance-none"
+                                    >
+                                        <option value="super_admin">Business Owner (Super Admin)</option>
+                                        <option value="ecommerce_admin">Admin / Manager</option>
+                                        <option value="dev_admin">Developer / Tech</option>
+                                        <option value="user">Employee (Staff)</option>
+                                    </select>
+                                    <div className="absolute right-3.5 top-3.5 pointer-events-none">
+                                        <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Department Selection for Employees */}
+                            {role === 'user' && (
+                                <div className="space-y-1.5 group animate-in slide-in-from-top-2 fade-in">
+                                    <label className="text-sm font-semibold text-slate-700 ml-1">Department</label>
+                                    <div className="relative">
+                                        <Briefcase className="absolute left-3.5 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                                        <select
+                                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-slate-800 bg-white shadow-sm appearance-none"
+                                            onChange={(e) => setDepartment(e.target.value)}
+                                            defaultValue=""
+                                            required
+                                        >
+                                            <option value="" disabled>Select Department</option>
+                                            <option value="E-commerce">E-commerce</option>
+                                            <option value="Web Development">Web Development</option>
+                                        </select>
+                                        <div className="absolute right-3.5 top-3.5 pointer-events-none">
+                                            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="space-y-1.5 group">
                                 <label className="text-sm font-semibold text-slate-700 ml-1">Full Name</label>
                                 <div className="relative">
