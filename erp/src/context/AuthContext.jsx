@@ -11,6 +11,9 @@ export const useAuth = () => {
     return context;
 };
 
+// Use Environment Variable or default to relative path (Vercel) or localhost
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
