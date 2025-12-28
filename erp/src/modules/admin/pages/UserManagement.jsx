@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { mockDataService } from '../../../services/mockDataService';
@@ -38,23 +39,38 @@ export default function UserManagement() {
     const basePool = config?.basePool || 0;
 
     const addAdminMutation = useMutation({
-        mutationFn: (newAdmin) => {
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    const result = mockDataService.addAdmin(newAdmin);
-                    if (result.success) resolve(result.data);
-                    else reject(result.error);
-                }, 500);
+        mutationFn: async (newAdmin) => {
+            const response = await fetch('http://localhost:5000/api/auth/invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newAdmin),
             });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to invite admin');
+
+            // If debug_preview_url exists, log it or alert it (for demo)
+            if (data.debug_preview_url) {
+                console.log('Email Preview:', data.debug_preview_url);
+                alert(`Test Mode: View Email at ${data.debug_preview_url}`);
+            }
+
+            // Check for warnings (e.g., user created but email failed)
+            if (data.warning) {
+                console.warn(data.warning, data.error);
+                alert(`User created, BUT email failed to send: ${data.error}. Check backend logs.`);
+            }
+
+            return data.user;
         },
-        onSuccess: () => {
+        onSuccess: (_, variables) => {
             queryClient.invalidateQueries(['admins']);
             setIsModalOpen(false);
             setFormData({ name: '', email: '', role: 'ecommerce_admin' });
             setError('');
+            alert(`Invitation email sent successfully to ${variables.email}!`);
         },
         onError: (err) => {
-            setError(err);
+            setError(err.message);
         }
     });
 
@@ -287,8 +303,8 @@ export default function UserManagement() {
             </motion.div>
 
             {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            {isModalOpen && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
                     <motion.div
                         className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-700/50"
                         initial={{ scale: 0.9, opacity: 0 }}
@@ -364,7 +380,8 @@ export default function UserManagement() {
                             </div>
                         </form>
                     </motion.div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

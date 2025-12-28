@@ -177,50 +177,8 @@ export default function SignupPage() {
                         </AnimatePresence>
 
                         <div className="space-y-4">
-                            {/* Account Type */}
-                            <motion.div
-                                className="space-y-2 group"
-                                whileHover={{ scale: 1.01 }}
-                                transition={{ type: "spring", stiffness: 400 }}
-                            >
-                                <label className="text-sm font-bold text-slate-300 ml-1 flex items-center gap-2">
-                                    <Briefcase className="w-4 h-4 text-purple-400" />
-                                    Account Type
-                                </label>
-                                <select
-                                    value={role}
-                                    onChange={(e) => setRole(e.target.value)}
-                                    className="w-full px-5 py-4 rounded-2xl border-2 border-slate-700/50 bg-slate-800/50 backdrop-blur-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all outline-none text-white appearance-none cursor-pointer"
-                                >
-                                    <option value="super_admin">🏢 Business Owner (Super Admin)</option>
-                                    <option value="ecommerce_admin">🛍️ Admin / Manager</option>
-                                    <option value="dev_admin">💻 Developer / Tech Lead</option>
-                                    <option value="user">👤 Employee (Staff)</option>
-                                </select>
-                            </motion.div>
+                            {/* Role and Department are predetermined by the invitation, so we hide these selectors */}
 
-                            {/* Department Selection (conditional) */}
-                            <AnimatePresence>
-                                {role === 'user' && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="space-y-2 group"
-                                    >
-                                        <label className="text-sm font-bold text-slate-300 ml-1">Department</label>
-                                        <select
-                                            onChange={(e) => setDepartment(e.target.value)}
-                                            className="w-full px-5 py-4 rounded-2xl border-2 border-slate-700/50 bg-slate-800/50 backdrop-blur-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all outline-none text-white appearance-none cursor-pointer"
-                                            required
-                                        >
-                                            <option value="" disabled selected>Select Department</option>
-                                            <option value="E-commerce">E-commerce</option>
-                                            <option value="Web Development">Web Development</option>
-                                        </select>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
 
                             {/* Name */}
                             <motion.div

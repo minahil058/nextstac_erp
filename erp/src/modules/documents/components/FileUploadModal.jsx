@@ -1,32 +1,35 @@
 import React, { useState } from 'react';
-import { X, Upload, File, FileText, Image as ImageIcon } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, Upload, File, FileText, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function FileUploadModal({ isOpen, onClose, onSubmit }) {
     const [fileName, setFileName] = useState('');
     const [fileType, setFileType] = useState('application/pdf');
     const [isDragging, setIsDragging] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
     const fileInputRef = React.useRef(null);
-
-    if (!isOpen) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit({
             name: fileName,
             type: fileType,
+            file: selectedFile // Pass the actual file object
         });
         setFileName('');
+        setSelectedFile(null);
         onClose();
     };
 
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragging(false);
-        // Simulate catching a file
         const file = e.dataTransfer.files[0];
         if (file) {
             setFileName(file.name);
             setFileType(file.type || 'application/pdf');
+            setSelectedFile(file);
         }
     };
 
@@ -35,93 +38,120 @@ export default function FileUploadModal({ isOpen, onClose, onSubmit }) {
         if (file) {
             setFileName(file.name);
             setFileType(file.type || 'application/pdf');
+            setSelectedFile(file);
         }
     };
 
-    return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="flex justify-between items-center p-6 border-b border-slate-100">
-                    <h2 className="text-xl font-bold text-slate-900">Upload Document</h2>
-                    <button
+    return createPortal(
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    <input
-                        type="file"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
+                        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
                     />
-                    <div
-                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer
-                            ${isDragging
-                                ? 'border-indigo-500 bg-indigo-50'
-                                : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
-                            }`}
-                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                        onDragLeave={() => setIsDragging(false)}
-                        onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()}
+
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative z-10 flex flex-col"
                     >
-                        <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Upload className="w-6 h-6" />
-                        </div>
-                        <p className="text-sm font-medium text-slate-900">Click to upload or drag and drop</p>
-                        <p className="text-xs text-slate-500 mt-1">SVG, PNG, JPG or PDF</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">File Name</label>
-                            <input
-                                required
-                                type="text"
-                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                placeholder="report_q4.pdf"
-                                value={fileName}
-                                onChange={(e) => setFileName(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">File Type</label>
-                            <select
-                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                value={fileType}
-                                onChange={(e) => setFileType(e.target.value)}
+                        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50 sticky top-0 z-10 backdrop-blur-xl">
+                            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                                <Upload className="w-5 h-5 text-purple-400" />
+                                Upload Document
+                            </h2>
+                            <button
+                                onClick={onClose}
+                                className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
                             >
-                                <option value="application/pdf">PDF Document</option>
-                                <option value="image/jpeg">Image (JPG/PNG)</option>
-                                <option value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">Spreadsheet (XLSX)</option>
-                                <option value="application/vnd.openxmlformats-officedocument.wordprocessingml.document">Word Document (DOCX)</option>
-                            </select>
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
-                    </div>
 
-                    <div className="flex justify-end gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg flex items-center gap-2 transition-colors shadow-sm"
-                        >
-                            <Upload className="w-4 h-4" />
-                            Upload
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            <input
+                                type="file"
+                                className="hidden"
+                                ref={fileInputRef}
+                                onChange={handleFileSelect}
+                            />
+                            <div
+                                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer relative group overflow-hidden
+                                    ${isDragging
+                                        ? 'border-purple-500 bg-purple-500/10'
+                                        : 'border-slate-700 hover:border-purple-500/50 hover:bg-slate-800'
+                                    }`}
+                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={() => setIsDragging(false)}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors
+                                    ${isDragging ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-800 text-slate-400 group-hover:bg-purple-500/20 group-hover:text-purple-400'}`}>
+                                    <Upload className="w-7 h-7" />
+                                </div>
+                                <p className="text-sm font-bold text-white">Click or drag file to upload</p>
+                                <p className="text-xs text-slate-500 mt-1 font-medium">SVG, PNG, JPG or PDF</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        <File className="w-3.5 h-3.5" /> File Name
+                                    </label>
+                                    <input
+                                        required
+                                        type="text"
+                                        className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-white placeholder:text-slate-500 transition-all font-medium"
+                                        placeholder="report_q4.pdf"
+                                        value={fileName}
+                                        onChange={(e) => setFileName(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        <FileText className="w-3.5 h-3.5" /> File Type
+                                    </label>
+                                    <select
+                                        className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-white transition-all font-medium appearance-none"
+                                        value={fileType}
+                                        onChange={(e) => setFileType(e.target.value)}
+                                    >
+                                        <option value="application/pdf">PDF Document</option>
+                                        <option value="image/jpeg">Image (JPG/PNG)</option>
+                                        <option value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">Spreadsheet (XLSX)</option>
+                                        <option value="application/vnd.openxmlformats-officedocument.wordprocessingml.document">Word Document (DOCX)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="pt-2 flex justify-end gap-3 border-t border-slate-800 mt-4">
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-slate-300 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-700 hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-2 active:scale-95"
+                                >
+                                    <Upload className="w-4 h-4" />
+                                    Upload
+                                </button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>,
+        document.body
     );
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { mockDataService } from '../../../services/mockDataService';
 import LedgerDashboard from '../components/ledger/LedgerDashboard';
@@ -37,16 +38,17 @@ export default function Ledger() {
             </div>
 
             {/* T-Account Overlay/Modal */}
-            {selectedAccount && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden relative flex flex-col">
+            {selectedAccount && createPortal(
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-slate-900 border border-slate-700/50 rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden relative flex flex-col pt-0">
                         <TAccountView
                             account={selectedAccount}
                             transactions={transactions || []}
                             onClose={() => setSelectedAccount(null)}
                         />
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

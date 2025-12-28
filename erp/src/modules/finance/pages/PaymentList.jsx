@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mockDataService } from '../../../services/mockDataService';
 import {
@@ -81,8 +82,8 @@ export default function PaymentList() {
         <div className="min-h-screen relative">
 
             {/* Modal Overlay */}
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            {isModalOpen && createPortal(
+                <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-slate-900/95 backdrop-blur-2xl w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-700/50 animate-in zoom-in-95 duration-200">
                         <div className="px-6 py-5 bg-slate-900/50 border-b border-slate-700/50 flex justify-between items-center">
                             <h3 className="text-xl font-bold text-white">Record New Payment</h3>
@@ -154,7 +155,8 @@ export default function PaymentList() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             <div className="p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">

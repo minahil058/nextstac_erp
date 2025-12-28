@@ -5,16 +5,16 @@ const TAccountView = ({ account, transactions, onClose }) => {
     // Filter transactions for this account
     const accountTransactions = transactions.filter(t =>
         // Allow fallback to direct object access for mock data robustness
-        t.debit_account_id === account.id ||
-        t.credit_account_id === account.id ||
-        t.debitAccount?.id === account.id ||
-        t.creditAccount?.id === account.id
+        String(t.debit_account_id) === String(account.id) ||
+        String(t.credit_account_id) === String(account.id) ||
+        String(t.debitAccount?.id) === String(account.id) ||
+        String(t.creditAccount?.id) === String(account.id)
     ).sort((a, b) => new Date(a.date) - new Date(b.date));
 
     // Calculate running balance
     let runningBalance = 0;
     const transactionsWithBalance = accountTransactions.map(t => {
-        const isDebit = t.debit_account_id === account.id || t.debitAccount?.id === account.id;
+        const isDebit = String(t.debit_account_id) === String(account.id) || String(t.debitAccount?.id) === String(account.id);
         const amount = parseFloat(t.amount);
 
         if (account.normal_balance === 'Debit' || account.normalBalance === 'Debit') {
@@ -27,11 +27,11 @@ const TAccountView = ({ account, transactions, onClose }) => {
     });
 
     const totalDebits = accountTransactions
-        .filter(t => t.debit_account_id === account.id || t.debitAccount?.id === account.id)
+        .filter(t => String(t.debit_account_id) === String(account.id) || String(t.debitAccount?.id) === String(account.id))
         .reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
     const totalCredits = accountTransactions
-        .filter(t => t.credit_account_id === account.id || t.creditAccount?.id === account.id)
+        .filter(t => String(t.credit_account_id) === String(account.id) || String(t.creditAccount?.id) === String(account.id))
         .reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
     const endingBalance = Math.abs(totalDebits - totalCredits);

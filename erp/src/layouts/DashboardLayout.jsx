@@ -143,90 +143,126 @@ export default function DashboardLayout() {
         }
     };
 
-    const renderNavItem = (item) => {
-        const Icon = item.icon;
-        const isActive = location.pathname === item.path ||
-            (item.path !== '/' && location.pathname.startsWith(item.path));
 
-        return (
-            <div key={item.path}>
-                <NavLink
-                    to={item.path}
-                    end={!item.children}
-                    className={({ isActive: linkActive }) => cn(
-                        "flex items-center gap-3 px-3 py-1.5 rounded-md text-xs font-medium transition-all justify-between group active:scale-95",
-                        linkActive
-                            ? "bg-indigo-600 text-white shadow-sm"
-                            : "text-slate-400 hover:text-white hover:bg-slate-800"
-                    )}
-                >
-                    <div className="flex items-center gap-3">
-                        {Icon && <Icon className="w-4 h-4" />}
-                        <span>{item.label}</span>
-                    </div>
-                </NavLink>
-
-                {/* Sub-menu Removed for Flat Navigation */}
-            </div>
-        );
-    };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex text-slate-900">
+        <div className="min-h-screen bg-slate-950 flex text-slate-100 font-sans selection:bg-indigo-500/30">
             {/* Sidebar - Desktop */}
-            <aside className="hidden md:flex flex-col w-64 bg-slate-900 text-white fixed h-full z-30 transition-all">
-                <div className="p-4 border-b border-slate-700/50 h-14 flex items-center bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg shadow-lg shadow-indigo-500/30 flex items-center justify-center font-bold text-white text-sm">L</div>
-                        <span className="text-sm font-bold truncate text-slate-100 tracking-tight">{getDashboardTitle()}</span>
+            <aside className="hidden md:flex flex-col w-72 bg-slate-900 border-r border-slate-800/50 fixed h-full z-30 transition-all shadow-2xl shadow-black/50">
+                {/* Sidebar Header / Logo */}
+                <div className="h-20 px-6 flex items-center border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-10">
+                    <div className="flex items-center gap-3 group cursor-pointer">
+                        <div className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300">
+                            <span className="font-black text-white text-lg tracking-tight">L</span>
+                            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-base font-bold text-white tracking-tight leading-none group-hover:text-indigo-400 transition-colors">
+                                {getDashboardTitle()}
+                            </span>
+                            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-1">
+                                Enterprise ERP
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5 custom-scrollbar">
-                    {filteredNavItems.map(renderNavItem)}
+                {/* Navigation */}
+                <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+                    {filteredNavItems.map(item => {
+                        const Icon = item.icon;
+                        return (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                end={!item.children}
+                                className={({ isActive }) => cn(
+                                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group relative overflow-hidden",
+                                    isActive
+                                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25"
+                                        : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                                )}
+                            >
+                                {({ isActive }) => (
+                                    <>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="sidebar-active-pill"
+                                                className="absolute inset-0 bg-white/10 mix-blend-overlay"
+                                                initial={false}
+                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                            />
+                                        )}
+                                        {Icon && <Icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-slate-500 group-hover:text-indigo-400")} />}
+                                        <span className="relative z-10">{item.label}</span>
+                                        {isActive && (
+                                            <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white shadow-glow" />
+                                        )}
+                                    </>
+                                )}
+                            </NavLink>
+                        );
+                    })}
                 </nav>
 
-                <div className="p-3 border-t border-slate-800">
-                    <div className="mb-2 px-2">
-                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Logged in as</p>
-                        <p className="text-xs font-medium text-white truncate">{user?.name} ({user?.role})</p>
+                {/* Sidebar Footer / User Profile */}
+                <div className="p-4 border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-xl">
+                    <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-indigo-500/30 transition-colors group">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 p-[2px] shadow-lg shadow-indigo-500/20">
+                                <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-xs uppercase">
+                                    {user?.name?.charAt(0) || 'U'}
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                                <p className="text-sm font-bold text-white truncate group-hover:text-indigo-400 transition-colors">{user?.name}</p>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium truncate">{user?.role}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={logout}
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 border border-transparent rounded-lg transition-all"
+                        >
+                            <LogOut className="w-3.5 h-3.5" />
+                            Sign Out
+                        </button>
                     </div>
-                    <button
-                        onClick={logout}
-                        className="flex items-center gap-2 px-2 py-1.5 text-slate-400 hover:text-white transition-colors w-full text-xs font-medium rounded hover:bg-slate-800"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                    </button>
                 </div>
             </aside>
 
             {/* Main Content Wrapper */}
-            <div className="flex-1 md:ml-64 flex flex-col min-h-screen transition-all duration-300 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+            <div className="flex-1 md:ml-72 flex flex-col min-h-screen transition-all duration-300 relative">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none fixed" />
 
                 {/* Header */}
-                <header className="h-16 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between shadow-xl transition-all">
-                    <button
-                        className="md:hidden p-1.5 -ml-1 text-slate-300 hover:bg-slate-700/50 rounded-md"
-                        onClick={() => setIsMobileMenuOpen(true)}
-                    >
-                        <Menu className="w-5 h-5" />
-                    </button>
-
-                    <div className="flex items-center gap-3 ml-auto">
-                        <button className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-full transition-colors relative">
-                            <Bell className="w-4 h-4" />
-                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-slate-800"></span>
+                <header className="h-20 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/50 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <button
+                            className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                            onClick={() => setIsMobileMenuOpen(true)}
+                        >
+                            <Menu className="w-6 h-6" />
                         </button>
-                        <div className="flex items-center gap-3 border-l border-slate-700/50 pl-4 ml-2">
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xs">
-                                    AD
-                                </div>
+                        {/* Breadcrumbs or Title could go here */}
+                    </div>
+
+                    <div className="flex items-center gap-4 ml-auto">
+                        <button className="relative p-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-xl transition-all hover:scale-105 active:scale-95 group">
+                            <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
+                        </button>
+
+                        <div className="h-8 w-[1px] bg-slate-800 mx-2" />
+
+                        <div className="flex items-center gap-3">
+                            <div className="text-right hidden sm:block">
+                                <p className="text-sm font-bold text-white leading-tight">{user?.name}</p>
+                                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">{user?.role}</p>
                             </div>
-                            <div className="hidden sm:block leading-tight">
-                                <p className="font-semibold text-white text-sm">Admin User</p>
-                                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Administrator</p>
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px] shadow-lg shadow-indigo-500/20 cursor-pointer hover:shadow-indigo-500/40 transition-shadow">
+                                <div className="w-full h-full rounded-[10px] bg-slate-900 flex items-center justify-center text-white font-bold">
+                                    {user?.name?.charAt(0) || 'A'}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -235,12 +271,12 @@ export default function DashboardLayout() {
                 {/* Mobile Sidebar Overlay */}
                 <AnimatePresence>
                     {isMobileMenuOpen && (
-                        <div className="fixed inset-0 z-40 md:hidden">
+                        <div className="fixed inset-0 z-50 md:hidden">
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             />
                             <motion.nav
@@ -248,59 +284,49 @@ export default function DashboardLayout() {
                                 animate={{ x: 0 }}
                                 exit={{ x: '-100%' }}
                                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                                className="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 text-white p-4 flex flex-col h-full shadow-2xl"
+                                className="absolute left-0 top-0 bottom-0 w-80 bg-slate-900 border-r border-slate-800 flex flex-col h-full shadow-2xl"
                             >
-                                <div className="flex items-center justify-between mb-8">
+                                <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-bold">L</div>
-                                        <span className="text-lg font-bold">Office Ledger</span>
+                                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">L</div>
+                                        <span className="text-xl font-bold text-white tracking-tight">Office Ledger</span>
                                     </div>
-                                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-1 hover:bg-slate-800 rounded active:scale-90 transition-transform">
+                                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
                                         <X className="w-6 h-6" />
                                     </button>
                                 </div>
-                                <div className="space-y-1 flex-1 overflow-y-auto">
-                                    {NAV_ITEMS.map((item) => {
+                                <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                                    {filteredNavItems.map((item) => {
                                         const Icon = item.icon;
                                         return (
-                                            <div key={item.path}>
+                                            <React.Fragment key={item.path}>
                                                 <NavLink
                                                     to={item.path}
                                                     end={!item.children}
                                                     onClick={() => setIsMobileMenuOpen(false)}
                                                     className={({ isActive }) => cn(
-                                                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                                                        isActive || (item.children && location.pathname.startsWith(item.path))
-                                                            ? "bg-indigo-600 text-white"
-                                                            : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                                        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                                        isActive
+                                                            ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25"
+                                                            : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                                                     )}
                                                 >
                                                     {Icon && <Icon className="w-5 h-5" />}
                                                     {item.label}
                                                 </NavLink>
-
-                                                {item.children && (
-                                                    <div className="ml-4 mt-1 space-y-1 pl-4 border-l border-slate-700">
-                                                        {item.children.map(child => (
-                                                            <NavLink
-                                                                key={child.path}
-                                                                to={child.path}
-                                                                onClick={() => setIsMobileMenuOpen(false)}
-                                                                className={({ isActive }) => cn(
-                                                                    "block px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                                                                    isActive
-                                                                        ? "text-white font-semibold"
-                                                                        : "text-slate-400 hover:text-white"
-                                                                )}
-                                                            >
-                                                                {child.label}
-                                                            </NavLink>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
+                                                {/* Mobile Submenu could go here if needed */}
+                                            </React.Fragment>
                                         );
                                     })}
+                                </div>
+                                <div className="p-6 border-t border-slate-800 bg-slate-900/50">
+                                    <button
+                                        onClick={logout}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-red-500/10 text-slate-300 hover:text-red-400 rounded-xl font-medium transition-all border border-slate-700 hover:border-red-500/30"
+                                    >
+                                        <LogOut className="w-5 h-5" />
+                                        Sign Out
+                                    </button>
                                 </div>
                             </motion.nav>
                         </div>
@@ -308,15 +334,15 @@ export default function DashboardLayout() {
                 </AnimatePresence>
 
                 {/* Page Content */}
-                <main className="flex-1 p-3 sm:p-4 lg:p-6 overflow-auto">
+                <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto z-10 relative">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={location.pathname}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            variants={pageVariants}
-                            className="w-full"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.2 }}
+                            className="w-full max-w-7xl mx-auto"
                         >
                             {currentOutlet}
                         </motion.div>

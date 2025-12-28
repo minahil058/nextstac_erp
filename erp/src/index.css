@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", sans-serif;
-}
+/* Font settings managed by Tailwind config */
 
 /* --- 1. SHADCN COLORS (Variables) --- */
 :root {
@@ -74,8 +72,8 @@
   }
 
   body {
-    /* Premium Grey Background */
-    background-color: #F8FAFC;
+    background-color: #020617;
+    /* Slate-950 */
     color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
   }
@@ -83,28 +81,48 @@
 
 /* --- 3. CUSTOM SCROLLBAR & GLASS EFFECT --- */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0f172a;
+  /* Slate-900 */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #334155;
+  /* Slate-700 */
   border-radius: 9999px;
-  border: 2px solid #F8FAFC;
+  border: 1px solid #1e293b;
+  /* Slate-800 */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #475569;
+  /* Slate-600 */
+}
+
+/* Custom Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(2, 6, 23, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
-
-/* Vercel Force Update */

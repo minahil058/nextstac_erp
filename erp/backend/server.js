@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import hrRoutes from './routes/hrRoutes.js';
 import financeRoutes from './routes/financeRoutes.js';
@@ -10,7 +12,6 @@ import purchasingRoutes from './routes/purchasingRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
 
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Trash2, X, Calculator, Save } from 'lucide-react';
 
 const InvoiceForm = ({ onSave, onCancel, products = [] }) => {
@@ -71,8 +72,8 @@ const InvoiceForm = ({ onSave, onCancel, products = [] }) => {
         });
     };
 
-    return (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto animate-in fade-in duration-200">
+    return createPortal(
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 overflow-y-auto animate-in fade-in duration-200">
             <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-2xl w-full max-w-4xl my-auto animate-in zoom-in-95 duration-200">
                 <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
                     {/* Header */}
@@ -265,7 +266,8 @@ const InvoiceForm = ({ onSave, onCancel, products = [] }) => {
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

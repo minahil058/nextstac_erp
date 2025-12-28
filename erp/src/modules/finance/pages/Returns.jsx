@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mockDataService } from '../../../services/mockDataService';
 import {
@@ -95,8 +96,8 @@ const Returns = () => {
         <div className="min-h-screen relative">
 
             {/* Create Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            {isModalOpen && createPortal(
+                <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-slate-900/95 backdrop-blur-2xl w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-700/50 animate-in zoom-in-95 duration-200">
                         <div className="px-6 py-5 bg-slate-900/50 border-b border-slate-700/50 flex justify-between items-center">
                             <h3 className="text-xl font-bold text-white">
@@ -144,10 +145,10 @@ const Returns = () => {
                                         onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                                         className="w-full px-4 py-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none font-medium text-white appearance-none cursor-pointer transition-all shadow-inner"
                                     >
-                                        <option>Damaged Goods</option>
-                                        <option>Incorrect Item</option>
-                                        <option>Overcharged</option>
-                                        <option>Other</option>
+                                        <option className="bg-slate-800">Damaged Goods</option>
+                                        <option className="bg-slate-800">Incorrect Item</option>
+                                        <option className="bg-slate-800">Overcharged</option>
+                                        <option className="bg-slate-800">Other</option>
                                     </select>
                                     <ArrowUpRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none rotate-45" />
                                 </div>
@@ -165,7 +166,8 @@ const Returns = () => {
                             </button>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             <div className="p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">

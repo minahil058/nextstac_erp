@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mockDataService } from '../../../services/mockDataService';
@@ -176,8 +177,8 @@ export default function WarehouseList() {
                 </div>
 
                 {/* Modal */}
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+                {isModalOpen && createPortal(
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
                         <div className="bg-slate-900 rounded-xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-800">
                             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
                                 <h2 className="text-lg font-bold text-white">Add New Warehouse</h2>
@@ -239,7 +240,8 @@ export default function WarehouseList() {
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </div>
 

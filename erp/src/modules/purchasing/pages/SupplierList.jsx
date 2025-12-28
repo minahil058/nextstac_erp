@@ -12,8 +12,10 @@ import {
     Plus,
     Trash2,
     Edit2,
-    MapPin
+    MapPin,
+    User
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import SupplierFormModal from '../components/SupplierFormModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 
@@ -85,10 +87,35 @@ export default function SupplierList() {
         s.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (isLoading) return <div className="p-8 text-center">Loading suppliers...</div>;
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
+
+    if (isLoading) return (
+        <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400">
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+                <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
+            </motion.div>
+            <p className="mt-4 font-medium">Loading suppliers...</p>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="space-y-6 max-w-[1920px] mx-auto p-4 md:p-8">
             <SupplierFormModal
                 isOpen={isFormOpen}
                 initialData={editingSupplier}
@@ -109,116 +136,144 @@ export default function SupplierList() {
                 variant="danger"
             />
 
-            <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-900">Suppliers</h2>
-                        <p className="text-slate-500 text-sm">Manage vendor relationships and procurement</p>
-                    </div>
-                    <button
-                        onClick={() => {
-                            setEditingSupplier(null);
-                            setIsFormOpen(true);
-                        }}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add Supplier
-                    </button>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-white tracking-tight">Suppliers</h2>
+                    <p className="text-slate-400">Manage vendor relationships and procurement</p>
                 </div>
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                        setEditingSupplier(null);
+                        setIsFormOpen(true);
+                    }}
+                    className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-purple-500/25 flex items-center gap-2 font-bold transition-all"
+                >
+                    <Plus className="w-5 h-5" />
+                    Add Supplier
+                </motion.button>
+            </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative">
-                    <Search className="absolute left-7 top-6.5 w-5 h-5 text-slate-400" />
+            <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 p-4 rounded-2xl sticky top-20 z-30 shadow-xl">
+                <div className="relative">
+                    <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Search suppliers..."
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                        placeholder="Search by company or contact person..."
+                        className="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-white placeholder:text-slate-500 transition-all shadow-inner"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+            >
+                <AnimatePresence mode="popLayout">
                     {filteredSuppliers?.map(supplier => (
-                        <div key={supplier.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group relative">
-                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <motion.div
+                            key={supplier.id}
+                            variants={itemVariants}
+                            layout
+                            className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 group relative hover:bg-slate-800/80 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10"
+                        >
+                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
                                 <button
                                     onClick={() => handleEdit(supplier)}
-                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                    className="p-2 text-slate-400 hover:text-white hover:bg-purple-500/20 rounded-lg transition-all"
                                     title="Edit"
                                 >
                                     <Edit2 className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => handleDelete(supplier.id)}
-                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                                     title="Delete"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
 
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-                                        <Building2 className="w-6 h-6" />
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center text-purple-400 border border-slate-600 shadow-inner">
+                                        <Building2 className="w-7 h-7" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-900 text-lg">{supplier.companyName}</h3>
-                                        <div className="flex items-center gap-1 text-xs text-slate-500">
-                                            <Star className="w-3.5 h-3.5 text-amber-400 fill-current" />
-                                            <span>{supplier.rating}/5 Reliability</span>
+                                        <h3 className="font-bold text-white text-lg leading-tight">{supplier.companyName}</h3>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <div className="flex">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        className={`w-3.5 h-3.5 ${i < supplier.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-700'}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <span className="text-xs font-medium text-slate-500 ml-1">Reliability</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-3 mb-4">
-                                <div className="flex items-center gap-3 text-sm text-slate-600">
-                                    <User className="w-4 h-4 text-slate-400" />
-                                    <span className="font-medium">{supplier.contactPerson}</span>
+                            <div className="space-y-3 mb-6">
+                                <div className="flex items-center gap-3 text-sm group/item">
+                                    <div className="p-1.5 rounded-lg bg-slate-700/50 text-slate-400 group-hover/item:text-purple-400 transition-colors">
+                                        <User className="w-4 h-4" />
+                                    </div>
+                                    <span className="font-medium text-slate-300">{supplier.contactPerson}</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm text-slate-600">
-                                    <Mail className="w-4 h-4 text-slate-400" />
-                                    <span className="truncate">{supplier.email}</span>
+                                <div className="flex items-center gap-3 text-sm group/item">
+                                    <div className="p-1.5 rounded-lg bg-slate-700/50 text-slate-400 group-hover/item:text-purple-400 transition-colors">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-slate-400 truncate">{supplier.email}</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm text-slate-600">
-                                    <Phone className="w-4 h-4 text-slate-400" />
-                                    <span>{supplier.phone}</span>
+                                <div className="flex items-center gap-3 text-sm group/item">
+                                    <div className="p-1.5 rounded-lg bg-slate-700/50 text-slate-400 group-hover/item:text-purple-400 transition-colors">
+                                        <Phone className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-slate-400">{supplier.phone}</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm text-slate-600">
-                                    <MapPin className="w-4 h-4 text-slate-400" />
-                                    <span className="truncate">{supplier.address}</span>
+                                <div className="flex items-center gap-3 text-sm group/item">
+                                    <div className="p-1.5 rounded-lg bg-slate-700/50 text-slate-400 group-hover/item:text-purple-400 transition-colors">
+                                        <MapPin className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-slate-400 truncate">{supplier.address}</span>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-100 mt-4 flex justify-between items-center">
+                            <div className="pt-4 border-t border-slate-700/50 flex justify-between items-center">
                                 <button
                                     onClick={() => toggleStatus(supplier)}
-                                    className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all active:scale-95 ${supplier.status === 'Active'
-                                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all active:scale-95 border ${supplier.status === 'Active'
+                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                                            : 'bg-slate-700/50 text-slate-400 border-slate-600 hover:bg-slate-700'
                                         }`}
                                 >
                                     {supplier.status}
                                 </button>
+                                <span className="text-xs font-medium text-purple-400 cursor-pointer hover:underline">View Details</span>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                    {filteredSuppliers?.length === 0 && (
-                        <div className="col-span-full py-12 text-center text-slate-400">
-                            <Building2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                            <p>No suppliers found matching your search.</p>
+                </AnimatePresence>
+
+                {filteredSuppliers?.length === 0 && (
+                    <div className="col-span-full py-20 text-center text-slate-500 flex flex-col items-center">
+                        <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
+                            <Building2 className="w-8 h-8 opacity-40" />
                         </div>
-                    )}
-                </div>
-            </div>
+                        <p className="text-lg font-medium text-slate-400">No suppliers found</p>
+                        <p className="text-sm mt-1">Try adjusting your search terms</p>
+                    </div>
+                )}
+            </motion.div>
         </div>
     );
-}
-
-function User({ className }) {
-    return (
-        <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-    )
 }

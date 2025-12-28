@@ -296,14 +296,14 @@ export default function CompanyProfile() {
                         </PremiumCard>
                     </motion.div>
                 </div>
-
-                <CompanyForm
-                    isOpen={isEditing}
-                    onClose={() => setIsEditing(false)}
-                    initialData={company}
-                    onSave={handleSave}
-                />
             </motion.div>
+
+            <CompanyForm
+                isOpen={isEditing}
+                onClose={() => setIsEditing(false)}
+                initialData={company}
+                onSave={handleSave}
+            />
         </div>
     );
 }
