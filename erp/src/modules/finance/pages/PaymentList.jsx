@@ -13,6 +13,7 @@ import {
     Trash2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { clsx } from 'clsx';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import PaymentStatusToggle from '../components/payment/PaymentStatusToggle';
 
@@ -74,40 +75,40 @@ export default function PaymentList() {
         });
     };
 
-    if (isLoading) return <div className="p-8 text-center text-slate-500 font-medium">Loading payments...</div>;
+    if (isLoading) return <div className="p-8 text-center text-slate-400 font-medium animate-pulse">Loading payments...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50 relative">
+        <div className="min-h-screen relative">
 
             {/* Modal Overlay */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border-2 border-slate-900 animate-in zoom-in-95 duration-200">
-                        <div className="px-6 py-4 bg-slate-50 border-b-2 border-slate-900 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-slate-900">Record New Payment</h3>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-slate-900/95 backdrop-blur-2xl w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-700/50 animate-in zoom-in-95 duration-200">
+                        <div className="px-6 py-5 bg-slate-900/50 border-b border-slate-700/50 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-white">Record New Payment</h3>
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+                                className="p-2 hover:bg-slate-800 rounded-full transition-colors group"
                             >
-                                <X className="w-5 h-5 text-slate-500" />
+                                <X className="w-5 h-5 text-slate-400 group-hover:text-white" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Vendor Name</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Vendor Name</label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.vendor}
                                     onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-indigo-500 focus:ring-0 outline-none font-medium text-slate-900 transition-colors"
+                                    className="w-full px-4 py-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none font-medium text-white placeholder:text-slate-600 transition-all shadow-inner"
                                     placeholder="e.g. Acme Corp"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Amount ($)</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Amount ($)</label>
                                 <input
                                     type="number"
                                     required
@@ -115,30 +116,33 @@ export default function PaymentList() {
                                     step="0.01"
                                     value={formData.amount}
                                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-indigo-500 focus:ring-0 outline-none font-bold text-slate-900 text-lg transition-colors"
+                                    className="w-full px-4 py-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold text-white text-lg transition-all shadow-inner"
                                     placeholder="0.00"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Payment Method</label>
-                                <select
-                                    value={formData.method}
-                                    onChange={(e) => setFormData({ ...formData, method: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-indigo-500 focus:ring-0 outline-none font-medium text-slate-900 bg-white cursor-pointer"
-                                >
-                                    <option>Bank Transfer</option>
-                                    <option>Credit Card</option>
-                                    <option>Cash</option>
-                                    <option>Check</option>
-                                </select>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Payment Method</label>
+                                <div className="relative">
+                                    <select
+                                        value={formData.method}
+                                        onChange={(e) => setFormData({ ...formData, method: e.target.value })}
+                                        className="w-full px-4 py-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium text-white appearance-none cursor-pointer transition-all shadow-inner"
+                                    >
+                                        <option className="bg-slate-800">Bank Transfer</option>
+                                        <option className="bg-slate-800">Credit Card</option>
+                                        <option className="bg-slate-800">Cash</option>
+                                        <option className="bg-slate-800">Check</option>
+                                    </select>
+                                    <ArrowUpRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none rotate-45" />
+                                </div>
                             </div>
 
                             <div className="pt-2">
                                 <button
                                     type="submit"
                                     disabled={addPaymentMutation.isPending}
-                                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold uppercase tracking-wide shadow-[4px_4px_0px_0px_rgba(203,213,225,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-bold uppercase tracking-widest shadow-lg hover:shadow-emerald-500/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     {addPaymentMutation.isPending ? 'Processing...' : (
                                         <>
@@ -156,25 +160,25 @@ export default function PaymentList() {
             <div className="p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Payments</h2>
-                        <p className="text-slate-500 text-sm">Track outgoing payments to vendors</p>
+                        <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-white drop-shadow-sm">Payments</h2>
+                        <p className="text-slate-400 text-sm mt-1">Track outgoing payments to vendors</p>
                     </div>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg flex items-center gap-2 font-bold transition-all shadow-[4px_4px_0px_0px_rgba(203,213,225,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+                        className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl flex items-center gap-2 font-bold transition-all shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-5 h-5" />
                         Record Payment
                     </button>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border-2 border-slate-900 shadow-sm flex flex-col sm:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
+                <div className="bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-slate-700/50 shadow-xl flex flex-col sm:flex-row gap-4 relative z-20">
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
                         <input
                             type="text"
                             placeholder="Search payments..."
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border-2 border-slate-200 focus:border-indigo-500 focus:ring-0 outline-none transition-all font-medium"
+                            className="w-full pl-12 pr-4 py-3 rounded-2xl bg-slate-900/50 border border-slate-700/50 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -182,22 +186,21 @@ export default function PaymentList() {
                     <div className="relative">
                         <button
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
-                            className={`px-4 py-2 border-2 rounded-lg flex items-center gap-2 font-bold transition-colors ${statusFilter !== 'All'
-                                ? 'border-indigo-600 text-indigo-600 bg-indigo-50'
-                                : 'border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900'
-                                }`}
+                            className={clsx(
+                                "px-6 py-3 rounded-2xl flex items-center gap-2 font-bold transition-all border",
+                                statusFilter !== 'All'
+                                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-500/20'
+                                    : 'bg-slate-800/50 text-slate-300 border-slate-700/50 hover:bg-slate-700/50 hover:text-white'
+                            )}
                         >
-                            <Filter className="w-4 h-4" />
+                            <Filter className="w-5 h-5" />
                             {statusFilter === 'All' ? 'Status' : statusFilter}
                         </button>
 
                         {isFilterOpen && (
                             <>
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setIsFilterOpen(false)}
-                                />
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border-2 border-slate-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                                <div className="fixed inset-0 z-30" onClick={() => setIsFilterOpen(false)} />
+                                <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 p-2 z-40 animate-in fade-in zoom-in-95 duration-200">
                                     {['All', 'Paid', 'Pending', 'Failed'].map((status) => (
                                         <button
                                             key={status}
@@ -205,15 +208,15 @@ export default function PaymentList() {
                                                 setStatusFilter(status);
                                                 setIsFilterOpen(false);
                                             }}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-between ${statusFilter === status
-                                                ? 'bg-indigo-50 text-indigo-700'
-                                                : 'text-slate-600 hover:bg-slate-50'
-                                                }`}
+                                            className={clsx(
+                                                "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors flex items-center justify-between",
+                                                statusFilter === status
+                                                    ? 'bg-emerald-600/20 text-emerald-300'
+                                                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                            )}
                                         >
                                             {status}
-                                            {statusFilter === status && (
-                                                <div className="w-2 h-2 rounded-full bg-indigo-600" />
-                                            )}
+                                            {statusFilter === status && <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />}
                                         </button>
                                     ))}
                                 </div>
@@ -223,37 +226,37 @@ export default function PaymentList() {
                 </div>
 
                 {/* Desktop Table View */}
-                <div className="hidden md:block bg-white rounded-xl border-2 border-slate-900 shadow-sm overflow-hidden">
+                <div className="hidden md:block bg-slate-800/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-100 border-b-2 border-slate-900">
+                            <thead className="bg-slate-900/50 border-b border-slate-700/50">
                                 <tr>
-                                    <th className="px-6 py-4 font-bold text-slate-900 uppercase tracking-wider">Payment #</th>
-                                    <th className="px-6 py-4 font-bold text-slate-900 uppercase tracking-wider">Vendor</th>
-                                    <th className="px-6 py-4 font-bold text-slate-900 uppercase tracking-wider">Date</th>
-                                    <th className="px-6 py-4 font-bold text-slate-900 uppercase tracking-wider">Method</th>
-                                    <th className="px-6 py-4 font-bold text-slate-900 uppercase tracking-wider text-right">Amount</th>
-                                    <th className="px-6 py-4 font-bold text-slate-900 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 font-bold text-slate-900 uppercase tracking-wider text-right">Actions</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Payment #</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Vendor</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Date</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Method</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs text-right">Amount</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Status</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-700/50">
                                 {filteredPayments?.map((payment) => (
-                                    <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 font-mono font-bold text-indigo-600 border-r border-slate-100">
+                                    <tr key={payment.id} className="hover:bg-slate-700/30 transition-colors group">
+                                        <td className="px-6 py-4 font-mono font-bold text-emerald-400 border-r border-slate-700/50 group-hover:border-slate-700/80 transition-colors">
                                             {payment.paymentNumber}
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-slate-900">{payment.vendor}</td>
-                                        <td className="px-6 py-4 text-slate-600 font-medium">
+                                        <td className="px-6 py-4 font-bold text-white">{payment.vendor}</td>
+                                        <td className="px-6 py-4 text-slate-400 font-medium">
                                             {new Date(payment.date).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 text-slate-600">
-                                            <span className="flex items-center gap-2 font-medium">
-                                                <CreditCard className="w-4 h-4 text-slate-400" />
+                                        <td className="px-6 py-4 text-slate-400">
+                                            <span className="flex items-center gap-2 font-bold bg-slate-800/80 px-3 py-1.5 rounded-lg w-fit text-xs border border-slate-700/50 text-slate-300 shadow-sm">
+                                                <CreditCard className="w-3.5 h-3.5 text-slate-500" />
                                                 {payment.method}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-slate-900 font-bold text-right font-mono text-lg">
+                                        <td className="px-6 py-4 text-white font-bold text-right font-mono text-lg tracking-tight">
                                             ${payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </td>
                                         <td className="px-6 py-4">
@@ -268,7 +271,7 @@ export default function PaymentList() {
                                         <td className="px-6 py-4 text-right">
                                             <button
                                                 onClick={() => setDeleteModal({ isOpen: true, id: payment.id })}
-                                                className="text-slate-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                                                 title="Delete Payment"
                                             >
                                                 <Trash2 className="w-5 h-5" />
@@ -284,13 +287,13 @@ export default function PaymentList() {
                 {/* Mobile Card View */}
                 <div className="md:hidden space-y-4">
                     {filteredPayments?.map((payment) => (
-                        <div key={payment.id} className="bg-white p-5 rounded-xl border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(203,213,225,1)] space-y-4">
+                        <div key={payment.id} className="bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-slate-700/50 shadow-xl space-y-4">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">
+                                    <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1 font-mono">
                                         {payment.paymentNumber}
                                     </div>
-                                    <div className="font-extrabold text-slate-900 text-lg">{payment.vendor}</div>
+                                    <div className="font-extrabold text-white text-lg">{payment.vendor}</div>
                                 </div>
                                 <PaymentStatusToggle
                                     currentStatus={payment.status}
@@ -301,29 +304,29 @@ export default function PaymentList() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 text-sm border-y-2 border-slate-100 py-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm border-y border-slate-700/50 py-4">
                                 <div>
-                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Date</div>
-                                    <div className="font-bold text-slate-700">
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Date</div>
+                                    <div className="font-bold text-slate-300">
                                         {new Date(payment.date).toLocaleDateString()}
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Amount</div>
-                                    <div className="font-mono font-bold text-slate-900 text-xl">
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Amount</div>
+                                    <div className="font-mono font-bold text-white text-xl">
                                         ${payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </div>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between pt-1">
-                                <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                <div className="flex items-center gap-2 text-sm font-medium text-slate-400 bg-slate-700/30 px-3 py-1.5 rounded-lg">
                                     <CreditCard className="w-4 h-4" />
                                     {payment.method}
                                 </div>
                                 <button
                                     onClick={() => setDeleteModal({ isOpen: true, id: payment.id })}
-                                    className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                                    className="p-2 hover:bg-red-500/10 rounded-xl text-slate-500 hover:text-red-400 transition-colors"
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>

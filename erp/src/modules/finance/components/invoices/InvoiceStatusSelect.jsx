@@ -10,18 +10,18 @@ export default function InvoiceStatusSelect({ currentStatus, onUpdate }) {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'Paid': return 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100';
-            case 'Pending': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100';
-            case 'Overdue': return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100';
-            default: return 'bg-slate-50 text-slate-700 border-slate-200';
+            case 'Paid': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20';
+            case 'Pending': return 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20';
+            case 'Overdue': return 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20';
+            default: return 'bg-slate-800 text-slate-400 border-slate-700/50';
         }
     };
 
     const getDotColor = (status) => {
         switch (status) {
-            case 'Paid': return 'bg-emerald-500';
-            case 'Pending': return 'bg-amber-500';
-            case 'Overdue': return 'bg-red-500';
+            case 'Paid': return 'bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.6)]';
+            case 'Pending': return 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]';
+            case 'Overdue': return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]';
             default: return 'bg-slate-500';
         }
     };
@@ -62,7 +62,7 @@ export default function InvoiceStatusSelect({ currentStatus, onUpdate }) {
             </button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 mt-1 w-[140px] bg-white rounded-xl shadow-xl border border-slate-100 p-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-full left-0 mt-2 w-[140px] bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-200">
                     {statuses.map((status) => (
                         <button
                             key={status}
@@ -70,15 +70,15 @@ export default function InvoiceStatusSelect({ currentStatus, onUpdate }) {
                             className={clsx(
                                 "w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold uppercase transition-colors mb-0.5 last:mb-0",
                                 status === currentStatus
-                                    ? "bg-indigo-50 text-indigo-700"
-                                    : "text-slate-600 hover:bg-slate-50"
+                                    ? "bg-slate-700 text-white"
+                                    : "text-slate-400 hover:bg-slate-700/50 hover:text-white"
                             )}
                         >
                             <div className="flex items-center gap-2">
                                 <div className={clsx("w-1.5 h-1.5 rounded-full", getDotColor(status))} />
                                 {status}
                             </div>
-                            {status === currentStatus && <Check className="w-3 h-3" />}
+                            {status === currentStatus && <Check className="w-3.5 h-3.5 text-white" />}
                         </button>
                     ))}
                 </div>

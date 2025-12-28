@@ -11,24 +11,24 @@ const CompanyHeader = () => {
     ];
 
     return (
-        <div className="bg-white border-b border-slate-200 sticky top-0 z-10 font-[Inter]">
+        <div className="bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-10 font-[Inter]">
             <div className="px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm shadow-blue-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
                             C
                         </div>
                         <div>
-                            <h1 className="text-lg font-extrabold text-slate-900 leading-tight tracking-tight">
+                            <h1 className="text-lg font-extrabold text-white leading-tight tracking-tight">
                                 Company
                             </h1>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                            <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest bg-indigo-500/20 px-1.5 py-0.5 rounded border border-indigo-500/30">
                                 Management
                             </span>
                         </div>
                     </div>
 
-                    <div className="h-8 w-px bg-slate-200 mx-2 hidden sm:block"></div>
+                    <div className="h-8 w-px bg-slate-700/50 mx-2 hidden sm:block"></div>
 
                     <nav className="hidden sm:flex items-center gap-1">
                         {navItems.map((item) => (
@@ -39,8 +39,8 @@ const CompanyHeader = () => {
                                 className={({ isActive }) => clsx(
                                     "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                                     isActive
-                                        ? "bg-slate-100 text-slate-900 shadow-sm ring-1 ring-slate-200"
-                                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                                        ? "bg-indigo-600 text-white shadow-lg"
+                                        : "text-slate-400 hover:text-white hover:bg-slate-700/50"
                                 )}
                             >
                                 {item.label}
@@ -59,8 +59,8 @@ const CompanyHeader = () => {
                         className={({ isActive }) => clsx(
                             "flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
                             isActive
-                                ? "bg-slate-900 text-white border-slate-900"
-                                : "bg-white text-slate-500 border-slate-200"
+                                ? "bg-indigo-600 text-white border-indigo-600"
+                                : "bg-slate-700/50 text-slate-300 border-slate-600/50"
                         )}
                     >
                         {item.label}

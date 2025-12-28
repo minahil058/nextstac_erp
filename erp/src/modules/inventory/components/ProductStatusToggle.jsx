@@ -20,8 +20,8 @@ export default function ProductStatusToggle({ currentStatus, onUpdate }) {
             {/* Toggle Switch */}
             <div
                 className={clsx(
-                    "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                    isActive ? "bg-indigo-600" : "bg-slate-200"
+                    "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner",
+                    isActive ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" : "bg-slate-700"
                 )}
             >
                 <span
@@ -36,8 +36,8 @@ export default function ProductStatusToggle({ currentStatus, onUpdate }) {
             {/* Status Label */}
             <span
                 className={clsx(
-                    "text-sm font-medium transition-colors",
-                    isActive ? "text-indigo-900" : "text-slate-500"
+                    "text-sm font-bold transition-colors",
+                    isActive ? "text-emerald-400 drop-shadow-md" : "text-slate-500 group-hover:text-slate-400"
                 )}
             >
                 {currentStatus}

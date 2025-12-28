@@ -187,225 +187,222 @@ export default function LeaveManagement() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50/50">
-            <div className="p-4 sm:p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">
+        <div className="p-4 sm:p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">
 
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Leave Management</h2>
-                        <p className="text-slate-500 mt-1">
-                            {user?.role === 'user' ? 'Manage and track your leave requests.' : 'Review, approve, or reject employee leave requests.'}
-                        </p>
-                    </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                        {user?.role === 'user' && ( // Only employees see New Request
-                            <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
-                                <Plus className="w-4 h-4" />
-                                New Request
-                            </Button>
-                        )}
-                        <Button
-                            onClick={handleExport}
-                            variant="outline"
-                            className="w-full sm:w-auto gap-2 shadow-sm"
-                        >
-                            <Download className="w-4 h-4" />
-                            Export
-                        </Button>
-                    </div>
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 className="text-4xl font-black text-white tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-white">
+                        Leave Management
+                    </h2>
+                    <p className="text-slate-400 mt-2 text-lg">Track and manage employee leave requests.</p>
                 </div>
-
-                {/* Filters */}
-                <Card className="shadow-sm">
-                    <CardContent className="p-4 flex flex-col md:flex-row gap-4">
-                        <div className="relative flex-1">
-                            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                            <Input
-                                type="text"
-                                placeholder="Search by employee name..."
-                                className="w-full pl-9"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex gap-2 overflow-x-auto md:overflow-visible pb-1 md:pb-0">
-                            <div className="min-w-[150px]">
-                                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="w-full">
-                                        <div className="flex items-center gap-2">
-                                            <Filter className="w-4 h-4 text-slate-500" />
-                                            <SelectValue placeholder="All Statuses" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="All">Status: All</SelectItem>
-                                        <SelectItem value="Pending">Pending</SelectItem>
-                                        <SelectItem value="Approved">Approved</SelectItem>
-                                        <SelectItem value="Rejected">Rejected</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="min-w-[150px]">
-                                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                    <SelectTrigger className="w-full">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-slate-500" />
-                                            <SelectValue placeholder="Type: All" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="All">Type: All</SelectItem>
-                                        <SelectItem value="Sick Leave">Sick Leave</SelectItem>
-                                        <SelectItem value="Vacation">Vacation</SelectItem>
-                                        <SelectItem value="Personal">Personal</SelectItem>
-                                        <SelectItem value="Emergency">Emergency</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Desktop Table View */}
-                <div className="hidden md:block rounded-md border bg-white shadow-sm overflow-hidden">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                                <TableHead className="font-semibold text-slate-700">Employee</TableHead>
-                                <TableHead className="font-semibold text-slate-700">Type</TableHead>
-                                <TableHead className="font-semibold text-slate-700">Duration</TableHead>
-                                <TableHead className="font-semibold text-slate-700">Reason</TableHead>
-                                <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                                <TableHead className="font-semibold text-slate-700 text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredLeaves?.length > 0 ? (
-                                filteredLeaves.map((request) => (
-                                    <TableRow key={request.id} className="hover:bg-slate-50/80 transition-colors group">
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-9 w-9 border border-slate-100 shadow-sm">
-                                                    <AvatarImage src={request.avatar} />
-                                                    <AvatarFallback className="bg-indigo-50 text-indigo-600">{request.employeeName[0]}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <div className="font-medium text-slate-900">{request.employeeName}</div>
-                                                    <div className="text-xs text-slate-500">{request.position || 'Employee'}</div>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                                                {request.type}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="text-slate-900 font-medium">{request.days} Days</div>
-                                            <div className="text-xs text-slate-500">
-                                                {formatDate(request.startDate)} - {formatDate(request.endDate)}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <p className="text-slate-600 max-w-[200px] truncate" title={request.reason}>
-                                                {request.reason}
-                                            </p>
-                                        </TableCell>
-                                        <TableCell>
-                                            {getStatusBadge(request.status)}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {user?.role !== 'user' && ( // Only Admins can take actions
-                                                <div className="flex justify-end gap-2">
-                                                    {(request.status === 'Pending' || request.status === 'Rejected') && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleAction(request.id, 'Approved')}
-                                                            className="h-8 w-8 text-slate-400 hover:text-green-600 hover:bg-green-50"
-                                                            title="Approve"
-                                                        >
-                                                            <CheckCircle className="w-5 h-5" />
-                                                        </Button>
-                                                    )}
-                                                    {(request.status === 'Pending' || request.status === 'Approved') && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleAction(request.id, 'Rejected')}
-                                                            className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                                                            title="Reject"
-                                                        >
-                                                            <XCircle className="w-5 h-5" />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                                        No leave requests found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className="md:hidden space-y-4">
-                    {filteredLeaves?.length > 0 ? (
-                        filteredLeaves.map((request) => (
-                            <Card key={request.id} className="shadow-sm">
-                                {/* ... (Mobile card content similar to desktop, adapted) ... */}
-                                <CardContent className="p-4 space-y-4">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div>
-                                                <div className="font-semibold text-slate-900">{request.employeeName}</div>
-                                                <div className="text-xs text-slate-500">Employee</div>
-                                            </div>
-                                        </div>
-                                        {getStatusBadge(request.status)}
-                                    </div>
-                                    {/* ... details ... */}
-                                </CardContent>
-                            </Card>
-                        ))
-                    ) : (
-                        <div className="p-8 text-center text-slate-500 bg-white rounded-xl border border-slate-200">
-                            No leave requests found.
-                        </div>
-                    )}
-                </div>
-
+                <Button
+                    onClick={() => setIsModalOpen(true)}
+                    className="w-full sm:w-auto shadow-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white border-0 rounded-2xl px-6 py-6 h-auto font-bold text-base transition-all hover:scale-105"
+                >
+                    <Plus className="w-5 h-5 mr-2" />
+                    New Request
+                </Button>
             </div>
 
-            {/* New Request Modal */}
+            {/* Filters */}
+            <div className="bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-slate-700/50 shadow-xl relative z-50">
+                <div className="flex flex-col md:flex-row gap-6">
+                    <div className="flex-1 relative group">
+                        <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                        <Input
+                            placeholder="Search employees..."
+                            className="pl-12 pr-4 py-6 rounded-2xl bg-slate-800/50 border-slate-700/50 text-white placeholder:text-slate-500 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-md"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-full sm:w-[180px] h-auto py-3.5 rounded-2xl bg-slate-800/50 border-slate-700/50 text-white focus:ring-indigo-500/20">
+                                <div className="flex items-center gap-2">
+                                    <Filter className="w-4 h-4 text-indigo-400" />
+                                    <SelectValue placeholder="Status" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700 text-slate-300 rounded-xl z-[100]">
+                                <SelectItem value="All">All Status</SelectItem>
+                                <SelectItem value="Pending">Pending</SelectItem>
+                                <SelectItem value="Approved">Approved</SelectItem>
+                                <SelectItem value="Rejected">Rejected</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={typeFilter} onValueChange={setTypeFilter}>
+                            <SelectTrigger className="w-full sm:w-[180px] h-auto py-3.5 rounded-2xl bg-slate-800/50 border-slate-700/50 text-white focus:ring-indigo-500/20">
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-pink-400" />
+                                    <SelectValue placeholder="Type" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700 text-slate-300 rounded-xl z-[100]">
+                                <SelectItem value="All">All Types</SelectItem>
+                                <SelectItem value="Sick Leave">Sick Leave</SelectItem>
+                                <SelectItem value="Vacation">Vacation</SelectItem>
+                                <SelectItem value="Personal">Personal</SelectItem>
+                                <SelectItem value="Emergency">Emergency</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-slate-800/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-xl overflow-hidden">
+                <Table>
+                    <TableHeader className="bg-slate-800/80">
+                        <TableRow className="border-slate-700/50 hover:bg-transparent">
+                            <TableHead className="text-slate-300 font-bold">Employee</TableHead>
+                            <TableHead className="text-slate-300 font-bold">Type</TableHead>
+                            <TableHead className="text-slate-300 font-bold">Duration</TableHead>
+                            <TableHead className="text-slate-300 font-bold">Days</TableHead>
+                            <TableHead className="text-slate-300 font-bold">Status</TableHead>
+                            <TableHead className="text-right text-slate-300 font-bold">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center py-8 text-slate-400">
+                                    Loading leave requests...
+                                </TableCell>
+                            </TableRow>
+                        ) : filteredLeaves.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center py-8 text-slate-400">
+                                    No leave requests found
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            filteredLeaves.map((request) => (
+                                <TableRow key={request.id} className="border-slate-700/50 hover:bg-slate-700/30 transition-colors group">
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9 border border-slate-600/50 shadow-sm">
+                                                <AvatarImage src={request.avatar} />
+                                                <AvatarFallback className="bg-slate-700 text-slate-300">{request.employeeName[0]}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="font-semibold text-white">{request.employeeName}</div>
+                                                <div className="text-xs text-slate-400">{request.position || 'Employee'}</div>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-slate-700/50 text-slate-300 border border-slate-600/50">
+                                            {request.type}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="text-white font-medium">{request.days} Days</div>
+                                        <div className="text-xs text-slate-400">
+                                            {formatDate(request.startDate)} - {formatDate(request.endDate)}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <p className="text-slate-400 max-w-[200px] truncate" title={request.reason}>
+                                            {request.reason}
+                                        </p>
+                                    </TableCell>
+                                    <TableCell>
+                                        {getStatusBadge(request.status)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {user?.role !== 'user' && ( // Only Admins can take actions
+                                            <div className="flex justify-end gap-2">
+                                                {(request.status === 'Pending' || request.status === 'Rejected') && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleAction(request.id, 'Approved')}
+                                                        className="h-8 w-8 text-slate-400 hover:text-green-600 hover:bg-green-50"
+                                                        title="Approve"
+                                                    >
+                                                        <CheckCircle className="w-5 h-5" />
+                                                    </Button>
+                                                )}
+                                                {(request.status === 'Pending' || request.status === 'Approved') && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleAction(request.id, 'Rejected')}
+                                                        className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                                        title="Reject"
+                                                    >
+                                                        <XCircle className="w-5 h-5" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+                {filteredLeaves?.length > 0 ? (
+                    filteredLeaves.map((request) => (
+                        <Card key={request.id} className="shadow-lg bg-slate-800/50 backdrop-blur-xl border-slate-700/50">
+                            <CardContent className="p-4 space-y-4">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div>
+                                            <div className="font-bold text-white">{request.employeeName}</div>
+                                            <div className="text-xs text-slate-400">Employee</div>
+                                        </div>
+                                    </div>
+                                    {getStatusBadge(request.status)}
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <p className="text-xs text-slate-500 font-semibold mb-1">Type</p>
+                                        <p className="text-slate-300 font-medium">{request.type}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 font-semibold mb-1">Duration</p>
+                                        <p className="text-slate-300 font-medium">{request.days} Days</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                ) : (
+                    <div className="p-8 text-center text-slate-400 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                        No leave requests found.
+                    </div>
+                )}
+            </div>
+
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95">
-                        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="font-semibold text-slate-900">New Leave Request</h3>
-                            <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="h-8 w-8 rounded-full">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 border border-slate-800">
+                        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900">
+                            <h3 className="text-lg font-bold text-white">New Leave Request</h3>
+                            <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="h-8 w-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800">
                                 <X className="w-4 h-4" />
                             </Button>
                         </div>
-                        <form onSubmit={handleSubmitRequest} className="p-6 space-y-4">
+                        <form onSubmit={handleSubmitRequest} className="p-6 space-y-5">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Leave Type</label>
+                                <label className="text-sm font-semibold text-slate-300">Leave Type</label>
                                 <Select
                                     value={newRequest.type}
                                     onValueChange={(val) => setNewRequest({ ...newRequest, type: val })}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="bg-slate-800 border-slate-700 text-white focus:ring-indigo-500/50">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-slate-800 border-slate-700 text-slate-300">
                                         <SelectItem value="Sick Leave">Sick Leave</SelectItem>
                                         <SelectItem value="Vacation">Vacation</SelectItem>
                                         <SelectItem value="Personal">Personal</SelectItem>
@@ -416,19 +413,21 @@ export default function LeaveManagement() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-700">Start Date</label>
+                                    <label className="text-sm font-semibold text-slate-300">Start Date</label>
                                     <Input
                                         type="date"
                                         required
+                                        className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500/50"
                                         value={newRequest.startDate}
                                         onChange={(e) => setNewRequest({ ...newRequest, startDate: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-700">End Date</label>
+                                    <label className="text-sm font-semibold text-slate-300">End Date</label>
                                     <Input
                                         type="date"
                                         required
+                                        className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500/50"
                                         value={newRequest.endDate}
                                         onChange={(e) => setNewRequest({ ...newRequest, endDate: e.target.value })}
                                     />
@@ -436,9 +435,9 @@ export default function LeaveManagement() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Reason</label>
+                                <label className="text-sm font-semibold text-slate-300">Reason</label>
                                 <textarea
-                                    className="flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[100px]"
+                                    className="flex w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm ring-offset-slate-900 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 min-h-[100px] text-white"
                                     placeholder="Please provide a reason for your leave request..."
                                     required
                                     value={newRequest.reason}
@@ -446,9 +445,9 @@ export default function LeaveManagement() {
                                 />
                             </div>
 
-                            <div className="pt-2 flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">Submit Request</Button>
+                            <div className="pt-2 flex justify-end gap-3">
+                                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">Cancel</Button>
+                                <Button type="submit" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg border-0">Submit Request</Button>
                             </div>
                         </form>
                     </div>

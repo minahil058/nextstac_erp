@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mockDataService } from '../../../services/mockDataService';
 import {
@@ -129,10 +130,14 @@ export default function VendorList() {
         vendor.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (isLoading) return <div className="p-8 text-center">Loading vendors...</div>;
+    if (isLoading) return <div className="p-8 text-center text-slate-400">Loading vendors...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen"
+        >
             <VendorModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -150,28 +155,28 @@ export default function VendorList() {
                 variant="danger"
             />
 
-            <div className="p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">
+            <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 w-full">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Vendors</h2>
-                        <p className="text-slate-500 text-sm">Manage suppliers and partners</p>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Vendors</h2>
+                        <p className="text-slate-400 text-sm mt-1">Manage suppliers and partners</p>
                     </div>
                     <button
                         onClick={handleAddClick}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
+                        className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white rounded-xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95 border border-blue-400/20"
                     >
                         <Plus className="w-4 h-4" />
                         Add Vendor
                     </button>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div className="bg-slate-800/50 backdrop-blur-xl p-4 rounded-2xl border border-slate-700/50 shadow-xl">
                     <div className="relative">
-                        <Search className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
+                        <Search className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
                         <input
                             type="text"
                             placeholder="Search vendors..."
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-slate-200 placeholder:text-slate-500 transition-all font-medium"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -183,46 +188,53 @@ export default function VendorList() {
                         <div className="col-span-full text-center py-12 text-slate-500">
                             No vendors found.
                         </div>
-                    ) : filteredVendors?.map((vendor) => (
-                        <div key={vendor.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                    ) : filteredVendors?.map((vendor, index) => (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.1 }}
+                            key={vendor.id}
+                            className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700/50 shadow-lg hover:shadow-2xl hover:bg-slate-800/80 transition-all p-6 group"
+                        >
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-blue-500/10 rounded-2xl border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-500/10">
                                         <Store className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-900 truncate max-w-[150px]">{vendor.companyName}</h3>
-                                        <div className="flex items-center gap-1 text-amber-500">
-                                            <Star className="w-3 h-3 fill-current" />
-                                            <span className="text-xs font-bold text-slate-600">{vendor.rating || 5}.0</span>
+                                        <h3 className="font-bold text-white truncate max-w-[150px] text-lg leading-tight">{vendor.companyName}</h3>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                                            <span className="text-xs font-bold text-slate-400">{vendor.rating || 5}.0</span>
                                         </div>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => handleDeleteClick(vendor)}
-                                    className="text-slate-400 hover:text-red-600 p-1 rounded-full hover:bg-red-50 transition-colors"
+                                    className="text-slate-500 hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 transition-colors active:scale-95"
                                     title="Delete Vendor"
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            <div className="space-y-3 mb-6">
-                                <div className="flex items-center gap-3 text-sm text-slate-600">
-                                    <span className="w-20 text-slate-400">Contact:</span>
-                                    <span className="font-medium text-slate-900">{vendor.contactPerson}</span>
+                            <div className="space-y-4 mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700/30">
+                                <div className="flex items-center gap-3 text-sm">
+                                    <span className="w-20 text-slate-500 font-medium text-xs uppercase tracking-wide">Contact</span>
+                                    <span className="font-semibold text-slate-200">{vendor.contactPerson}</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm text-slate-600">
-                                    <span className="w-20 text-slate-400">Phone:</span>
-                                    <span>{vendor.phone}</span>
+                                <div className="flex items-center gap-3 text-sm">
+                                    <span className="w-20 text-slate-500 font-medium text-xs uppercase tracking-wide">Phone</span>
+                                    <span className="text-slate-300 font-mono">{vendor.phone}</span>
                                 </div>
-                                <div className="flex items-start gap-3 text-sm text-slate-600">
-                                    <span className="w-20 text-slate-400 shrink-0">Address:</span>
-                                    <span className="truncate">{vendor.address}</span>
+                                <div className="flex items-start gap-3 text-sm">
+                                    <span className="w-20 text-slate-500 font-medium text-xs uppercase tracking-wide shrink-0">Address</span>
+                                    <span className="truncate text-slate-300">{vendor.address}</span>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                            <div className="pt-4 border-t border-slate-700/50 flex items-center justify-between">
                                 <StatusToggle
                                     currentStatus={vendor.status || 'Active'}
                                     onUpdate={(newStatus) => updateStatusMutation.mutate({ id: vendor.id, status: newStatus })}
@@ -231,16 +243,16 @@ export default function VendorList() {
                                 />
                                 <button
                                     onClick={() => handleEditClick(vendor)}
-                                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                                    className="text-sm font-bold text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg border border-blue-500/20"
                                 >
                                     View Details
                                 </button>
                             </div>
-                        </div>
+                        </motion.div>
                     ))
                     }
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

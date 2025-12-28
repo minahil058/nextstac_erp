@@ -202,31 +202,31 @@ export default function DashboardLayout() {
             </aside>
 
             {/* Main Content Wrapper */}
-            <div className="flex-1 md:ml-64 flex flex-col min-h-screen transition-all duration-300 bg-slate-50/50">
+            <div className="flex-1 md:ml-64 flex flex-col min-h-screen transition-all duration-300 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
 
                 {/* Header */}
-                <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between shadow-sm transition-all">
+                <header className="h-16 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between shadow-xl transition-all">
                     <button
-                        className="md:hidden p-1.5 -ml-1 text-slate-600 hover:bg-slate-100 rounded-md"
+                        className="md:hidden p-1.5 -ml-1 text-slate-300 hover:bg-slate-700/50 rounded-md"
                         onClick={() => setIsMobileMenuOpen(true)}
                     >
                         <Menu className="w-5 h-5" />
                     </button>
 
                     <div className="flex items-center gap-3 ml-auto">
-                        <button className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors relative">
+                        <button className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-full transition-colors relative">
                             <Bell className="w-4 h-4" />
-                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
+                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-slate-800"></span>
                         </button>
-                        <div className="flex items-center gap-3 border-l border-slate-200 pl-4 ml-2">
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-100 to-purple-100 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-indigo-700 font-bold text-xs">
+                        <div className="flex items-center gap-3 border-l border-slate-700/50 pl-4 ml-2">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[2px]">
+                                <div className="w-full h-full rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xs">
                                     AD
                                 </div>
                             </div>
                             <div className="hidden sm:block leading-tight">
-                                <p className="font-semibold text-slate-700 text-sm">Admin User</p>
-                                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Administrator</p>
+                                <p className="font-semibold text-white text-sm">Admin User</p>
+                                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Administrator</p>
                             </div>
                         </div>
                     </div>

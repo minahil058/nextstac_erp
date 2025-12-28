@@ -32,36 +32,43 @@ export default function SalaryHistoryChart({ data }) {
                 >
                     <defs>
                         <linearGradient id="colorSalary" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1} />
-                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
                     <XAxis
                         dataKey="date"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 12 }}
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
                         dy={10}
                     />
                     <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 12 }}
+                        tick={{ fill: '#94a3b8', fontSize: 12 }}
                         tickFormatter={(value) => `$${value / 1000}k`}
                     />
                     <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{
+                            backgroundColor: '#1e293b',
+                            borderRadius: '12px',
+                            border: '1px solid #334155',
+                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.5)',
+                            color: '#e2e8f0'
+                        }}
+                        itemStyle={{ color: '#10b981' }}
                         formatter={(value) => [`$${value.toLocaleString()}`, 'Salary']}
                     />
                     <Area
                         type="monotone"
                         dataKey="amount"
-                        stroke="#6366f1"
+                        stroke="#10b981"
                         strokeWidth={3}
                         fillOpacity={1}
                         fill="url(#colorSalary)"
-                        activeDot={{ r: 6, strokeWidth: 0, fill: '#4f46e5' }}
+                        activeDot={{ r: 6, strokeWidth: 0, fill: '#059669', stroke: '#fff' }}
                     />
                 </AreaChart>
             </ResponsiveContainer>

@@ -1,12 +1,9 @@
 import { motion } from 'framer-motion';
-import { Outlet } from 'react-router-dom';
-import FinanceHeader from '../components/FinanceHeader';
 
-// Floating Orbs Component
-const FloatingOrbs = () => {
+export const FloatingOrbs = ({ count = 15, className = "" }) => {
     return (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(15)].map((_, i) => (
+        <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}>
+            {[...Array(count)].map((_, i) => (
                 <motion.div
                     key={i}
                     className="absolute rounded-full bg-gradient-to-br from-indigo-400/20 to-purple-400/20 blur-xl"
@@ -33,10 +30,9 @@ const FloatingOrbs = () => {
     );
 };
 
-// Animated Grid Background
-const AnimatedGrid = () => {
+export const AnimatedGrid = ({ className = "" }) => {
     return (
-        <div className="absolute inset-0 overflow-hidden opacity-20">
+        <div className={`absolute inset-0 overflow-hidden opacity-20 ${className}`}>
             <div
                 className="absolute inset-0"
                 style={{
@@ -50,18 +46,3 @@ const AnimatedGrid = () => {
         </div>
     );
 };
-
-const FinanceLayout = () => {
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 relative">
-            <FloatingOrbs />
-            <AnimatedGrid />
-            <div className="relative z-10">
-                <FinanceHeader />
-                <Outlet />
-            </div>
-        </div>
-    );
-};
-
-export default FinanceLayout;
