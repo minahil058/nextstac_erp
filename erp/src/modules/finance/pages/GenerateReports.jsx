@@ -245,34 +245,34 @@ export default function GenerateReports() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900">Generate Reports</h2>
-                    <p className="text-xs text-slate-500">Select a time period and download your financial reports</p>
+                    <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-white drop-shadow-sm">Generate Reports</h2>
+                    <p className="text-sm text-slate-400 mt-1">Select a time period and download your financial reports</p>
                 </div>
 
                 {/* Quick Report Dropdown */}
                 <div className="relative group">
-                    <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md text-xs font-bold border border-indigo-100 hover:bg-indigo-100 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-xs font-bold shadow-lg hover:shadow-indigo-500/25 transition-all hover:scale-105">
                         <FileText className="w-4 h-4" />
                         Quick Report
                         <ChevronDown className="w-3 h-3" />
                     </button>
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white shadow-xl rounded-lg border border-slate-100 hidden group-hover:block z-10 p-1">
-                        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/50 mb-1">Current Period</div>
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900 shadow-2xl rounded-2xl border border-slate-700 hidden group-hover:block z-20 p-2 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-800/50 rounded-lg mb-1">Current Period</div>
                         {['This Week', 'This Month', 'This Year'].map(p => (
                             <button
                                 key={p}
                                 onClick={() => { setPeriod(p.toLowerCase().replace(' ', '_')); setActiveTab('preset'); }}
-                                className="w-full text-left px-3 py-2 text-xs font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors"
+                                className="w-full text-left px-3 py-2 text-xs font-bold text-slate-300 hover:bg-indigo-600/20 hover:text-indigo-300 rounded-lg transition-colors"
                             >
                                 {p}
                             </button>
                         ))}
-                        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/50 mt-1 mb-1">Previous Period</div>
+                        <div className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-800/50 rounded-lg mt-1 mb-1">Previous Period</div>
                         {['Last Week', 'Last Month', 'Last Year'].map(p => (
                             <button
                                 key={p}
                                 onClick={() => { setPeriod(p.toLowerCase().replace(' ', '_')); setActiveTab('preset'); }}
-                                className="w-full text-left px-3 py-2 text-xs font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors"
+                                className="w-full text-left px-3 py-2 text-xs font-bold text-slate-300 hover:bg-indigo-600/20 hover:text-indigo-300 rounded-lg transition-colors"
                             >
                                 {p}
                             </button>
@@ -282,31 +282,31 @@ export default function GenerateReports() {
             </div>
 
             {/* Main Selection Area */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-xl overflow-hidden">
                 {/* Tab Header */}
-                <div className="flex border-b border-slate-200">
+                <div className="flex border-b border-slate-700/50">
                     <button
                         onClick={() => setActiveTab('preset')}
-                        className={`flex-1 py-4 text-sm font-bold text-center transition-colors relative ${activeTab === 'preset' ? 'text-indigo-600 bg-indigo-50/10' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                        className={`flex-1 py-4 text-sm font-bold text-center transition-all relative ${activeTab === 'preset' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                             }`}
                     >
                         Preset Periods
-                        {activeTab === 'preset' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"></div>}
+                        {activeTab === 'preset' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>}
                     </button>
                     <button
                         onClick={() => setActiveTab('custom')}
-                        className={`flex-1 py-4 text-sm font-bold text-center transition-colors relative ${activeTab === 'custom' ? 'text-indigo-600 bg-indigo-50/10' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                        className={`flex-1 py-4 text-sm font-bold text-center transition-all relative ${activeTab === 'custom' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                             }`}
                     >
                         Custom Date Range
-                        {activeTab === 'custom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"></div>}
+                        {activeTab === 'custom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>}
                     </button>
                 </div>
 
                 {/* Tab Content */}
                 <div className="p-6">
                     {activeTab === 'preset' ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {[
                                 { id: 'this_week', label: 'This Week', sub: 'Current week' },
                                 { id: 'this_month', label: 'This Month', sub: 'Current month' },
@@ -317,14 +317,14 @@ export default function GenerateReports() {
                                     key={p.id}
                                     onClick={() => setPeriod(p.id)}
                                     className={`
-                                        flex flex-col items-center justify-center py-4 px-3 rounded-lg border transition-all text-center
+                                        flex flex-col items-center justify-center py-5 px-3 rounded-2xl border transition-all text-center group
                                         ${period === p.id
-                                            ? 'bg-white border-indigo-500 shadow-md ring-1 ring-indigo-500'
-                                            : 'bg-slate-50 border-slate-100 hover:bg-white hover:border-slate-200'}
+                                            ? 'bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-500/25'
+                                            : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50 hover:border-slate-600'}
                                     `}
                                 >
-                                    <span className={`text-xs font-bold ${period === p.id ? 'text-indigo-700' : 'text-slate-700'}`}>{p.label}</span>
-                                    <span className="text-[10px] text-slate-400 mt-1">{p.sub}</span>
+                                    <span className={`text-sm font-bold ${period === p.id ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>{p.label}</span>
+                                    <span className={`text-[10px] mt-1 ${period === p.id ? 'text-indigo-200' : 'text-slate-500'}`}>{p.sub}</span>
                                 </button>
                             ))}
                         </div>
@@ -345,7 +345,7 @@ export default function GenerateReports() {
                                         <button
                                             key={qs.label}
                                             onClick={() => handleQuickSelect(qs.months)}
-                                            className="px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 rounded text-xs font-semibold text-slate-600 transition-colors"
+                                            className="px-4 py-2 bg-slate-800 hover:bg-indigo-600 hover:text-white border border-slate-700/50 rounded-xl text-xs font-bold text-slate-400 transition-all hover:scale-105"
                                         >
                                             {qs.label}
                                         </button>
@@ -353,27 +353,26 @@ export default function GenerateReports() {
                                 </div>
                             </div>
 
-                            {/* Date Inputs */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-700">Start Date</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Start Date</label>
                                     <div className="relative">
                                         <input
                                             type="date"
                                             value={customStart}
                                             onChange={(e) => setCustomStart(e.target.value)}
-                                            className="w-full h-10 px-3 pl-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 font-medium"
+                                            className="w-full h-12 px-4 text-sm bg-slate-900/50 border border-slate-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-white font-medium shadow-inner"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-700">End Date</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">End Date</label>
                                     <div className="relative">
                                         <input
                                             type="date"
                                             value={customEnd}
                                             onChange={(e) => setCustomEnd(e.target.value)}
-                                            className="w-full h-10 px-3 pl-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 font-medium"
+                                            className="w-full h-12 px-4 text-sm bg-slate-900/50 border border-slate-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-white font-medium shadow-inner"
                                         />
                                     </div>
                                 </div>
@@ -384,18 +383,18 @@ export default function GenerateReports() {
             </div>
 
             {/* Main Report Card */}
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-700/50 overflow-hidden">
                 {/* Header */}
-                <div className="bg-slate-900 p-6 flex items-start justify-between">
+                <div className="bg-slate-900/80 p-6 flex items-start justify-between border-b border-slate-700/50">
                     <div>
-                        <h3 className="text-xl font-bold text-white mb-1 capitalize">
+                        <h3 className="text-2xl font-black text-white mb-1 capitalize tracking-tight">
                             {activeTab === 'custom' ? 'Custom Financial Report' : `${period.replace('_', ' ')} Report`}
                         </h3>
-                        <p className="text-slate-400 text-xs font-mono">
+                        <p className="text-slate-400 text-xs font-mono bg-slate-800 px-3 py-1 rounded-lg w-fit mt-2 border border-slate-700">
                             {formatDate(start)} - {formatDate(end)}
                         </p>
                     </div>
-                    <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center gap-2">
+                    <div className="px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
                         <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">Books Balanced</span>
                     </div>
@@ -404,93 +403,93 @@ export default function GenerateReports() {
                 <div className="p-6 space-y-8">
                     {/* KPI Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
-                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Revenue</p>
-                            <p className="text-2xl font-black text-emerald-900 tracking-tight">{formatCurrency(stats.revenue)}</p>
+                        <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl group hover:bg-emerald-500/20 transition-colors">
+                            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">Revenue</p>
+                            <p className="text-3xl font-black text-white tracking-tight">{formatCurrency(stats.revenue)}</p>
                         </div>
-                        <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl">
-                            <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest mb-1">Expenses</p>
-                            <p className="text-2xl font-black text-rose-900 tracking-tight">{formatCurrency(stats.expenses)}</p>
+                        <div className="p-5 bg-rose-500/10 border border-rose-500/20 rounded-2xl group hover:bg-rose-500/20 transition-colors">
+                            <p className="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2">Expenses</p>
+                            <p className="text-3xl font-black text-white tracking-tight">{formatCurrency(stats.expenses)}</p>
                         </div>
-                        <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
-                            <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-1">Net Profit</p>
-                            <p className={`text-2xl font-black tracking-tight ${stats.net >= 0 ? 'text-indigo-900' : 'text-rose-900'}`}>
+                        <div className="p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl group hover:bg-indigo-500/20 transition-colors">
+                            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">Net Profit</p>
+                            <p className={`text-3xl font-black tracking-tight ${stats.net >= 0 ? 'text-indigo-400' : 'text-rose-400'}`}>
                                 {formatCurrency(stats.net)}
                             </p>
                         </div>
-                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Transactions</p>
-                            <p className="text-2xl font-black text-slate-800 tracking-tight">{stats.count}</p>
+                        <div className="p-5 bg-slate-700/30 border border-slate-600/30 rounded-2xl hover:bg-slate-700/50 transition-colors">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Transactions</p>
+                            <p className="text-3xl font-black text-white tracking-tight">{stats.count}</p>
                         </div>
                     </div>
 
                     {/* Summary Row */}
-                    <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-b border-slate-100 py-6 text-center">
+                    <div className="grid grid-cols-3 divide-x divide-slate-700/50 border-t border-b border-slate-700/50 py-6 text-center">
                         <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Assets</p>
-                            <p className="text-lg font-bold text-slate-700">{formatCurrency(stats.assets)}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Assets</p>
+                            <p className="text-xl font-bold text-slate-300">{formatCurrency(stats.assets)}</p>
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Liabilities</p>
-                            <p className="text-lg font-bold text-slate-700">{formatCurrency(stats.liabilities)}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Liabilities</p>
+                            <p className="text-xl font-bold text-slate-300">{formatCurrency(stats.liabilities)}</p>
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Equity</p>
-                            <p className="text-lg font-bold text-slate-700">{formatCurrency(stats.equity)}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Equity</p>
+                            <p className="text-xl font-bold text-slate-300">{formatCurrency(stats.equity)}</p>
                         </div>
                     </div>
 
                     {/* Trial Balance Table Preview */}
                     <div>
-                        <h4 className="text-sm font-bold text-slate-800 mb-4">Trial Balance Summary</h4>
-                        <div className="border border-slate-200 rounded-lg overflow-hidden">
+                        <h4 className="text-sm font-bold text-white mb-4">Trial Balance Summary</h4>
+                        <div className="border border-slate-700/50 rounded-2xl overflow-hidden shadow-inner">
                             <table className="w-full text-xs">
-                                <thead className="bg-slate-50">
+                                <thead className="bg-slate-900/50">
                                     <tr>
-                                        <th className="text-left py-3 px-4 font-bold text-slate-600 uppercase tracking-wider">Account</th>
-                                        <th className="text-left py-3 px-4 font-bold text-slate-600 uppercase tracking-wider">Type</th>
-                                        <th className="text-right py-3 px-4 font-bold text-slate-600 uppercase tracking-wider">Debit</th>
-                                        <th className="text-right py-3 px-4 font-bold text-slate-600 uppercase tracking-wider">Credit</th>
+                                        <th className="text-left py-4 px-6 font-bold text-slate-400 uppercase tracking-wider">Account</th>
+                                        <th className="text-left py-4 px-6 font-bold text-slate-400 uppercase tracking-wider">Type</th>
+                                        <th className="text-right py-4 px-6 font-bold text-slate-400 uppercase tracking-wider">Debit</th>
+                                        <th className="text-right py-4 px-6 font-bold text-slate-400 uppercase tracking-wider">Credit</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-slate-700/50 bg-slate-800/30">
                                     {trialBalanceData.slice(0, 5).map(acc => (
-                                        <tr key={acc.id} className="hover:bg-slate-50/50">
-                                            <td className="py-2.5 px-4 font-medium text-slate-700">{acc.name}</td>
-                                            <td className="py-2.5 px-4">
+                                        <tr key={acc.id} className="hover:bg-slate-700/30 transition-colors">
+                                            <td className="py-3.5 px-6 font-medium text-slate-300">{acc.name}</td>
+                                            <td className="py-3.5 px-6">
                                                 <span className={`
-                                                    px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide
-                                                    ${acc.type === 'Asset' ? 'bg-blue-50 text-blue-600' : ''}
-                                                    ${acc.type === 'Liability' ? 'bg-amber-50 text-amber-600' : ''}
-                                                    ${acc.type === 'Equity' ? 'bg-purple-50 text-purple-600' : ''}
-                                                    ${acc.type === 'Revenue' ? 'bg-emerald-50 text-emerald-600' : ''}
-                                                    ${acc.type === 'Expense' ? 'bg-rose-50 text-rose-600' : ''}
+                                                    px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border
+                                                    ${acc.type === 'Asset' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : ''}
+                                                    ${acc.type === 'Liability' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : ''}
+                                                    ${acc.type === 'Equity' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : ''}
+                                                    ${acc.type === 'Revenue' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : ''}
+                                                    ${acc.type === 'Expense' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : ''}
                                                 `}>
                                                     {acc.type}
                                                 </span>
                                             </td>
-                                            <td className="py-2.5 px-4 text-right font-mono text-slate-600">
+                                            <td className="py-3.5 px-6 text-right font-mono text-slate-400">
                                                 {acc.balanceType === 'Debit' ? formatCurrency(acc.balanceAmount) : '-'}
                                             </td>
-                                            <td className="py-2.5 px-4 text-right font-mono text-slate-600">
+                                            <td className="py-3.5 px-6 text-right font-mono text-slate-400">
                                                 {acc.balanceType === 'Credit' ? formatCurrency(acc.balanceAmount) : '-'}
                                             </td>
                                         </tr>
                                     ))}
                                     {trialBalanceData.length > 5 && (
                                         <tr>
-                                            <td colSpan={4} className="py-2 px-4 text-center text-slate-400 italic">
+                                            <td colSpan={4} className="py-3 px-6 text-center text-slate-500 italic border-t border-slate-700/50">
                                                 ... {trialBalanceData.length - 5} more accounts ...
                                             </td>
                                         </tr>
                                     )}
-                                    <tr className="bg-slate-50 font-bold border-t border-slate-200">
-                                        <td className="py-3 px-4 text-slate-900">Total</td>
+                                    <tr className="bg-slate-900/50 font-bold border-t border-slate-700/50">
+                                        <td className="py-4 px-6 text-white">Total</td>
                                         <td></td>
-                                        <td className="py-3 px-4 text-right text-slate-900">
+                                        <td className="py-4 px-6 text-right text-indigo-300">
                                             {formatCurrency(trialBalanceData.reduce((s, a) => s + (a.balanceType === 'Debit' ? a.balanceAmount : 0), 0))}
                                         </td>
-                                        <td className="py-3 px-4 text-right text-slate-900">
+                                        <td className="py-4 px-6 text-right text-indigo-300">
                                             {formatCurrency(trialBalanceData.reduce((s, a) => s + (a.balanceType === 'Credit' ? a.balanceAmount : 0), 0))}
                                         </td>
                                     </tr>
@@ -501,35 +500,35 @@ export default function GenerateReports() {
                 </div>
 
                 {/* Actions */}
-                <div className="bg-slate-50 p-6 border-t border-slate-200 flex flex-col sm:flex-row gap-3">
+                <div className="bg-slate-900/50 border-t border-slate-700/50 p-6 flex flex-col sm:flex-row gap-4">
                     <button
                         onClick={handleDownloadPDF}
-                        className="flex-1 flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition-colors shadow-sm active:scale-[0.98]"
+                        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-red-600 text-white font-bold py-4 rounded-2xl hover:from-rose-500 hover:to-red-500 transition-all shadow-lg shadow-rose-900/20 active:scale-[0.98] group"
                     >
-                        <FileText className="w-5 h-5" />
+                        <FileText className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         Download PDF Report
                     </button>
                     <button
                         onClick={handleExportExcel}
-                        className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm active:scale-[0.98]"
+                        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold py-4 rounded-2xl hover:from-emerald-500 hover:to-teal-500 transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.98] group"
                     >
-                        <Download className="w-5 h-5" />
+                        <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         Export to Excel
                     </button>
                 </div>
             </div>
 
             {/* Footer Note */}
-            <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 flex gap-3">
-                <div className="mt-0.5">
-                    <Activity className="w-5 h-5 text-indigo-500" />
+            <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-2xl p-6 flex gap-4">
+                <div className="mt-1 bg-indigo-500/20 p-2 rounded-lg h-fit">
+                    <Activity className="w-5 h-5 text-indigo-400" />
                 </div>
                 <div>
-                    <h5 className="text-xs font-bold text-indigo-900 uppercase tracking-wide mb-1">Report Contents & Automatic Reports</h5>
-                    <p className="text-[11px] text-indigo-700/80 leading-relaxed">
+                    <h5 className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-2">Report Contents & Automatic Reports</h5>
+                    <p className="text-sm text-indigo-200/70 leading-relaxed font-medium">
                         Each report includes: Executive Summary, Trial Balance, Income Statement, Balance Sheet, and Transaction Details.
                         <br />
-                        <span className="font-bold">Auto Popups:</span> Weekly reports appear every Sunday, Monthly on the 1st, and Yearly on January 1st.
+                        <span className="text-indigo-200">Auto Popups:</span> Weekly reports appear every Sunday, Monthly on the 1st, and Yearly on January 1st.
                     </p>
                 </div>
             </div>

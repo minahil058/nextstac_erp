@@ -17,39 +17,63 @@ const LedgerDashboard = ({ onAccountClick, accounts }) => {
     const getGroupConfig = (type) => {
         switch (type) {
             case 'Asset': return {
-                color: 'bg-blue-600',
-                border: 'border-blue-200',
+                color: 'bg-indigo-500',
+                text: 'text-indigo-400',
+                border: 'border-indigo-500/30',
                 badgeText: 'DEBIT',
+                badgeBg: 'bg-indigo-500/10',
+                badgeColor: 'text-indigo-400',
+                iconBg: 'bg-indigo-500/20',
                 icon: Wallet
             };
             case 'Liability': return {
-                color: 'bg-red-600',
-                border: 'border-red-200',
+                color: 'bg-rose-500',
+                text: 'text-rose-400',
+                border: 'border-rose-500/30',
                 badgeText: 'CREDIT',
+                badgeBg: 'bg-rose-500/10',
+                badgeColor: 'text-rose-400',
+                iconBg: 'bg-rose-500/20',
                 icon: CreditCard
             };
             case 'Equity': return {
-                color: 'bg-purple-600',
-                border: 'border-purple-200',
+                color: 'bg-violet-500',
+                text: 'text-violet-400',
+                border: 'border-violet-500/30',
                 badgeText: 'CREDIT',
+                badgeBg: 'bg-violet-500/10',
+                badgeColor: 'text-violet-400',
+                iconBg: 'bg-violet-500/20',
                 icon: Building2
             };
             case 'Revenue': return {
-                color: 'bg-emerald-600',
-                border: 'border-emerald-200',
+                color: 'bg-emerald-500',
+                text: 'text-emerald-400',
+                border: 'border-emerald-500/30',
                 badgeText: 'CREDIT',
+                badgeBg: 'bg-emerald-500/10',
+                badgeColor: 'text-emerald-400',
+                iconBg: 'bg-emerald-500/20',
                 icon: TrendingUp
             };
             case 'Expense': return {
-                color: 'bg-amber-600',
-                border: 'border-amber-200',
+                color: 'bg-amber-500',
+                text: 'text-amber-400',
+                border: 'border-amber-500/30',
                 badgeText: 'DEBIT',
+                badgeBg: 'bg-amber-500/10',
+                badgeColor: 'text-amber-400',
+                iconBg: 'bg-amber-500/20',
                 icon: TrendingDown
             };
             default: return {
-                color: 'bg-slate-600',
-                border: 'border-slate-200',
+                color: 'bg-slate-500',
+                text: 'text-slate-400',
+                border: 'border-slate-500/30',
                 badgeText: '---',
+                badgeBg: 'bg-slate-500/10',
+                badgeColor: 'text-slate-400',
+                iconBg: 'bg-slate-500/20',
                 icon: Coins
             };
         }
@@ -66,9 +90,9 @@ const LedgerDashboard = ({ onAccountClick, accounts }) => {
                     <div key={type} className="space-y-4">
                         {/* Section Header */}
                         <div className="flex items-center gap-3">
-                            <div className={`w-1.5 h-6 rounded-full ${config.color}`}></div>
-                            <h3 className="text-lg font-bold text-slate-900">{type} Accounts</h3>
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white border border-slate-200 text-slate-600 shadow-sm">
+                            <div className={`w-1.5 h-6 rounded-full ${config.color} shadow-[0_0_10px_rgba(255,255,255,0.3)]`}></div>
+                            <h3 className="text-lg font-bold text-white tracking-tight">{type} Accounts</h3>
+                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-800 border border-slate-700 text-slate-400 shadow-sm">
                                 {groupAccounts.length}
                             </span>
                         </div>
@@ -78,29 +102,29 @@ const LedgerDashboard = ({ onAccountClick, accounts }) => {
                             {groupAccounts.map(account => (
                                 <div
                                     key={account.id}
-                                    className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative group cursor-pointer"
+                                    className={`bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 shadow-lg hover:shadow-xl hover:bg-slate-800/60 transition-all relative group cursor-pointer hover:border-slate-600`}
                                     onClick={() => onAccountClick(account)}
                                 >
                                     {/* Debit/Credit Indicator */}
-                                    <div className="absolute top-6 right-6 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                                    <div className={`absolute top-6 right-6 text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded-lg ${config.badgeBg} ${config.badgeColor} border border-transparent group-hover:border-current/10 transition-colors`}>
                                         {config.badgeText}
                                     </div>
 
                                     {/* Icon */}
-                                    <div className="mb-4 text-slate-400 group-hover:text-slate-600 transition-colors">
-                                        <Icon className="w-6 h-6 stroke-1" />
+                                    <div className={`mb-4 w-12 h-12 rounded-xl flex items-center justify-center ${config.iconBg} ${config.text} group-hover:scale-110 transition-transform duration-300`}>
+                                        <Icon className="w-6 h-6 stroke-2" />
                                     </div>
 
                                     {/* Content */}
                                     <div className="mb-6">
-                                        <h4 className="font-bold text-slate-900 text-lg mb-1">{account.name}</h4>
-                                        <p className="text-xs text-slate-400 font-mono">ID: #{account.id.substring(0, 8)}</p>
+                                        <h4 className="font-bold text-white text-lg mb-1 truncate">{account.name}</h4>
+                                        <p className="text-xs text-slate-500 font-mono">ID: #{account.id.substring(0, 8)}</p>
                                     </div>
 
                                     {/* Footer Link */}
-                                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                                        <span className="text-xs font-semibold text-slate-600">View Ledger</span>
-                                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                                    <div className="pt-4 border-t border-slate-700/50 flex items-center justify-between">
+                                        <span className="text-xs font-bold text-slate-400 group-hover:text-white transition-colors">View Ledger</span>
+                                        <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
                                     </div>
                                 </div>
                             ))}

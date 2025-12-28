@@ -13,26 +13,26 @@ const HRHeader = () => {
     ];
 
     return (
-        <div className="bg-white border-b border-slate-200 sticky top-0 z-10 font-[Inter]">
+        <div className="bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-10">
             <div className="px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-rose-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm shadow-rose-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg border border-emerald-400/20">
                             H
                         </div>
                         <div>
-                            <h1 className="text-lg font-extrabold text-slate-900 leading-tight tracking-tight">
-                                Human Resources
+                            <h1 className="text-xl font-black text-white leading-tight tracking-tight">
+                                HR & Employees
                             </h1>
-                            <span className="text-[10px] font-bold text-rose-600 uppercase tracking-widest bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100">
-                                Personnel
+                            <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                                Management
                             </span>
                         </div>
                     </div>
 
-                    <div className="h-8 w-px bg-slate-200 mx-2 hidden lg:block"></div>
+                    <div className="h-8 w-px bg-slate-700/50 mx-2 hidden sm:block"></div>
 
-                    <nav className="hidden lg:flex items-center gap-1">
+                    <nav className="hidden sm:flex items-center gap-1">
                         {navItems.map((item) => (
                             <NavLink
                                 key={item.path}
@@ -41,8 +41,8 @@ const HRHeader = () => {
                                 className={({ isActive }) => clsx(
                                     "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                                     isActive
-                                        ? "bg-slate-100 text-slate-900 shadow-sm ring-1 ring-slate-200"
-                                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                                        ? "bg-emerald-600 text-white shadow-lg"
+                                        : "text-slate-400 hover:text-white hover:bg-slate-700/50"
                                 )}
                             >
                                 {item.label}
@@ -52,7 +52,7 @@ const HRHeader = () => {
                 </div>
             </div>
             {/* Mobile Nav */}
-            <div className="lg:hidden overflow-x-auto pb-3 px-4 flex gap-2 no-scrollbar">
+            <div className="sm:hidden overflow-x-auto pb-3 px-4 flex gap-2 no-scrollbar">
                 {navItems.map((item) => (
                     <NavLink
                         key={item.path}
@@ -61,8 +61,8 @@ const HRHeader = () => {
                         className={({ isActive }) => clsx(
                             "flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
                             isActive
-                                ? "bg-slate-900 text-white border-slate-900"
-                                : "bg-white text-slate-500 border-slate-200"
+                                ? "bg-emerald-600 text-white border-emerald-600"
+                                : "bg-slate-700/50 text-slate-300 border-slate-600/50"
                         )}
                     >
                         {item.label}

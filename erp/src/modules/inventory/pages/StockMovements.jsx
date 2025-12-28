@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mockDataService } from '../../../services/mockDataService';
 import {
@@ -70,10 +71,14 @@ export default function StockMovements() {
         return matchesSearch && matchesType;
     });
 
-    if (isLoading) return <div className="p-8 text-center">Loading stock history...</div>;
+    if (isLoading) return <div className="p-8 text-center text-slate-400">Loading stock history...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen"
+        >
             <StockAdjustmentModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -90,27 +95,27 @@ export default function StockMovements() {
                 variant="danger"
             />
 
-            <div className="p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">
+            <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 w-full">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Stock Movements</h2>
-                        <p className="text-slate-500 text-sm">Track inventory logs and transfers</p>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Stock Movements</h2>
+                        <p className="text-slate-400 text-sm mt-1">Track inventory logs and transfers</p>
                     </div>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-lg flex items-center gap-2 font-medium transition-all shadow-sm">
+                        className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-white rounded-xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-teal-500/20 active:scale-95 border border-teal-400/20">
                         <Plus className="w-4 h-4" />
                         New Adjustment
                     </button>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4">
+                <div className="bg-slate-800/50 backdrop-blur-xl p-4 rounded-2xl border border-slate-700/50 shadow-xl flex flex-col md:flex-row gap-4 relative z-30">
                     <div className="relative flex-1">
                         <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
                             placeholder="Search by product or reference..."
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/50 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none text-slate-200 placeholder:text-slate-500 transition-all font-medium"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -120,9 +125,9 @@ export default function StockMovements() {
                     <div className="relative">
                         <button
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
-                            className={`px-4 py-2 border rounded-lg flex items-center gap-2 font-medium transition-all ${typeFilter !== 'All'
-                                ? 'border-indigo-600 text-indigo-600 bg-indigo-50'
-                                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                            className={`px-4 py-2.5 border rounded-xl flex items-center gap-2 font-medium transition-all ${typeFilter !== 'All'
+                                ? 'border-teal-500/50 text-teal-400 bg-teal-500/10'
+                                : 'border-slate-700/50 text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
                                 }`}
                         >
                             <Filter className="w-4 h-4" />
@@ -132,7 +137,7 @@ export default function StockMovements() {
                         {isFilterOpen && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)} />
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
                                     {types.map((type) => (
                                         <button
                                             key={type}
@@ -141,13 +146,13 @@ export default function StockMovements() {
                                                 setIsFilterOpen(false);
                                             }}
                                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${typeFilter === type
-                                                ? 'bg-indigo-50 text-indigo-700'
-                                                : 'text-slate-600 hover:bg-slate-50'
+                                                ? 'bg-teal-500/20 text-teal-300'
+                                                : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
                                                 }`}
                                         >
                                             {type}
                                             {typeFilter === type && (
-                                                <div className="w-2 h-2 rounded-full bg-indigo-600" />
+                                                <div className="w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.5)]" />
                                             )}
                                         </button>
                                     ))}
@@ -157,68 +162,76 @@ export default function StockMovements() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 border-b border-slate-200">
+                            <thead className="bg-slate-900/50 border-b border-slate-700/50">
                                 <tr>
-                                    <th className="px-6 py-4 font-semibold text-slate-700">Date</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-700">Reference</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-700">Product</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-700">Type</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-700">Quantity</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-700">Warehouse</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Date</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Reference</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Product</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Type</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Quantity</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs">Warehouse</th>
+                                    <th className="px-6 py-5 font-bold text-slate-400 uppercase tracking-widest text-xs text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {filteredMovements?.map((move) => (
-                                    <tr key={move.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 text-slate-600">
+                            <tbody className="divide-y divide-slate-700/50">
+                                {filteredMovements?.map((move, index) => (
+                                    <motion.tr
+                                        initial={{ opacity: 0, x: -20 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: index * 0.05 }}
+                                        key={move.id}
+                                        className="hover:bg-slate-700/30 transition-colors group"
+                                    >
+                                        <td className="px-6 py-4 text-slate-400 font-mono text-xs tracking-wider">
                                             {new Date(move.date).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                                        <td className="px-6 py-4 font-mono text-xs text-teal-400">
                                             {move.reference}
                                         </td>
-                                        <td className="px-6 py-4 font-medium text-slate-900">
+                                        <td className="px-6 py-4 font-bold text-slate-200">
                                             {move.productName}
                                         </td>
                                         <td className="px-6 py-4">
                                             {move.type === 'In' ? (
-                                                <span className="flex items-center gap-1 text-green-600 font-medium">
-                                                    <ArrowDownLeft className="w-4 h-4" /> In
+                                                <span className="flex items-center gap-1.5 text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg w-fit text-xs border border-emerald-500/20">
+                                                    <ArrowDownLeft className="w-3.5 h-3.5" /> In
                                                 </span>
                                             ) : move.type === 'Out' ? (
-                                                <span className="flex items-center gap-1 text-red-600 font-medium">
-                                                    <ArrowUpRight className="w-4 h-4" /> Out
+                                                <span className="flex items-center gap-1.5 text-rose-400 font-bold bg-rose-500/10 px-2.5 py-1 rounded-lg w-fit text-xs border border-rose-500/20">
+                                                    <ArrowUpRight className="w-3.5 h-3.5" /> Out
                                                 </span>
                                             ) : (
-                                                <span className="flex items-center gap-1 text-amber-600 font-medium">
-                                                    <History className="w-4 h-4" /> {move.type}
+                                                <span className="flex items-center gap-1.5 text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-lg w-fit text-xs border border-amber-500/20">
+                                                    <History className="w-3.5 h-3.5" /> {move.type}
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 font-semibold text-slate-900">
+                                        <td className="px-6 py-4 font-bold text-slate-200">
                                             {move.quantity}
                                         </td>
-                                        <td className="px-6 py-4 text-slate-600">
+                                        <td className="px-6 py-4 text-slate-400">
                                             {move.warehouse}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button
                                                 onClick={() => handleDeleteClick(move)}
-                                                className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
+                                                className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-lg transition-all active:scale-90"
                                                 title="Delete Log"
                                             >
-                                                <Trash2 className="w-5 h-5" />
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </td>
-                                    </tr>
+                                    </motion.tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

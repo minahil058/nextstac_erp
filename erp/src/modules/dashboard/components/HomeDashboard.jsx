@@ -1,13 +1,16 @@
 import React, { useMemo } from 'react';
 import { AreaChart, Area, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { motion } from 'framer-motion';
+import { TrendingUp, TrendingDown, DollarSign, Wallet, PiggyBank, Sparkles } from 'lucide-react';
 import { calculateAccountBalance } from '../../../utils/accountingCalculations';
+import { FloatingOrbs, AnimatedGrid } from '../../../components/shared/BackgroundEffects';
+import { StatCard, PremiumCard } from '../../../components/shared/PremiumComponents';
 
 const HomeDashboard = ({ accounts, transactions, loading }) => {
     // Calculate Financial Data
     const financialData = useMemo(() => {
         if (loading || !accounts || accounts.length === 0) return null;
 
-        // Helper to get total balance for a group of accounts
         const getGroupTotal = (type) => {
             return accounts
                 .filter(a => a.type === type)
@@ -37,7 +40,6 @@ const HomeDashboard = ({ accounts, transactions, loading }) => {
 
         const netProfit = totalRevenue - totalExpenses;
         const totalEquity = totalEquityAccounts + netProfit;
-
         const isBalanced = Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01;
 
         return {
@@ -55,7 +57,6 @@ const HomeDashboard = ({ accounts, transactions, loading }) => {
     const trendChartData = useMemo(() => {
         if (!transactions || transactions.length === 0) return [];
 
-        // Group transactions by month
         const monthlyData = {};
 
         transactions.forEach(transaction => {
@@ -66,8 +67,6 @@ const HomeDashboard = ({ accounts, transactions, loading }) => {
                 monthlyData[monthKey] = { month: monthKey, revenue: 0, expenses: 0 };
             }
 
-            // Get account types
-            // Handle both structure patterns (direct ID or object)
             const debitAccountId = transaction.debit_account_id || transaction.debitAccount?.id;
             const creditAccountId = transaction.credit_account_id || transaction.creditAccount?.id;
 
@@ -93,162 +92,207 @@ const HomeDashboard = ({ accounts, transactions, loading }) => {
             }));
     }, [transactions, accounts]);
 
-    // Chart Data: Expense Breakdown by Account
+    // Chart Data: Expense Breakdown
     const expenseBreakdownData = useMemo(() => {
         if (!accounts || !transactions) return [];
 
         const expenseAccounts = accounts.filter(a => a.type === 'Expense');
+        const expenseTotals = expenseAccounts.map(account => {
+            const { balanceAmount } = calculateAccountBalance(account, transactions);
+            return {
+                name: account.name,
+                value: Math.round(balanceAmount)
+            };
+        }).filter(item => item.value > 0);
 
-        return expenseAccounts
-            .map(account => {
-                const { debitTotal, creditTotal } = calculateAccountBalance(account, transactions);
-                const balance = debitTotal - creditTotal;
-                return {
-                    name: account.name,
-                    value: Math.round(balance)
-                };
-            })
-            .filter(item => item.value > 0)
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 5); // Top 5 expenses
+        return expenseTotals.sort((a, b) => b.value - a.value).slice(0, 5);
     }, [accounts, transactions]);
 
-    // Recent Transactions
-    const recentTransactions = transactions ? [...transactions]
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 5) : [];
+    const COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981'];
 
-    // Chart Colors
-    const COLORS = ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16'];
-
-    // Skeleton Loader
     if (loading) {
         return (
-            <div className="space-y-8 animate-pulse">
-                {/* Top Cards Skeleton */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="h-40 bg-gray-200 rounded-2xl"></div>
-                    ))}
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-slate-400">Loading dashboard...</p>
                 </div>
-                {/* Charts Skeleton */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="h-80 bg-gray-200 rounded-2xl"></div>
-                    <div className="h-80 bg-gray-200 rounded-2xl"></div>
-                </div>
-                {/* Performance Section Skeleton */}
-                <div className="h-48 bg-gray-200 rounded-2xl"></div>
-                {/* Bottom Section Skeleton */}
-                <div className="h-80 bg-gray-200 rounded-2xl"></div>
             </div>
         );
     }
 
-    if (!financialData) return <div className="p-8 text-center text-slate-500">No financial data available.</div>;
+    if (!financialData) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-slate-400 text-lg">No financial data available</p>
+                    <p className="text-slate-500 text-sm mt-2">Add accounts and transactions to see your dashboard</p>
+                </div>
+            </div>
+        );
+    }
 
     const { totalAssets, totalLiabilities, totalEquity, totalRevenue, totalExpenses, netProfit, isBalanced } = financialData;
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { type: "spring", stiffness: 100 }
+        }
+    };
+
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            {/* 1. Accounting Equation Cards */}
-            <div className="relative">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Assets */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                        <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-2">Total Assets</h3>
-                        <p className="text-3xl font-bold text-slate-900">
-                            ${totalAssets.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                        <div className="mt-4 flex items-center text-emerald-600 text-sm font-medium">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-                            <span>Asset Value</span>
-                        </div>
-                    </div>
+        <div className="relative min-h-screen">
+            <FloatingOrbs count={12} />
+            <AnimatedGrid />
 
-                    {/* Liabilities */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                        <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-2">Total Liabilities</h3>
-                        <p className="text-3xl font-bold text-slate-900">
-                            ${totalLiabilities.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                        <div className="mt-4 flex items-center text-red-500 text-sm font-medium">
-                            <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-                            <span>Outstanding Debt</span>
-                        </div>
+            <motion.div
+                className="relative z-10 space-y-8 p-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {/* Header with Balance Badge */}
+                <motion.div variants={itemVariants} className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-4xl font-black text-white mb-2 flex items-center gap-3">
+                            <Sparkles className="w-8 h-8 text-indigo-400" />
+                            Financial Overview
+                        </h1>
+                        <p className="text-slate-400">Real-time accounting insights at your fingertips</p>
                     </div>
+                    {isBalanced && (
+                        <motion.div
+                            className="bg-emerald-500/20 backdrop-blur-xl text-emerald-300 px-6 py-3 rounded-2xl font-bold border border-emerald-500/30 flex items-center gap-2"
+                            initial={scale: 0}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", delay: 0.5 }}
+                        >
+                    <span>⚖️</span>
+                    Equation Balanced
+                </motion.div>
+                    )}
+            </motion.div>
 
-                    {/* Equity */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                        <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-2">Owner's Equity</h3>
-                        <p className="text-3xl font-bold text-slate-900">
-                            ${totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                        <div className="mt-4 flex items-center text-indigo-600 text-sm font-medium">
-                            <span className="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
-                            <span>Net Value</span>
-                        </div>
-                    </div>
-                </div>
+            {/* Accounting Equation Cards */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard
+                    icon={Wallet}
+                    label="Total Assets"
+                    value={`$${totalAssets.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                    trend={15}
+                    color="emerald"
+                />
+                <StatCard
+                    icon={DollarSign}
+                    label="Total Liabilities"
+                    value={`$${totalLiabilities.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                    trend={-5}
+                    color="pink"
+                />
+                <StatCard
+                    icon={PiggyBank}
+                    label="Owner's Equity"
+                    value={`$${totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                    trend={12}
+                    color="indigo"
+                />
+            </motion.div>
 
-                {/* Balance Badge */}
-                {isBalanced && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-emerald-50 text-emerald-700 px-4 py-1 rounded-full text-xs font-bold border border-emerald-200 shadow-sm flex items-center gap-1">
-                        <span>⚖️</span>
-                        Equation Balanced
-                    </div>
-                )}
-            </div>
+            {/* Performance Cards */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                    { label: 'Total Revenue', value: totalRevenue, icon: TrendingUp, color: 'emerald' },
+                    { label: 'Total Expenses', value: totalExpenses, icon: TrendingDown, color: 'amber' },
+                    { label: 'Net Profit', value: netProfit, icon: netProfit >= 0 ? TrendingUp : TrendingDown, color: netProfit >= 0 ? 'blue' : 'pink' },
+                    { label: 'Profit Margin', value: `${totalRevenue ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0}%`, icon: DollarSign, color: 'purple' },
+                ].map((stat, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3 + i * 0.1 }}
+                    >
+                        <PremiumCard className="p-6">
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-bold text-slate-400">{stat.label}</p>
+                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-${stat.color}-500/20 to-${stat.color}-500/5 flex items-center justify-center`}>
+                                    <stat.icon className={`w-5 h-5 text-${stat.color}-400`} />
+                                </div>
+                            </div>
+                            <p className="text-2xl font-black text-white">
+                                {typeof stat.value === 'number'
+                                    ? `$${stat.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                                    : stat.value
+                                }
+                            </p>
+                        </PremiumCard>
+                    </motion.div>
+                ))}
+            </motion.div>
 
-            {/* 2. Financial Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Charts Section */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue vs Expenses Trend */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                    <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-                        Trend Analysis
+                <PremiumCard className="p-6">
+                    <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-indigo-400" />
+                        Revenue & Expenses Trend
                     </h3>
                     {trendChartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={280}>
                             <AreaChart data={trendChartData}>
                                 <defs>
-                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                    <linearGradient id="colorRevenueDark" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                                     </linearGradient>
-                                    <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                                    <linearGradient id="colorExpensesDark" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                                <XAxis dataKey="month" stroke="#64748B" fontSize={12} />
-                                <YAxis stroke="#64748B" fontSize={12} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                                <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
+                                <YAxis stroke="#94A3B8" fontSize={12} />
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: '#fff',
-                                        border: '1px solid #E2E8F0',
-                                        borderRadius: '8px',
-                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                        backgroundColor: '#1E293B',
+                                        border: '1px solid #334155',
+                                        borderRadius: '12px',
+                                        color: '#F1F5F9'
                                     }}
                                 />
                                 <Legend />
-                                <Area type="monotone" dataKey="Revenue" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
-                                <Area type="monotone" dataKey="Expenses" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExpenses)" />
+                                <Area type="monotone" dataKey="Revenue" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenueDark)" />
+                                <Area type="monotone" dataKey="Expenses" stroke="#F59E0B" strokeWidth={3} fillOpacity={1} fill="url(#colorExpensesDark)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="h-72 flex items-center justify-center text-slate-400">
+                        <div className="h-72 flex items-center justify-center text-slate-500">
                             No transaction data available
                         </div>
                     )}
-                </div>
+                </PremiumCard>
 
                 {/* Expense Breakdown */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                    <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <PremiumCard className="p-6">
+                    <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <PiggyBank className="w-5 h-5 text-purple-400" />
                         Top Expense Categories
                     </h3>
                     {expenseBreakdownData.length > 0 ? (
-                        <div className="flex items-center justify-between gap-8">
+                        <div className="flex items-center justify-between">
                             <ResponsiveContainer width="50%" height={280}>
                                 <PieChart>
                                     <Pie
@@ -266,98 +310,37 @@ const HomeDashboard = ({ accounts, transactions, loading }) => {
                                     </Pie>
                                     <Tooltip
                                         contentStyle={{
-                                            backgroundColor: '#fff',
-                                            border: '1px solid #E2E8F0',
-                                            borderRadius: '8px',
-                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                            backgroundColor: '#1E293B',
+                                            border: '1px solid #334155',
+                                            borderRadius: '12px',
+                                            color: '#F1F5F9'
                                         }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
-                            <div className="flex-1 space-y-3">
+                            <div className="space-y-3 flex-1">
                                 {expenseBreakdownData.map((item, index) => (
                                     <div key={index} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                            <span className="text-sm text-slate-600 font-medium truncate">{item.name}</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }} />
+                                            <span className="text-sm text-slate-300 font-medium">{item.name}</span>
                                         </div>
-                                        <span className="text-sm font-bold text-slate-900">${item.value.toLocaleString()}</span>
+                                        <span className="text-sm font-bold text-white">
+                                            ${item.value.toLocaleString()}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     ) : (
-                        <div className="h-72 flex items-center justify-center text-slate-400">
+                        <div className="h-72 flex items-center justify-center text-slate-500">
                             No expense data available
                         </div>
                     )}
-                </div>
-            </div>
-
-            {/* 3. Performance Overview */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    Performance Overview
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                    <div className="space-y-1">
-                        <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Revenue</p>
-                        <p className="text-2xl font-bold text-emerald-600">
-                            +${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Expenses</p>
-                        <p className="text-2xl font-bold text-red-500">
-                            -${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                    </div>
-                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Net Profit</p>
-                        <p className={`text-4xl font-black ${netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {netProfit >= 0 ? '+' : '-'}${Math.abs(netProfit).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* 4. Recent Activity Feed */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        Recent Journal Entries
-                    </h3>
-                    <button className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-all active:scale-95">
-                        View All
-                    </button>
-                </div>
-                <div className="divide-y divide-slate-50">
-                    {recentTransactions.map(transaction => (
-                        <div key={transaction.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">
-                                    {new Date(transaction.date).getDate()}
-                                </div>
-                                <div>
-                                    <p className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{transaction.description}</p>
-                                    <p className="text-xs text-slate-500">
-                                        {transaction.debitAccount?.name}
-                                        <span className="mx-1 text-slate-300">→</span>
-                                        {transaction.creditAccount?.name}
-                                    </p>
-                                </div>
-                            </div>
-                            <span className="font-mono font-bold text-slate-900">
-                                ${parseFloat(transaction.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                    ))}
-                    {recentTransactions.length === 0 && (
-                        <div className="p-8 text-center text-slate-400">No recent transactions</div>
-                    )}
-                </div>
-            </div>
-        </div>
+                </PremiumCard>
+            </motion.div>
+        </motion.div>
+        </div >
     );
 };
 

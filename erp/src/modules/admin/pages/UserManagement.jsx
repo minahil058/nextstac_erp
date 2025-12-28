@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { mockDataService } from '../../../services/mockDataService';
 import {
     Users,
     Plus,
     Shield,
     AlertTriangle,
-    DollarSign
+    DollarSign,
+    Sparkles
 } from 'lucide-react';
+import { FloatingOrbs, AnimatedGrid } from '../../../components/shared/BackgroundEffects';
+import { PremiumCard, PremiumButton } from '../../../components/shared/PremiumComponents';
 import AdminTableRow from '../components/AdminTableRow';
 
 export default function UserManagement() {
     const queryClient = useQueryClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingId, setEditingId] = useState(null); // Track editing state
+    const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -21,13 +25,11 @@ export default function UserManagement() {
     });
     const [error, setError] = useState('');
 
-    // Fetch Admins
     const { data: admins, isLoading: isLoadingAdmins } = useQuery({
         queryKey: ['admins'],
         queryFn: mockDataService.getAdmins,
     });
 
-    // Fetch Base Pool Config
     const { data: config } = useQuery({
         queryKey: ['compensation-config'],
         queryFn: mockDataService.getCompensationConfig,
@@ -65,7 +67,7 @@ export default function UserManagement() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['admins']);
-            setIsModalOpen(false); // Close modal on success for edits too
+            setIsModalOpen(false);
             setEditingId(null);
             setFormData({ name: '', email: '', role: 'ecommerce_admin' });
         }
@@ -138,153 +140,203 @@ export default function UserManagement() {
         }
     };
 
-    if (isLoadingAdmins) return <div className="p-8 text-center">Loading users...</div>;
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { type: "spring", stiffness: 100 }
+        }
+    };
+
+    if (isLoadingAdmins) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-slate-400">Loading admin users...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Admin Management</h1>
-                    <p className="text-slate-500 text-sm">Manage system administrators and their roles</p>
-                </div>
-                <button
-                    onClick={() => {
-                        setEditingId(null);
-                        setFormData({ name: '', email: '', role: 'ecommerce_admin' });
-                        setIsModalOpen(true);
-                    }}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-lg flex items-center gap-2 font-medium transition-all shadow-sm"
-                >
-                    <Plus className="w-4 h-4" />
-                    Add New Admin
-                </button>
-            </div>
+        <div className="relative min-h-screen">
+            <FloatingOrbs count={10} />
+            <AnimatedGrid />
 
-            {/* Compensation & Limits Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Stats Cards */}
-                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                <Users className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-slate-500">E-commerce Admins</p>
-                                <h3 className="text-lg font-bold text-slate-900">
-                                    {admins?.filter(a => a.role === 'ecommerce_admin').length} / 5
-                                </h3>
+            <motion.div
+                className="relative z-10 p-6 md:p-8 space-y-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {/* Header */}
+                <motion.div variants={itemVariants} className="flex justify-between items-start md:items-center gap-4 flex-col md:flex-row">
+                    <div>
+                        <h1 className="text-4xl font-black text-white mb-2 flex items-center gap-3">
+                            <Shield className="w-8 h-8 text-indigo-400" />
+                            Admin Management
+                        </h1>
+                        <p className="text-slate-400">Manage system administrators and their roles</p>
+                    </div>
+                    <PremiumButton
+                        onClick={() => {
+                            setEditingId(null);
+                            setFormData({ name: '', email: '', role: 'ecommerce_admin' });
+                            setIsModalOpen(true);
+                        }}
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add New Admin
+                    </PremiumButton>
+                </motion.div>
+
+                {/* Stats Grid */}
+                <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <PremiumCard className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                                    <Users className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-slate-400 mb-1">E-commerce Admins</p>
+                                    <h3 className="text-2xl font-black text-white">
+                                        {admins?.filter(a => a.role === 'ecommerce_admin').length} / 5
+                                    </h3>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-                                <Shield className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-slate-500">Dev Admins</p>
-                                <h3 className="text-lg font-bold text-slate-900">
-                                    {admins?.filter(a => a.role === 'dev_admin').length} / 5
-                                </h3>
+                    </PremiumCard>
+
+                    <PremiumCard className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                                    <Shield className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-slate-400 mb-1">Dev Admins</p>
+                                    <h3 className="text-2xl font-black text-white">
+                                        {admins?.filter(a => a.role === 'dev_admin').length} / 5
+                                    </h3>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </PremiumCard>
 
-                {/* Compensation Base Pool */}
-                <div className="bg-gradient-to-r from-slate-900 to-indigo-900 p-5 rounded-xl text-white shadow-lg lg:col-span-1">
-                    <div className="flex items-center gap-2 mb-2">
-                        <DollarSign className="w-4 h-4 text-indigo-300" />
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-100">Total Base Pool</h3>
-                    </div>
-                    <div className="flex items-end gap-2">
-                        <span className="text-2xl font-bold">$</span>
-                        <input
-                            type="number"
-                            value={basePool}
-                            onChange={(e) => handleUpdateBasePool(parseFloat(e.target.value) || 0)}
-                            className="bg-white/10 border border-white/20 rounded px-2 py-1 text-2xl font-bold text-white outline-none focus:bg-white/20 w-full"
-                        />
-                    </div>
-                    <p className="text-xs text-indigo-300 mt-2">Shared Monthly Allocation</p>
-                </div>
-            </div>
+                    <PremiumCard className="p-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 border-0">
+                        <div className="flex items-center gap-2 mb-3">
+                            <DollarSign className="w-5 h-5 text-white" />
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-white">Total Base Pool</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-3xl font-black text-white">$</span>
+                            <input
+                                type="number"
+                                value={basePool}
+                                onChange={(e) => handleUpdateBasePool(parseFloat(e.target.value) || 0)}
+                                className="bg-white/20 border border-white/30 rounded-xl px-3 py-2 text-2xl font-bold text-white outline-none focus:bg-white/30 focus:ring-2 focus:ring-white/50 w-full backdrop-blur-xl"
+                            />
+                        </div>
+                        <p className="text-xs text-white/80 mt-2">Shared Monthly Allocation</p>
+                    </PremiumCard>
+                </motion.div>
 
-            {/* Users Table */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm min-w-[900px]">
-                        <thead className="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th className="px-6 py-4 font-semibold text-slate-700">Name</th>
-                                <th className="px-6 py-4 font-semibold text-slate-700">Role</th>
-                                <th className="px-6 py-4 font-semibold text-slate-700">Profit Share (%)</th>
-                                <th className="px-6 py-4 font-semibold text-slate-700 hidden md:table-cell">Est. Salary</th>
-                                <th className="px-6 py-4 font-semibold text-slate-700">Status</th>
-                                <th className="px-6 py-4 font-semibold text-slate-700 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {admins?.map((admin) => (
-                                <AdminTableRow
-                                    key={admin.id}
-                                    admin={admin}
-                                    basePool={basePool}
-                                    onUpdateShare={handleUpdateShare}
-                                    onToggleStatus={handleToggleStatus}
-                                    onDelete={(id) => deleteAdminMutation.mutate(id)}
-                                    onEdit={handleEdit}
-                                />
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                {/* Admin Table */}
+                <motion.div variants={itemVariants}>
+                    <PremiumCard className="overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm min-w-[900px]">
+                                <thead className="bg-slate-700/30 border-b border-slate-700/50">
+                                    <tr>
+                                        <th className="px-6 py-4 font-bold text-slate-300">Name</th>
+                                        <th className="px-6 py-4 font-bold text-slate-300">Role</th>
+                                        <th className="px-6 py-4 font-bold text-slate-300">Profit Share (%)</th>
+                                        <th className="px-6 py-4 font-bold text-slate-300 hidden md:table-cell">Est. Salary</th>
+                                        <th className="px-6 py-4 font-bold text-slate-300">Status</th>
+                                        <th className="px-6 py-4 font-bold text-slate-300 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-700/30">
+                                    {admins?.map((admin) => (
+                                        <AdminTableRow
+                                            key={admin.id}
+                                            admin={admin}
+                                            basePool={basePool}
+                                            onUpdateShare={handleUpdateShare}
+                                            onToggleStatus={handleToggleStatus}
+                                            onDelete={(id) => deleteAdminMutation.mutate(id)}
+                                            onEdit={handleEdit}
+                                        />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </PremiumCard>
+                </motion.div>
+            </motion.div>
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-100">
-                            <h2 className="text-lg font-bold text-slate-900">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                    <motion.div
+                        className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-700/50"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    >
+                        <div className="p-6 border-b border-slate-700/50 bg-gradient-to-r from-indigo-600/20 to-purple-600/20">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-indigo-400" />
                                 {editingId ? 'Edit Admin' : 'Add New Admin'}
                             </h2>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
                             {error && (
-                                <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center gap-2 border border-red-100">
-                                    <AlertTriangle className="w-4 h-4" />
+                                <div className="p-4 bg-red-500/10 text-red-400 text-sm rounded-xl flex items-center gap-3 border border-red-500/20 backdrop-blur-xl">
+                                    <AlertTriangle className="w-5 h-5" />
                                     {error}
                                 </div>
                             )}
 
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">Full Name</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-300">Full Name</label>
                                 <input
                                     type="text"
                                     required
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="w-full px-4 py-3 border-2 border-slate-700/50 bg-slate-900/50 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-white placeholder-slate-500 transition-all"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="John Doe"
                                 />
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">Email Address</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-300">Email Address</label>
                                 <input
                                     type="email"
                                     required
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="w-full px-4 py-3 border-2 border-slate-700/50 bg-slate-900/50 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-white placeholder-slate-500 transition-all"
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                    placeholder="john@example.com"
                                 />
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">Role</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-300">Role</label>
                                 <select
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="w-full px-4 py-3 border-2 border-slate-700/50 bg-slate-900/50 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-white transition-all cursor-pointer"
                                     value={formData.role}
                                     onChange={e => setFormData({ ...formData, role: e.target.value })}
                                 >
@@ -297,22 +349,21 @@ export default function UserManagement() {
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}
-                                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                                    className="px-6 py-3 text-slate-300 hover:bg-slate-700/50 rounded-xl font-semibold transition-all"
                                 >
                                     Cancel
                                 </button>
-                                <button
+                                <PremiumButton
                                     type="submit"
                                     disabled={addAdminMutation.isPending || updateAdminMutation.isPending}
-                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-70"
                                 >
                                     {addAdminMutation.isPending || updateAdminMutation.isPending
                                         ? 'Saving...'
                                         : (editingId ? 'Save Changes' : 'Create Admin')}
-                                </button>
+                                </PremiumButton>
                             </div>
                         </form>
-                    </div>
+                    </motion.div>
                 </div>
             )}
         </div>

@@ -46,12 +46,14 @@ export default function Journal() {
         : '-';
 
     return (
-        <div className="min-h-screen bg-slate-50/50 pb-20">
-            <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8">
+        <div className="min-h-screen pb-20">
+            <div className="p-6 md:p-8 max-w-[1600px] mx-auto space-y-8">
                 {/* Header */}
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Journal Entries</h2>
-                    <p className="text-slate-500 text-sm mt-1">Record and view all financial transactions</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-white drop-shadow-sm">Journal Entries</h2>
+                        <p className="text-slate-400 text-sm mt-1">Record and view all financial transactions in general ledger</p>
+                    </div>
                 </div>
 
                 {/* Entry Form */}
@@ -62,41 +64,41 @@ export default function Journal() {
 
                 {/* Stats Section */}
                 <div className="space-y-4">
-                    <h3 className="font-bold text-slate-900 text-sm">Recent Entries</h3>
+                    <h3 className="font-bold text-white text-sm uppercase tracking-widest pl-1">Recent Activity</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Total Entries */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center justify-between">
+                        <div className="bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-slate-700/50 shadow-xl flex items-center justify-between group hover:bg-slate-800/70 transition-colors">
                             <div>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Entries</p>
-                                <p className="text-3xl font-black text-slate-900">{totalEntries}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Entries</p>
+                                <p className="text-3xl font-black text-white">{totalEntries}</p>
                             </div>
-                            <div className="p-3 bg-slate-200 rounded-xl text-slate-700">
-                                <FileText className="w-5 h-5" />
+                            <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                                <FileText className="w-6 h-6" />
                             </div>
                         </div>
 
                         {/* Total Value */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center justify-between">
+                        <div className="bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-slate-700/50 shadow-xl flex items-center justify-between group hover:bg-slate-800/70 transition-colors">
                             <div>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Value</p>
-                                <p className="text-3xl font-black text-slate-900">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Value</p>
+                                <p className="text-3xl font-black text-white">
                                     ${(totalValue / 1000).toFixed(1)}k
                                 </p>
                             </div>
-                            <div className="p-3 bg-slate-200 rounded-xl text-slate-700">
-                                <DollarSign className="w-5 h-5" />
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                                <DollarSign className="w-6 h-6" />
                             </div>
                         </div>
 
                         {/* Latest Entry */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center justify-between">
+                        <div className="bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-slate-700/50 shadow-xl flex items-center justify-between group hover:bg-slate-800/70 transition-colors">
                             <div>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Latest Entry</p>
-                                <p className="text-3xl font-black text-slate-900">{latestEntryDate}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Latest Entry</p>
+                                <p className="text-3xl font-black text-white">{latestEntryDate}</p>
                             </div>
-                            <div className="p-3 bg-slate-200 rounded-xl text-slate-700">
-                                <Calendar className="w-5 h-5" />
+                            <div className="w-14 h-14 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform">
+                                <Calendar className="w-6 h-6" />
                             </div>
                         </div>
                     </div>

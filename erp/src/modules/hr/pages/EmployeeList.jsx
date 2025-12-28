@@ -177,37 +177,39 @@ export default function EmployeeList() {
     if (error) return <div className="p-8 text-center text-red-500">Error loading data</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-4 sm:p-6 md:p-8">
+        <div className="p-4 sm:p-6 md:p-8">
             <div className="max-w-[1600px] mx-auto space-y-6">
 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Employees</h2>
-                        <p className="text-slate-500 mt-1">Manage your team members and their access.</p>
+                        <h2 className="text-4xl font-black text-white tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-white">
+                            Employees
+                        </h2>
+                        <p className="text-slate-400 mt-2 text-lg">Manage your team members and their access.</p>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <div className="flex bg-white rounded-lg border border-slate-200 p-1 shadow-sm">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="flex bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-1.5 shadow-lg">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`p-2.5 rounded-xl transition-all duration-200 ${viewMode === 'grid' ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
                                 title="Grid View"
                             >
-                                <LayoutGrid className="w-4 h-4" />
+                                <LayoutGrid className="w-5 h-5" />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`p-2.5 rounded-xl transition-all duration-200 ${viewMode === 'list' ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
                                 title="List View"
                             >
-                                <List className="w-4 h-4" />
+                                <List className="w-5 h-5" />
                             </button>
                         </div>
                         <Button
                             onClick={() => { setEditingEmployee(null); setIsFormOpen(true); }}
-                            className="flex-1 sm:flex-none shadow-md"
+                            className="flex-1 sm:flex-none shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white border-0 rounded-2xl px-6 py-6 h-auto font-bold text-base"
                         >
-                            <Plus className="w-4 h-4 mr-2" />
+                            <Plus className="w-5 h-5 mr-2" />
                             Add Employee
                         </Button>
                     </div>
@@ -217,7 +219,7 @@ export default function EmployeeList() {
                 <div className="flex flex-col gap-4">
                     {/* Department Tabs */}
                     {user?.role === 'super_admin' && (
-                        <div className="flex p-1 bg-white border border-slate-200 rounded-lg w-full sm:w-fit overflow-x-auto shadow-sm no-scrollbar">
+                        <div className="flex p-1.5 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl w-full sm:w-fit overflow-x-auto no-scrollbar shadow-lg">
                             {['All Departments', 'Development', 'Ecommerce'].map((dept) => (
                                 <Button
                                     key={dept}
@@ -227,7 +229,7 @@ export default function EmployeeList() {
                                         setDepartmentFilter(dept);
                                         setPage(1);
                                     }}
-                                    className={`whitespace-nowrap ${departmentFilter === dept ? 'bg-slate-100 font-semibold text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+                                    className={`whitespace-nowrap rounded-xl px-4 py-2 h-auto text-sm ${departmentFilter === dept ? 'bg-slate-700 text-white font-bold shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
                                 >
                                     {dept}
                                 </Button>
@@ -237,11 +239,11 @@ export default function EmployeeList() {
 
                     {/* Search & Actions */}
                     <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
                             <Input
                                 placeholder="Search by name, role, or department..."
-                                className="pl-9 pr-9"
+                                className="pl-12 pr-12 py-6 rounded-2xl bg-slate-800/50 border-slate-700/50 text-white placeholder:text-slate-500 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-lg backdrop-blur-xl"
                                 value={searchTerm}
                                 onChange={(e) => {
                                     setSearchTerm(e.target.value);
@@ -254,30 +256,30 @@ export default function EmployeeList() {
                                         setSearchTerm('');
                                         setPage(1);
                                     }}
-                                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="absolute right-4 top-3.5 text-slate-500 hover:text-white transition-colors"
                                 >
-                                    <X className="w-4 h-4" />
+                                    <X className="w-5 h-5" />
                                 </button>
                             )}
                         </div>
                         <Button
                             variant={showFilters ? "secondary" : "outline"}
-                            className="gap-2"
+                            className={`gap-2 rounded-2xl py-6 px-6 h-auto border-slate-700/50 hover:bg-slate-800 hover:text-white transition-all shadow-lg ${showFilters ? 'bg-slate-700 text-white ring-2 ring-indigo-500/50' : 'bg-slate-800/50 text-slate-300'}`}
                             onClick={() => setShowFilters(!showFilters)}
                         >
-                            <Filter className="w-4 h-4" />
+                            <Filter className="w-5 h-5" />
                             Filters
                         </Button>
                     </div>
 
                     {/* Expanded Filters */}
                     {showFilters && (
-                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm animate-in slide-in-from-top-2 duration-200">
+                        <div className="bg-slate-800/50 backdrop-blur-xl p-4 rounded-2xl border border-slate-700/50 animate-in slide-in-from-top-2 duration-200">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-slate-500 uppercase">Status</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase">Status</label>
                                     <select
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                        className="w-full px-3 py-2 border-2 border-slate-700/50 bg-slate-900/50 rounded-xl text-sm text-white outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
                                         value={statusFilter}
                                         onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                                     >
@@ -298,17 +300,18 @@ export default function EmployeeList() {
                         {viewMode === 'grid' ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {paginatedEmployees?.map((employee) => (
-                                    <Card key={employee.id} className="group hover:shadow-md transition-shadow duration-200 flex flex-col">
-                                        <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                                            <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
+                                    <Card key={employee.id} className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col rounded-3xl overflow-hidden relative">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-indigo-500/5 group-hover:via-purple-500/5 group-hover:to-pink-500/5 transition-all pointer-events-none" />
+                                        <CardHeader className="flex flex-row items-center gap-4 pb-2 relative z-10">
+                                            <Avatar className="h-16 w-16 border-4 border-slate-700/50 shadow-2xl group-hover:scale-105 transition-transform duration-300">
                                                 <AvatarImage src={employee.avatar} alt={employee.firstName} />
                                                 <AvatarFallback>{employee.firstName[0]}{employee.lastName[0]}</AvatarFallback>
                                             </Avatar>
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold text-slate-900 truncate">
+                                                <h3 className="font-bold text-white truncate">
                                                     {employee.firstName} {employee.lastName}
                                                 </h3>
-                                                <p className="text-xs text-slate-500 font-medium truncate">
+                                                <p className="text-xs text-slate-400 font-medium truncate">
                                                     {employee.position}
                                                 </p>
                                             </div>
@@ -316,7 +319,7 @@ export default function EmployeeList() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                                    className="h-9 w-9 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl"
                                                     onClick={() => handleEdit(employee)}
                                                 >
                                                     <Edit className="w-4 h-4" />
@@ -324,7 +327,7 @@ export default function EmployeeList() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                                    className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
                                                     onClick={() => setDeleteModal({ isOpen: true, id: employee.id, name: `${employee.firstName} ${employee.lastName}` })}
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -333,17 +336,17 @@ export default function EmployeeList() {
                                         </CardHeader>
 
                                         <CardContent className="flex-1 space-y-3 pb-4">
-                                            <div className="flex items-center gap-2 text-sm text-slate-600">
-                                                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                                            <div className="flex items-center gap-2 text-sm text-slate-400">
+                                                <Mail className="w-4 h-4 shrink-0" />
                                                 <span className="truncate">{employee.email}</span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm text-slate-600">
-                                                <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                                            <div className="flex items-center gap-2 text-sm text-slate-400">
+                                                <Building2 className="w-4 h-4 shrink-0" />
                                                 <span className="truncate">{employee.department}</span>
                                             </div>
                                         </CardContent>
 
-                                        <CardFooter className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                                        <CardFooter className="pt-4 border-t border-slate-700/50 flex items-center justify-between">
                                             <div onClick={() => handleStatusCycle(employee)} className="cursor-pointer" title="Click to cycle status">
                                                 <Badge variant={getStatusVariant(employee.status)}>
                                                     {employee.status}
@@ -352,7 +355,7 @@ export default function EmployeeList() {
                                             <Button
                                                 variant="link"
                                                 size="sm"
-                                                className="h-auto p-0 text-indigo-600"
+                                                className="h-auto p-0 text-emerald-400 hover:text-emerald-300"
                                                 onClick={() => setViewingEmployee(employee)}
                                             >
                                                 View Profile →
@@ -362,36 +365,36 @@ export default function EmployeeList() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-sm">
-                                        <thead className="bg-slate-50 border-b border-slate-200">
+                                        <thead className="bg-slate-700/30 border-b border-slate-700/50">
                                             <tr>
-                                                <th className="px-6 py-4 font-semibold text-slate-700">Employee</th>
-                                                <th className="px-6 py-4 font-semibold text-slate-700">Role</th>
-                                                <th className="px-6 py-4 font-semibold text-slate-700">Department</th>
-                                                <th className="px-6 py-4 font-semibold text-slate-700">Status</th>
-                                                <th className="px-6 py-4 font-semibold text-slate-700 text-right">Actions</th>
+                                                <th className="px-6 py-4 font-bold text-slate-300">Employee</th>
+                                                <th className="px-6 py-4 font-bold text-slate-300">Role</th>
+                                                <th className="px-6 py-4 font-bold text-slate-300">Department</th>
+                                                <th className="px-6 py-4 font-bold text-slate-300">Status</th>
+                                                <th className="px-6 py-4 font-bold text-slate-300 text-right">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100">
+                                        <tbody className="divide-y divide-slate-700/30">
                                             {paginatedEmployees?.map((employee) => (
-                                                <tr key={employee.id} className="hover:bg-slate-50 transition-colors group">
+                                                <tr key={employee.id} className="hover:bg-slate-700/20 transition-colors group">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <Avatar className="h-9 w-9 border border-slate-200">
+                                                            <Avatar className="h-9 w-9 border border-slate-700/50">
                                                                 <AvatarImage src={employee.avatar} />
                                                                 <AvatarFallback>{employee.firstName[0]}{employee.lastName[0]}</AvatarFallback>
                                                             </Avatar>
                                                             <div>
-                                                                <p className="font-medium text-slate-900">{employee.firstName} {employee.lastName}</p>
-                                                                <p className="text-xs text-slate-500">{employee.email}</p>
+                                                                <p className="font-semibold text-white">{employee.firstName} {employee.lastName}</p>
+                                                                <p className="text-xs text-slate-400">{employee.email}</p>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-slate-600">{employee.position}</td>
+                                                    <td className="px-6 py-4 text-slate-300">{employee.position}</td>
                                                     <td className="px-6 py-4">
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-700/50 text-slate-300 border border-slate-600/50">
                                                             <Building2 className="w-3 h-3" />
                                                             {employee.department}
                                                         </span>
@@ -408,7 +411,7 @@ export default function EmployeeList() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                                                className="h-8 w-8 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
                                                                 onClick={() => handleEdit(employee)}
                                                             >
                                                                 <Edit className="w-4 h-4" />
@@ -417,7 +420,7 @@ export default function EmployeeList() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                                                className="h-8 w-8 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
                                                                 onClick={() => setViewingEmployee(employee)}
                                                                 title="View Details"
                                                             >
@@ -426,7 +429,7 @@ export default function EmployeeList() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                                                className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
                                                                 onClick={() => setDeleteModal({ isOpen: true, id: employee.id, name: `${employee.firstName} ${employee.lastName}` })}
                                                             >
                                                                 <Trash2 className="w-4 h-4" />
@@ -443,11 +446,11 @@ export default function EmployeeList() {
                     </>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="bg-slate-100 p-4 rounded-full mb-4">
+                        <div className="bg-slate-700/30 p-4 rounded-full mb-4">
                             <Search className="w-8 h-8 text-slate-400" />
                         </div>
-                        <h3 className="text-lg font-semibold text-slate-900">No employees found</h3>
-                        <p className="text-slate-500 max-w-sm mt-2">
+                        <h3 className="text-lg font-bold text-white">No employees found</h3>
+                        <p className="text-slate-400 max-w-sm mt-2">
                             {departmentFilter !== 'All Departments'
                                 ? `No employees found in ${departmentFilter} matching your search.`
                                 : "We couldn't find any employees matching your search terms."}
@@ -469,16 +472,17 @@ export default function EmployeeList() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 pt-8 border-t border-slate-200">
+                    <div className="flex items-center justify-center gap-2 pt-8 border-t border-slate-700/50">
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
+                            className="border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
                         >
                             Previous
                         </Button>
-                        <span className="text-sm font-medium text-slate-600 px-2">
+                        <span className="text-sm font-semibold text-slate-300 px-2">
                             Page {page} of {totalPages}
                         </span>
                         <Button
@@ -486,6 +490,7 @@ export default function EmployeeList() {
                             size="sm"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
+                            className="border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
                         >
                             Next
                         </Button>

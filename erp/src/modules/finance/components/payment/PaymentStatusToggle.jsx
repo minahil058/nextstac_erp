@@ -15,22 +15,22 @@ export default function PaymentStatusToggle({ currentStatus, onUpdate }) {
         switch (status) {
             case 'Paid':
                 return {
-                    className: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200',
+                    className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
                     icon: ArrowUpRight
                 };
             case 'Pending':
                 return {
-                    className: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200',
+                    className: 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]',
                     icon: Clock
                 };
             case 'Failed':
                 return {
-                    className: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200',
+                    className: 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]',
                     icon: AlertCircle
                 };
             default:
                 return {
-                    className: 'bg-slate-100 text-slate-800 border-slate-200',
+                    className: 'bg-slate-800 text-slate-400 border-slate-700/50',
                     icon: ArrowUpRight
                 };
         }
