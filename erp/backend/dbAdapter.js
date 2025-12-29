@@ -9,6 +9,7 @@ const dbAdapter = {
     // Find User By Email
     findUserByEmail: async (email) => {
         if (isVercel) {
+            if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
             const { data, error } = await supabase
                 .from('users')
                 .select('*')
@@ -32,6 +33,7 @@ const dbAdapter = {
     // Create User (Invite)
     createUser: async (user) => {
         if (isVercel) {
+            if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
             // Map camelCase to snake_case if necessary, schema seems mixed but let's stick to what authController passed
             // The authController passes object keys that map to DB columns? 
             // SQLite Insert was: id, name, email, password_hash, role, status, department
@@ -56,6 +58,7 @@ const dbAdapter = {
     // Update User (Register/Activate)
     updateUser: async (id, updates) => {
         if (isVercel) {
+            if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
             const { error } = await supabase
                 .from('users')
                 .update(updates)
