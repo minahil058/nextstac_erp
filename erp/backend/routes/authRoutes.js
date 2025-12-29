@@ -1,10 +1,11 @@
 import express from 'express';
 import * as authController from '../controllers/authController.js';
+import { verifySupabaseToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/login', authController.login);
-router.post('/register', authController.register);
-router.post('/invite', authController.inviteUser);
+// NOTE: login and register routes removed - now handled by Supabase Auth on frontend
+// Only keeping invite route for admin-initiated user invitations
+router.post('/invite', verifySupabaseToken, authController.inviteUser);
 
 export default router;

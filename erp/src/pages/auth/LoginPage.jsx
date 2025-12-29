@@ -317,15 +317,7 @@ export default function LoginPage() {
                         </div>
                     </motion.div>
 
-                    {/* Sign Up Link */}
-                    <motion.div variants={itemVariants} className="text-center">
-                        <p className="text-slate-400">
-                            New to the platform?{' '}
-                            <Link to="/signup" className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400 hover:from-indigo-300 hover:to-pink-300 transition-all">
-                                Create Account →
-                            </Link>
-                        </p>
-                    </motion.div>
+                    {/* Signup removed - login-only system */}
                 </motion.div>
             </div>
 

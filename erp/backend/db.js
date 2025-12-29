@@ -10,21 +10,34 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const isVercel = process.env.VERCEL === '1';
-// Vercel allows writing to /tmp. We use that to prevent R/O errors.
-// Note: This data is ephemeral and may vanish when the lambda sleeps.
-const dbPath = isVercel ? '/tmp/erp.db' : path.resolve(__dirname, 'erp.db');
 
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Error opening database', err.message);
-    } else {
-        console.log(`Connected to the SQLite database (${isVercel ? '/tmp/erp.db' : 'Local File'}).`);
-        db.run('PRAGMA foreign_keys = ON');
-        if (isVercel) {
+let db;
+
+if (isVercel) {
+    console.log('Running on Vercel: SQLite disabled, mocking DB object. Auth should use Supabase.');
+    // Mock DB object to prevent crashes in non-migrated controllers
+    db = {
+        get: (sql, params, cb) => { if (cb) cb(new Error('SQLite is disabled on Vercel. Use Supabase.')); },
+        run: (sql, params, cb) => { if (cb) cb(new Error('SQLite is disabled on Vercel. Use Supabase.')); },
+        all: (sql, params, cb) => { if (cb) cb(new Error('SQLite is disabled on Vercel. Use Supabase.')); },
+        prepare: () => ({
+            run: (a, b, c, cb) => { if (typeof cb === 'function') cb(new Error('SQLite is disabled on Vercel.')); else if (typeof c === 'function') c(new Error('SQLite is disabled on Vercel.')); },
+            finalize: () => { }
+        }),
+        serialize: (cb) => { if (cb) cb(); }
+    };
+} else {
+    const dbPath = path.resolve(__dirname, 'erp.db');
+    db = new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+            console.error('Error opening database', err.message);
+        } else {
+            console.log('Connected to the SQLite database (Local File).');
+            db.run('PRAGMA foreign_keys = ON');
             initSchema();
         }
-    }
-});
+    });
+}
 
 import { v4 as uuidv4 } from 'uuid';
 
