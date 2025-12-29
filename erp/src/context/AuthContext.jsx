@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockDataService } from '../services/mockDataService';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -11,93 +11,175 @@ export const useAuth = () => {
     return context;
 };
 
-// Use Environment Variable or default to relative path (Vercel) or localhost
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Helper function to fetch user profile from database
+const fetchUserProfile = async (userId, email) => {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error) {
+            console.warn('User profile not found in database, using default:', error.message);
+            // Return default profile if not in database yet
+            return {
+                id: userId,
+                email: email,
+                name: email.split('@')[0],
+                role: 'super_admin',
+                status: 'Active',
+                permissions: ['all']
+            };
+        }
+
+        return {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            role: data.role,
+            status: data.status,
+            department: data.department,
+            share_percentage: data.share_percentage,
+            permissions: ['all'],
+            avatar: data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random`
+        };
+    } catch (err) {
+        console.error('Error fetching user profile:', err);
+        return null;
+    }
+};
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for persisted user session
-        const storedUser = localStorage.getItem('erp_user_session');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (error) {
-                console.error('Failed to parse user session', error);
-                localStorage.removeItem('erp_user_session');
+        // Check for existing Supabase session
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
+            if (session?.user) {
+                const userProfile = await fetchUserProfile(session.user.id, session.user.email);
+                setUser(userProfile);
             }
-        }
-        setLoading(false);
+            setLoading(false);
+        });
+
+        // Listen for auth state changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session?.user) {
+                const userProfile = await fetchUserProfile(session.user.id, session.user.email);
+                setUser(userProfile);
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     const login = async (email, password) => {
         try {
-            const response = await fetch(`${API_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                return { success: false, error: data.error || 'Invalid credentials' };
+            if (error) {
+                return { success: false, error: error.message };
             }
 
-            const sessionUser = {
-                id: data.user.id,
-                name: data.user.name,
-                email: data.user.email,
-                role: data.user.role,
-                permissions: ['all'],
-                avatar: data.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.name)}&background=random`
-            };
+            if (data.user) {
+                const userProfile = await fetchUserProfile(data.user.id, data.user.email);
 
-            setUser(sessionUser);
-            localStorage.setItem('erp_user_session', JSON.stringify(sessionUser));
-            return { success: true };
+                if (!userProfile) {
+                    await supabase.auth.signOut();
+                    return { success: false, error: 'Failed to load user profile' };
+                }
+
+                // Check user status
+                if (userProfile.status === 'Invited') {
+                    await supabase.auth.signOut();
+                    return { success: false, error: 'Account not activated. Please complete registration.' };
+                }
+
+                if (userProfile.status === 'Inactive') {
+                    await supabase.auth.signOut();
+                    return { success: false, error: 'Account is inactive. Contact administrator.' };
+                }
+
+                setUser(userProfile);
+                return { success: true };
+            }
+
+            return { success: false, error: 'Login failed' };
         } catch (error) {
+            console.error('Login error:', error);
             return { success: false, error: 'Connection error' };
         }
     };
 
     const register = async (name, email, password, role) => {
         try {
-            const response = await fetch(`${API_URL}/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password }),
+            // First, sign up with Supabase Auth
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        name: name,
+                    }
+                }
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                return { success: false, error: data.error || 'Registration failed' };
+            if (error) {
+                return { success: false, error: error.message };
             }
 
-            const sessionUser = {
-                id: data.user.id,
-                name: data.user.name,
-                email: data.user.email,
-                role: data.user.role,
-                permissions: ['all'],
-                avatar: data.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.name)}&background=random`
-            };
+            if (data.user) {
+                // Create or update user profile in database
+                const { error: profileError } = await supabase
+                    .from('users')
+                    .upsert({
+                        id: data.user.id,
+                        email: email,
+                        name: name,
+                        role: role || 'super_admin',
+                        status: 'Active',
+                        created_at: new Date().toISOString(),
+                    }, {
+                        onConflict: 'email'
+                    });
 
-            setUser(sessionUser);
-            localStorage.setItem('erp_user_session', JSON.stringify(sessionUser));
-            return { success: true };
+                if (profileError) {
+                    console.error('Profile creation error:', profileError);
+                    // Continue anyway - auth was successful
+                }
+
+                const userProfile = await fetchUserProfile(data.user.id, email);
+                setUser(userProfile);
+                return { success: true };
+            }
+
+            return { success: false, error: 'Registration failed' };
         } catch (error) {
+            console.error('Registration error:', error);
             return { success: false, error: error.message };
         }
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem('erp_user_session');
-        window.location.href = '/login';
+    const logout = async () => {
+        try {
+            await supabase.auth.signOut();
+            setUser(null);
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Force logout even if there's an error
+            setUser(null);
+            window.location.href = '/login';
+        }
     };
 
     const value = {
@@ -107,7 +189,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin'
+        isAdmin: user?.role === 'admin' || user?.role === 'super_admin'
     };
 
     return (

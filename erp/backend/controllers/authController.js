@@ -111,82 +111,9 @@ export const inviteUser = async (req, res) => {
     }
 };
 
-export const login = async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const row = await dbAdapter.findUserByEmail(email);
-
-        if (!row) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        if (row.status === 'Invited') {
-            return res.status(403).json({ error: 'Account not activated. Please complete registration.' });
-        }
-
-        if (row.status === 'Inactive') {
-            return res.status(403).json({ error: 'Account is inactive. Contact administrator.' });
-        }
-
-        // Mock password check
-        if (password !== row.password_hash) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        const { password_hash, ...user } = row;
-        res.json({ token: 'mock-jwt-token', user });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-export const register = async (req, res) => {
-    const { name, email, password } = req.body;
-    console.log('Registering user attempt:', { name, email });
-
-    if (!name || !email || !password) {
-        return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    try {
-        const row = await dbAdapter.findUserByEmail(email);
-
-        // Scenario 1: User does not exist at all -> Deny
-        if (!row) {
-            return res.status(403).json({ error: 'Access Denied. Your email has not been invited by an administrator.' });
-        }
-
-        // Scenario 2: User exists but is already Active -> Deny (Already registered)
-        if (row.status === 'Active') {
-            return res.status(400).json({ error: 'User already registered. Please login.' });
-        }
-
-        // Scenario 3: User exists and status is 'Invited' -> Allow (Update record)
-        if (row.status === 'Invited') {
-            const password_hash = password; // Should hash in real app
-            const status = 'Active';
-
-            const updates = { name, password_hash, status };
-            await dbAdapter.updateUser(row.id, updates);
-
-            // Return updated user object
-            const user = {
-                id: row.id,
-                name,
-                email,
-                role: row.role,
-                status,
-                department: row.department,
-                share_percentage: row.share_percentage
-            };
-
-            res.status(200).json({ token: 'mock-jwt-token', user });
-        } else {
-            // Fallback for any other status
-            return res.status(403).json({ error: `Account status is ${row.status}. Contact admin.` });
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
+// NOTE: login and register functions have been removed.
+// Authentication is now handled by Supabase Auth on the frontend.
+// Users sign in directly with Supabase using the SDK in AuthContext.jsx
+//
+// The inviteUser function above is still used for admin-initiated user invitations.
+// TODO: Update inviteUser to use Supabase Admin API to create auth users programmatically.
