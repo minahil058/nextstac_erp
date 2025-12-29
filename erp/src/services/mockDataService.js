@@ -544,6 +544,9 @@ export const mockDataService = {
     },
 
     // Files (Documents)
+    // In-memory storage for actual file blobs (since we can't stringify them for localStorage)
+    fileBlobStorage: new Map(),
+
     getFiles: () => {
         return getOrSeed('erp_mock_files', () => ({
             id: faker.string.uuid(),
@@ -555,15 +558,30 @@ export const mockDataService = {
         }), 20);
     },
 
-    addFile: (file) => {
+    getFileBlob: (id) => {
+        return mockDataService.fileBlobStorage.get(id);
+    },
+
+    addFile: (fileData) => {
         const files = mockDataService.getFiles();
+
+        // Extract the actual File object if present, separate from metadata
+        const { file: fileObject, ...metadata } = fileData;
+
         const newFile = {
             id: faker.string.uuid(),
             date: new Date().toISOString(),
             uploadedBy: 'Current User',
-            size: (Math.random() * 5000 + 500).toFixed(0) + ' KB',
-            ...file
+            size: fileObject ? (fileObject.size / 1024).toFixed(0) + ' KB' : (Math.random() * 5000 + 500).toFixed(0) + ' KB',
+            type: fileObject ? fileObject.type : metadata.type || 'application/octet-stream',
+            ...metadata
         };
+
+        // Store the actual file blob in memory if provided
+        if (fileObject) {
+            mockDataService.fileBlobStorage.set(newFile.id, fileObject);
+        }
+
         files.unshift(newFile);
         localStorage.setItem('erp_mock_files', JSON.stringify(files));
         return { success: true, data: newFile };
@@ -572,6 +590,12 @@ export const mockDataService = {
     deleteFile: (id) => {
         const files = mockDataService.getFiles();
         const newFiles = files.filter(f => f.id !== id);
+
+        // Clean up memory
+        if (mockDataService.fileBlobStorage.has(id)) {
+            mockDataService.fileBlobStorage.delete(id);
+        }
+
         localStorage.setItem('erp_mock_files', JSON.stringify(newFiles));
         return { success: true };
     },
@@ -657,12 +681,12 @@ export const mockDataService = {
 
     // Company Profile
     getCompanyProfile: () => {
-        return getOrSeed('erp_mock_company_profile', () => ({
+        return getOrSeed('erp_mock_company_profile_v2', () => ({
             id: faker.string.uuid(),
             name: 'Financa Tech Global',
             legalName: 'Financa Technologies Pvt Ltd',
             logo: faker.image.url({ width: 200, height: 200 }),
-            website: 'www.financa-tech.com',
+            website: 'nextstac.com/',
             email: 'contact@financa-tech.com',
             phone: '+1 (555) 123-4567',
             foundedYear: '2015',
@@ -691,11 +715,23 @@ export const mockDataService = {
             },
 
             socials: {
-                linkedin: 'linkedin.com/company/financa',
+                linkedin: 'www.linkedin.com/company/nextstac/',
                 github: 'github.com/financa-dev',
                 twitter: '@financa_tech'
             }
         }), 1)[0];
+    },
+
+    updateCompanyProfile: (updates) => {
+        const currentProfile = mockDataService.getCompanyProfile(); // Gets from storage if exists
+        const updatedProfile = { ...currentProfile, ...updates };
+
+        // Wrap in array because getOrSeed expects an array structure for this key if we used it as a list
+        // but here getCompanyProfile accesses [0].
+        // To remain consistent with getCompanyProfile's storage read:
+        localStorage.setItem('erp_mock_company_profile_v2', JSON.stringify([updatedProfile]));
+
+        return updatedProfile;
     },
 
     // Leave Management
@@ -892,6 +928,13 @@ export const mockDataService = {
             return { success: true, data: branches[index] };
         }
         return { success: false, error: 'Branch not found' };
+    },
+
+    deleteBranch: (id) => {
+        const branches = mockDataService.getBranches();
+        const newBranches = branches.filter(b => b.id !== id);
+        localStorage.setItem('erp_mock_branches', JSON.stringify(newBranches));
+        return { success: true };
     },
 
     // --- Departments ---

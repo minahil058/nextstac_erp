@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, Package, AlertCircle } from 'lucide-react';
 
 export default function ProductModal({ isOpen, onClose, product, onSubmit }) {
@@ -51,7 +52,7 @@ export default function ProductModal({ isOpen, onClose, product, onSubmit }) {
 
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="px-6 py-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
@@ -185,6 +186,7 @@ export default function ProductModal({ isOpen, onClose, product, onSubmit }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

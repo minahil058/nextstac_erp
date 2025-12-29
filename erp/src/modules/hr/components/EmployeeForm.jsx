@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save } from 'lucide-react';
 
 export default function EmployeeForm({ isOpen, onClose, onSubmit, initialData = null }) {
@@ -46,8 +47,8 @@ export default function EmployeeForm({ isOpen, onClose, onSubmit, initialData = 
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
             <div className="bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200 border border-slate-700/50 overflow-hidden">
                 <div className="flex justify-between items-center p-6 border-b border-slate-700/50 bg-slate-900/50 shrink-0">
                     <h2 className="text-xl font-bold text-white">
@@ -217,6 +218,7 @@ export default function EmployeeForm({ isOpen, onClose, onSubmit, initialData = 
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

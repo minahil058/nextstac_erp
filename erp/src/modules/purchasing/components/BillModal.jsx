@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Receipt, Calendar, DollarSign, User, AlertCircle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, Receipt, Calendar, DollarSign, User, AlertCircle, Save } from 'lucide-react';
 import { mockDataService } from '../../../services/mockDataService';
 import { useQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function BillModal({ isOpen, onClose, onSubmit }) {
     const [formData, setFormData] = useState({
@@ -31,135 +33,156 @@ export default function BillModal({ isOpen, onClose, onSubmit }) {
         }
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    return createPortal(
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+                    />
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-slate-900">Record New Bill</h2>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <form onSubmit={(e) => {
-                    e.preventDefault();
-                    onSubmit({
-                        ...formData,
-                        amount: parseFloat(formData.amount)
-                    });
-                }} className="p-6 space-y-4">
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Vendor</label>
-                        <div className="relative">
-                            <User className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                            <select
-                                required
-                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all appearance-none bg-white"
-                                value={formData.vendor}
-                                onChange={e => setFormData({ ...formData, vendor: e.target.value })}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden relative z-10 flex flex-col max-h-[90vh]"
+                    >
+                        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50 sticky top-0 z-10 backdrop-blur-xl">
+                            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                                <Receipt className="w-5 h-5 text-purple-400" />
+                                Record New Bill
+                            </h2>
+                            <button
+                                onClick={onClose}
+                                className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
                             >
-                                <option value="">Select Vendor</option>
-                                {vendors?.map(v => (
-                                    <option key={v.id} value={v.companyName}>{v.companyName}</option>
-                                ))}
-                            </select>
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
-                    </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Bill Number</label>
-                        <div className="relative">
-                            <Receipt className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                            <input
-                                required
-                                type="text"
-                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-                                placeholder="BILL-00000"
-                                value={formData.billNumber}
-                                onChange={e => setFormData({ ...formData, billNumber: e.target.value })}
-                            />
+                        <div className="overflow-y-auto custom-scrollbar">
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                onSubmit({
+                                    ...formData,
+                                    amount: parseFloat(formData.amount)
+                                });
+                            }} className="p-6 space-y-5">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        <User className="w-3.5 h-3.5" /> Vendor
+                                    </label>
+                                    <select
+                                        required
+                                        className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-white transition-all font-medium appearance-none"
+                                        value={formData.vendor}
+                                        onChange={e => setFormData({ ...formData, vendor: e.target.value })}
+                                    >
+                                        <option value="">Select Vendor</option>
+                                        {vendors?.map(v => (
+                                            <option key={v.id} value={v.companyName}>{v.companyName}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        <Receipt className="w-3.5 h-3.5" /> Bill Number
+                                    </label>
+                                    <input
+                                        required
+                                        type="text"
+                                        className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-white placeholder:text-slate-500 transition-all font-medium"
+                                        placeholder="BILL-00000"
+                                        value={formData.billNumber}
+                                        onChange={e => setFormData({ ...formData, billNumber: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                                            <Calendar className="w-3.5 h-3.5" /> Bill Date
+                                        </label>
+                                        <input
+                                            required
+                                            type="date"
+                                            className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-white placeholder:text-slate-500 transition-all font-medium"
+                                            value={formData.date}
+                                            onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                                            <AlertCircle className="w-3.5 h-3.5" /> Due Date
+                                        </label>
+                                        <input
+                                            required
+                                            type="date"
+                                            className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-white placeholder:text-slate-500 transition-all font-medium"
+                                            value={formData.dueDate}
+                                            onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        <DollarSign className="w-3.5 h-3.5" /> Total Amount
+                                    </label>
+                                    <input
+                                        required
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-white placeholder:text-slate-500 transition-all font-medium"
+                                        placeholder="0.00"
+                                        value={formData.amount}
+                                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        Status
+                                    </label>
+                                    <select
+                                        className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 text-white transition-all font-medium appearance-none"
+                                        value={formData.status}
+                                        onChange={e => setFormData({ ...formData, status: e.target.value })}
+                                    >
+                                        <option value="Pending">Pending</option>
+                                        <option value="Paid">Paid</option>
+                                        <option value="Overdue">Overdue</option>
+                                    </select>
+                                </div>
+
+                                <div className="pt-2 flex justify-end gap-3 sticky bottom-0 bg-slate-900/95 backdrop-blur pb-2 border-t border-slate-800 mt-4">
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="flex-1 px-4 py-2.5 text-sm font-bold text-slate-300 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-700 hover:text-white transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-2 active:scale-95"
+                                    >
+                                        <Save className="w-4 h-4" />
+                                        Record Bill
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Bill Date</label>
-                            <div className="relative">
-                                <Calendar className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                <input
-                                    required
-                                    type="date"
-                                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-                                    value={formData.date}
-                                    onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
-                            <div className="relative">
-                                <AlertCircle className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                <input
-                                    required
-                                    type="date"
-                                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-                                    value={formData.dueDate}
-                                    onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Total Amount</label>
-                        <div className="relative">
-                            <DollarSign className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                            <input
-                                required
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-                                placeholder="0.00"
-                                value={formData.amount}
-                                onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                        <select
-                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-                            value={formData.status}
-                            onChange={e => setFormData({ ...formData, status: e.target.value })}
-                        >
-                            <option value="Pending">Pending</option>
-                            <option value="Paid">Paid</option>
-                            <option value="Overdue">Overdue</option>
-                        </select>
-                    </div>
-
-                    <div className="pt-4 flex justify-end gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
-                        >
-                            Record Bill
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>,
+        document.body
     );
 }

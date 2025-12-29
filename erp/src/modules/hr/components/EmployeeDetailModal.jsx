@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
     X,
     Mail,
@@ -43,13 +44,13 @@ export default function EmployeeDetailModal({ isOpen, onClose, employee }) {
         }
     };
 
-    return (
+    return createPortal(
         <AnimatePresence>
             {isOpen && employee && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <motion.div
                         key="backdrop"
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
                         variants={backdropVariants}
                         initial="hidden"
                         animate="visible"
@@ -235,6 +236,7 @@ export default function EmployeeDetailModal({ isOpen, onClose, employee }) {
                     </motion.div>
                 </div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }

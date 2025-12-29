@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, Building, User, Mail, Phone, MapPin } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CustomerFormModal({ isOpen, onClose, onSubmit, initialData = null }) {
     const [formData, setFormData] = useState({
@@ -30,142 +32,150 @@ export default function CustomerFormModal({ isOpen, onClose, onSubmit, initialDa
         }
     }, [isOpen, initialData]);
 
-    if (!isOpen) return null;
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit(formData);
-        // Do not reset here, wait for modal close or success from parent
     };
 
     const isEditing = !!initialData;
 
-    return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
-                    <h3 className="font-bold text-slate-800">{isEditing ? 'Edit Customer' : 'Add New Customer'}</h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200 transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+    return createPortal(
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+                        onClick={onClose}
+                    />
 
-                <div className="overflow-y-auto">
-                    <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                                    <User className="w-3.5 h-3.5" /> Full Name
-                                </label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="e.g. John Doe"
-                                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 flex flex-col"
+                    >
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-slate-800 bg-slate-900/50 sticky top-0 z-10 backdrop-blur-xl">
+                            <div>
+                                <h2 className="text-xl font-bold text-white tracking-tight">
+                                    {isEditing ? 'Edit Customer' : 'Add New Customer'}
+                                </h2>
+                                <p className="text-sm text-slate-400 mt-1">Manage customer details</p>
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                                    <Building className="w-3.5 h-3.5" /> Company
-                                </label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="e.g. Acme Inc"
-                                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    value={formData.company}
-                                    onChange={e => setFormData({ ...formData, company: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                                    <Mail className="w-3.5 h-3.5" /> Email
-                                </label>
-                                <input
-                                    required
-                                    type="email"
-                                    placeholder="john@example.com"
-                                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    value={formData.email}
-                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                                    <Phone className="w-3.5 h-3.5" /> Phone
-                                </label>
-                                <input
-                                    required
-                                    type="tel"
-                                    placeholder="+1 (555) 000-0000"
-                                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    value={formData.phone}
-                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                                <MapPin className="w-3.5 h-3.5" /> Address
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="Street Address, City, Zip"
-                                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                value={formData.address || ''}
-                                onChange={e => setFormData({ ...formData, address: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Status</label>
-                            <select
-                                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white"
-                                value={formData.status}
-                                onChange={e => setFormData({ ...formData, status: e.target.value })}
-                            >
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                                <option value="Lead">Lead</option>
-                            </select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Notes</label>
-                            <textarea
-                                rows="3"
-                                placeholder="Additional customer notes..."
-                                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
-                                value={formData.notes || ''}
-                                onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="pt-2 flex gap-3 sticky bottom-0 bg-white pb-2">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 px-4 py-2 text-sm font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="flex-1 px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors flex items-center justify-center gap-2"
-                            >
-                                <Save className="w-4 h-4" />
-                                {isEditing ? 'Save Changes' : 'Add Customer'}
+                            <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-white">
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
-                    </form>
+
+                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                            {/* Basic Info */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Customer Name</label>
+                                    <div className="relative">
+                                        <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-white placeholder-slate-500"
+                                            placeholder="John Doe"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Company</label>
+                                    <div className="relative">
+                                        <Building className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            type="text"
+                                            name="company"
+                                            value={formData.company}
+                                            onChange={handleChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-white placeholder-slate-500"
+                                            placeholder="Acme Inc."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Details */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email</label>
+                                    <div className="relative">
+                                        <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-white placeholder-slate-500"
+                                            placeholder="john@example.com"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</label>
+                                    <div className="relative">
+                                        <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            type="text"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-white placeholder-slate-500"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Address */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Address</label>
+                                <div className="relative">
+                                    <MapPin className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                                    <textarea
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        rows="3"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-white placeholder-slate-500 resize-none"
+                                        placeholder="123 Main St, City, Country"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex justify-end gap-3 border-t border-slate-800 mt-6">
+                                <button type="button" onClick={onClose} className="px-5 py-2.5 text-slate-300 font-bold hover:bg-slate-800 rounded-xl transition-colors text-sm border border-transparent hover:border-slate-700">
+                                    Cancel
+                                </button>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    type="submit"
+                                    className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl transition-all flex items-center gap-2 text-sm shadow-lg shadow-indigo-500/25"
+                                >
+                                    <Save className="w-4 h-4" />
+                                    {isEditing ? 'Save Changes' : 'Add Customer'}
+                                </motion.button>
+                            </div>
+                        </form>
+                    </motion.div>
                 </div>
-            </div>
-        </div>
+            )}
+        </AnimatePresence>,
+        document.body
     );
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, DollarSign, Calendar, Users, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function PayrollModal({ isOpen, onClose, onRunPayroll, totalEmployees }) {
@@ -21,8 +22,8 @@ export default function PayrollModal({ isOpen, onClose, onRunPayroll, totalEmplo
         onClose();
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                     <div>
@@ -123,6 +124,7 @@ export default function PayrollModal({ isOpen, onClose, onRunPayroll, totalEmplo
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

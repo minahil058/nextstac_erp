@@ -6,6 +6,8 @@ import InventoryLayout from './modules/inventory/layouts/InventoryLayout';
 import FinanceLayout from './modules/finance/layouts/FinanceLayout';
 import SalesLayout from './modules/sales/layouts/SalesLayout';
 import PurchasingLayout from './modules/purchasing/layouts/PurchasingLayout';
+import DocumentsLayout from './modules/documents/layouts/DocumentsLayout';
+import AuditLayout from './modules/audit/layouts/AuditLayout';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import DashboardHome from './modules/dashboard/pages/DashboardHome';
@@ -182,13 +184,19 @@ export const router = createBrowserRouter([
                     // Documents (Super Admin + Dev)
                     {
                         path: 'documents',
-                        element: <RoleRoute allowed={['super_admin', 'dev_admin']}><FileManager /></RoleRoute>
+                        element: <RoleRoute allowed={['super_admin', 'dev_admin']}><DocumentsLayout /></RoleRoute>,
+                        children: [
+                            { index: true, element: <FileManager /> }
+                        ]
                     },
 
                     // Audit / Logs (Super Admin + Dev)
                     {
                         path: 'audit',
-                        element: <RoleRoute allowed={['super_admin', 'dev_admin']}><ActivityLogs /></RoleRoute>
+                        element: <RoleRoute allowed={['super_admin', 'dev_admin']}><AuditLayout /></RoleRoute>,
+                        children: [
+                            { index: true, element: <ActivityLogs /> }
+                        ]
                     },
 
                     // Admin Management (Super Admin)

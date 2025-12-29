@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mockDataService } from '../../../services/mockDataService';
 import {
@@ -191,94 +192,98 @@ export default function DepartmentList() {
             </div>
 
             {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-700/50">
-                        <div className="p-6 border-b border-slate-700/50 flex justify-between items-center bg-gradient-to-r from-indigo-600/20 to-purple-600/20">
-                            <h2 className="text-xl font-black text-white">{editingId ? 'Edit Department' : 'Add New Department'}</h2>
-                            <button onClick={handleClose} className="text-slate-400 hover:text-slate-600">
+            {isModalOpen && createPortal(
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-800">
+                        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                            <h2 className="text-xl font-bold text-white">{editingId ? 'Edit Department' : 'Add New Department'}</h2>
+                            <button onClick={handleClose} className="text-slate-400 hover:text-white transition-colors">
                                 <span className="sr-only">Close</span>
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">Department Name</label>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Department Name</label>
                                 <input
                                     type="text"
                                     required
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-white placeholder-slate-500"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="e.g. Marketing"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">Department Head</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Department Head</label>
                                 <input
                                     type="text"
                                     required
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-white placeholder-slate-500"
                                     value={formData.head}
                                     onChange={e => setFormData({ ...formData, head: e.target.value })}
                                     placeholder="e.g. Jane Smith"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">Annual Budget</label>
-                                <input
-                                    type="number"
-                                    required
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                    value={formData.budget}
-                                    onChange={e => setFormData({ ...formData, budget: e.target.value })}
-                                    placeholder="e.g. 500000"
-                                />
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Annual Budget</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="w-full pl-8 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-white placeholder-slate-500"
+                                        value={formData.budget}
+                                        onChange={e => setFormData({ ...formData, budget: e.target.value })}
+                                        placeholder="500000"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="pt-4 flex justify-end gap-3">
+                            <div className="pt-4 flex justify-end gap-3 border-t border-slate-800 mt-6">
                                 <button
                                     type="button"
                                     onClick={handleClose}
-                                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                                    className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl font-medium transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={addDepartmentMutation.isPending || updateDepartmentMutation.isPending}
-                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-70 flex items-center gap-2"
+                                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all disabled:opacity-70 flex items-center gap-2 shadow-lg shadow-indigo-500/20"
                                 >
                                     {(addDepartmentMutation.isPending || updateDepartmentMutation.isPending) ? 'Saving...' : (editingId ? 'Save Changes' : 'Create Department')}
                                 </button>
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Delete Confirmation Modal */}
-            {deleteId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-700/50">
+            {deleteId && createPortal(
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-800">
                         <div className="p-6 text-center">
-                            <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400 border border-red-500/30">
+                            <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 border border-red-500/30 shadow-lg shadow-red-500/10">
                                 <AlertTriangle className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-black text-white mb-2">Delete Department?</h3>
+                            <h3 className="text-xl font-bold text-white mb-2">Delete Department?</h3>
                             <p className="text-slate-400 text-sm mb-6">
                                 Are you sure you want to delete this department? This action cannot be undone.
                             </p>
                             <div className="flex gap-3 justify-center">
                                 <button
                                     onClick={() => setDeleteId(null)}
-                                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                                    className="px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl font-medium transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={() => deleteDepartmentMutation.mutate(deleteId)}
-                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-70"
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl font-medium transition-colors disabled:opacity-70 shadow-lg shadow-red-600/20"
                                     disabled={deleteDepartmentMutation.isPending}
                                 >
                                     {deleteDepartmentMutation.isPending ? 'Deleting...' : 'Delete'}
@@ -286,7 +291,8 @@ export default function DepartmentList() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, Clock, Calendar } from 'lucide-react';
 
 export default function AttendanceModal({ isOpen, onClose, record, employees, onSave }) {
@@ -55,8 +56,8 @@ export default function AttendanceModal({ isOpen, onClose, record, employees, on
         onClose();
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                     <div>
@@ -169,6 +170,7 @@ export default function AttendanceModal({ isOpen, onClose, record, employees, on
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
