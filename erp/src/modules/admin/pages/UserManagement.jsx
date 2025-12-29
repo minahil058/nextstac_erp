@@ -38,9 +38,11 @@ export default function UserManagement() {
 
     const basePool = config?.basePool || 0;
 
+    const API_URL = import.meta.env.VITE_API_URL || '/api';
+
     const addAdminMutation = useMutation({
         mutationFn: async (newAdmin) => {
-            const response = await fetch('http://localhost:5000/api/auth/invite', {
+            const response = await fetch(`${API_URL}/auth/invite`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newAdmin),
