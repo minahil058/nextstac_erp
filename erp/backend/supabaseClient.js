@@ -6,11 +6,16 @@ dotenv.config();
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
-// Warn if keys are missing (critical for Vercel)
-if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase URL or Key missing. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.');
-}
+let supabase = null;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+if (supabaseUrl && supabaseKey) {
+    try {
+        supabase = createClient(supabaseUrl, supabaseKey);
+    } catch (e) {
+        console.error('Failed to initialize Supabase client:', e);
+    }
+} else {
+    console.warn('Supabase URL or Key missing. Database operations will fail if VERCEL=1.');
+}
 
 export default supabase;
