@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { chartOfAccounts } from '../data/chartOfAccounts';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const STORAGE_KEYS = {
     EMPLOYEES: 'erp_mock_employees_v3_force_fix', // Bumped key to force re-seed
