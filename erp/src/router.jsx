@@ -70,6 +70,7 @@ const RootDispatcher = () => {
     if (user.role === 'super_admin') return <DashboardHome />;
     if (user.role === 'ecommerce_admin') return <Navigate to="/ecommerce" replace />;
     if (user.role === 'dev_admin') return <Navigate to="/dev" replace />;
+    if (user.role === 'user') return <EmployeeDashboard />;
 
     return <DashboardHome />;
 };
@@ -157,7 +158,7 @@ export const router = createBrowserRouter([
                     // HR (Super Admin)
                     {
                         path: 'hr',
-                        element: <RoleRoute allowed={['super_admin', 'ecommerce_admin', 'dev_admin', 'user']}><HRLayout /></RoleRoute>,
+                        element: <RoleRoute allowed={['super_admin', 'ecommerce_admin', 'dev_admin']}><HRLayout /></RoleRoute>,
                         children: [
                             { index: true, element: <Navigate to="employees" replace /> },
                             { path: 'employees', element: <EmployeeList /> },

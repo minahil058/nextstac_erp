@@ -92,15 +92,17 @@ const DashboardHome = () => {
         mutationFn: async (file) => {
             const formData = new FormData();
             formData.append('file', file);
-            const response = await fetch(`${baseUrl}/finance/upload`, {
-                method: 'POST',
-                body: formData,
-            });
-            if (!response.ok) throw new Error('Upload failed');
-            return response.json();
+
+            // Allow api.post to handle auth and headers
+            return await api.post('/finance/upload', formData);
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['transactions']);
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries(['transactions']),
+                queryClient.invalidateQueries(['employees']),
+                queryClient.invalidateQueries(['products']),
+                queryClient.invalidateQueries(['orders'])
+            ]);
             alert('Data imported successfully!');
         },
         onError: (err) => {

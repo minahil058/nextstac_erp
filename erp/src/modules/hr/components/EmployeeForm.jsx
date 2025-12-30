@@ -6,6 +6,7 @@ export default function EmployeeForm({ isOpen, onClose, onSubmit, initialData = 
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        cnic: '',
         email: '',
         position: '',
         department: '',
@@ -24,6 +25,7 @@ export default function EmployeeForm({ isOpen, onClose, onSubmit, initialData = 
                 firstName: '',
                 lastName: '',
                 email: '',
+                cnic: '',
                 position: '',
                 department: '',
                 salary: '',
@@ -90,17 +92,30 @@ export default function EmployeeForm({ isOpen, onClose, onSubmit, initialData = 
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-300">Email Address</label>
-                        <input
-                            type="email"
-                            name="email"
-                            required
-                            value={formData.email}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 border border-slate-700/50 bg-slate-800/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none placeholder-slate-500 transition-all shadow-inner"
-                            placeholder="john.doe@company.com"
-                        />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-300">Email Address</label>
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                value={formData.email}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 border border-slate-700/50 bg-slate-800/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none placeholder-slate-500 transition-all shadow-inner"
+                                placeholder="john.doe@company.com"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-300">CNIC (National ID)</label>
+                            <input
+                                type="text"
+                                name="cnic"
+                                value={formData.cnic || ''}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 border border-slate-700/50 bg-slate-800/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none placeholder-slate-500 transition-all shadow-inner"
+                                placeholder="00000-0000000-0"
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

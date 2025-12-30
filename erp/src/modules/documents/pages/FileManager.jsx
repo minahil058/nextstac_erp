@@ -52,51 +52,17 @@ export default function FileManager() {
         }
     });
 
-    const handleDownload = (file) => {
+    const handleDownload = async (file) => {
         setDownloadingId(file.id);
-
-        // Simulate network delay
-        setTimeout(() => {
-            try {
-                // Check if we have a real file blob stored in memory (for newly uploaded files)
-                const realBlob = mockDataService.getFileBlob(file.id);
-
-                if (realBlob) {
-                    // Download the real file
-                    const url = window.URL.createObjectURL(realBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = file.name; // Real file, real name
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
-                    showToast(`Downloaded ${file.name}`, 'success');
-                } else {
-                    // Fallback for pre-seeded mock files
-                    const content = `[MOCK FILE CONTENT]\n\nThis is a placeholder file for: ${file.name}\n\nMetadata:\n- Type: ${file.type}\n- Size: ${file.size}\n- Uploaded By: ${file.uploadedBy}\n- Date: ${new Date(file.date).toLocaleString()}\n\n(This is a pre-seeded mock file. Upload a real file to test actual download functionality.)`;
-
-                    const blob = new Blob([content], { type: 'text/plain' });
-                    const url = window.URL.createObjectURL(blob);
-
-                    const link = document.createElement('a');
-                    link.href = url;
-                    // Append .txt so it opens correctly as text
-                    link.download = `${file.name}.txt`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
-
-                    showToast(`Downloaded mock file details`, 'success');
-                }
-            } catch (error) {
-                console.error("Download error:", error);
-                showToast('Failed to download file', 'error');
-            } finally {
-                setDownloadingId(null);
-            }
-        }, 800);
+        try {
+            await mockDataService.downloadFile(file);
+            showToast(`Downloaded ${file.name}`, 'success');
+        } catch (error) {
+            console.error("Download error:", error);
+            showToast('Failed to download file', 'error');
+        } finally {
+            setDownloadingId(null);
+        }
     };
 
     const handleExport = () => {

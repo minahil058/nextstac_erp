@@ -12,6 +12,7 @@ import purchasingRoutes from './routes/purchasingRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
 
 
 const app = express();
@@ -31,6 +32,13 @@ app.use('/api/sales', salesRoutes);
 app.use('/api/purchasing', purchasingRoutes); // Vendors
 app.use('/api/system', systemRoutes);         // Logs, Profile
 app.use('/api/admin', adminRoutes);           // Admin Management
+app.use('/api/documents', documentRoutes);    // File Manager
+
+// Serve Uploads
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/', (req, res) => {
     res.send('Financa ERP API is running');

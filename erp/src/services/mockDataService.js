@@ -136,7 +136,12 @@ export const mockDataService = {
 
     addEmployee: async (employee) => {
         const { api } = await import('../lib/api');
-        const data = await api.post('/hr/employees', employee);
+        // Generate a default avatar if not provided
+        const employeeWithAvatar = {
+            ...employee,
+            avatar: employee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(employee.firstName + ' ' + employee.lastName)}&background=random`
+        };
+        const data = await api.post('/hr/employees', employeeWithAvatar);
         return { success: true, data };
     },
 
@@ -154,107 +159,73 @@ export const mockDataService = {
 
     // --- INVENTORY ---
     getProducts: async () => {
-        const response = await fetch(`${API_URL}/inventory/products`);
-        if (!response.ok) throw new Error('Failed to fetch products');
-        return response.json();
+        const { api } = await import('../lib/api');
+        return api.get('/inventory/products');
     },
 
     addProduct: async (product) => {
-        const response = await fetch(`${API_URL}/inventory/products`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(product),
-        });
-        if (!response.ok) throw new Error('Failed to add product');
-        return { success: true, data: await response.json() };
+        const { api } = await import('../lib/api');
+        const data = await api.post('/inventory/products', product);
+        return { success: true, data };
     },
 
     updateProduct: async (id, updates) => {
-        // Frontend sends { id, data: updates } or similar. Adjust to API expectations.
-        const response = await fetch(`${API_URL}/inventory/products/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ updates }),
-        });
-        if (!response.ok) throw new Error('Failed to update product');
-        return { success: true, data: await response.json() };
+        const { api } = await import('../lib/api');
+        const data = await api.put(`/inventory/products/${id}`, { updates });
+        return { success: true, data };
     },
 
     deleteProduct: async (id) => {
-        const response = await fetch(`${API_URL}/inventory/products/${id}`, {
-            method: 'DELETE',
-        });
-        if (!response.ok) throw new Error('Failed to delete product');
+        const { api } = await import('../lib/api');
+        await api.delete(`/inventory/products/${id}`);
         return { success: true };
     },
 
     // --- FINANCE: INVOICES ---
     getInvoices: async () => {
-        const response = await fetch(`${API_URL}/finance/invoices`);
-        if (!response.ok) throw new Error('Failed to fetch invoices');
-        return response.json();
+        const { api } = await import('../lib/api');
+        return api.get('/finance/invoices');
     },
 
     addInvoice: async (invoice) => {
-        const response = await fetch(`${API_URL}/finance/invoices`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(invoice),
-        });
-        if (!response.ok) throw new Error('Failed to add invoice');
-        return { success: true, data: await response.json() };
+        const { api } = await import('../lib/api');
+        const data = await api.post('/finance/invoices', invoice);
+        return { success: true, data };
     },
 
     updateInvoiceStatus: async (id, status) => {
-        const response = await fetch(`${API_URL}/finance/invoices/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status }),
-        });
-        if (!response.ok) throw new Error('Failed to update invoice status');
-        return { success: true, data: await response.json() };
+        const { api } = await import('../lib/api');
+        const data = await api.patch(`/finance/invoices/${id}/status`, { status });
+        return { success: true, data };
     },
 
     deleteInvoice: async (id) => {
-        const response = await fetch(`${API_URL}/finance/invoices/${id}`, {
-            method: 'DELETE',
-        });
-        if (!response.ok) throw new Error('Failed to delete invoice');
+        const { api } = await import('../lib/api');
+        await api.delete(`/finance/invoices/${id}`);
         return { success: true };
     },
 
     // --- FINANCE: PAYMENTS ---
     getPayments: async () => {
-        const response = await fetch(`${API_URL}/finance/payments`);
-        if (!response.ok) throw new Error('Failed to fetch payments');
-        return response.json();
+        const { api } = await import('../lib/api');
+        return api.get('/finance/payments');
     },
 
     addPayment: async (payment) => {
-        const response = await fetch(`${API_URL}/finance/payments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payment),
-        });
-        if (!response.ok) throw new Error('Failed to add payment');
-        return { success: true, data: await response.json() };
+        const { api } = await import('../lib/api');
+        const data = await api.post('/finance/payments', payment);
+        return { success: true, data };
     },
 
     updatePaymentStatus: async (id, status) => {
-        const response = await fetch(`${API_URL}/finance/payments/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status }),
-        });
-        if (!response.ok) throw new Error('Failed to update payment status');
-        return { success: true, data: await response.json() };
+        const { api } = await import('../lib/api');
+        const data = await api.patch(`/finance/payments/${id}/status`, { status });
+        return { success: true, data };
     },
 
     deletePayment: async (id) => {
-        const response = await fetch(`${API_URL}/finance/payments/${id}`, {
-            method: 'DELETE',
-        });
-        if (!response.ok) throw new Error('Failed to delete payment');
+        const { api } = await import('../lib/api');
+        await api.delete(`/finance/payments/${id}`);
         return { success: true };
     },
 
@@ -514,72 +485,70 @@ export const mockDataService = {
     },
 
     // Files (Documents)
-    // In-memory storage for actual file blobs (since we can't stringify them for localStorage)
-    fileBlobStorage: new Map(),
-
-    getFiles: () => {
-        return getOrSeed('erp_mock_files', () => ({
-            id: faker.string.uuid(),
-            name: faker.system.commonFileName(faker.helpers.arrayElement(['pdf', 'docx', 'xlsx', 'jpg'])),
-            type: faker.system.fileType(),
-            size: faker.number.int({ min: 100, max: 10000 }) + ' KB',
-            uploadedBy: faker.person.fullName(),
-            date: faker.date.recent().toISOString()
-        }), 20);
+    getFiles: async () => {
+        const { api } = await import('../lib/api');
+        return api.get('/documents');
     },
 
-    getFileBlob: (id) => {
-        return mockDataService.fileBlobStorage.get(id);
-    },
+    addFile: async (fileData) => {
+        const { file, uploadedBy } = fileData;
+        const formData = new FormData();
 
-    addFile: (fileData) => {
-        const files = mockDataService.getFiles();
-
-        // Extract the actual File object if present, separate from metadata
-        const { file: fileObject, ...metadata } = fileData;
-
-        const newFile = {
-            id: faker.string.uuid(),
-            date: new Date().toISOString(),
-            uploadedBy: 'Current User',
-            size: fileObject ? (fileObject.size / 1024).toFixed(0) + ' KB' : (Math.random() * 5000 + 500).toFixed(0) + ' KB',
-            type: fileObject ? fileObject.type : metadata.type || 'application/octet-stream',
-            ...metadata
-        };
-
-        // Store the actual file blob in memory if provided
-        if (fileObject) {
-            mockDataService.fileBlobStorage.set(newFile.id, fileObject);
+        if (file) {
+            formData.append('file', file);
+            formData.append('uploadedBy', uploadedBy || 'User');
         }
 
-        files.unshift(newFile);
-        localStorage.setItem('erp_mock_files', JSON.stringify(files));
-        return { success: true, data: newFile };
+        // We need to bypass the default JSON headers in api.js, so we use raw fetch here
+        // or we could assume api.js handles FormData if we pass a specific flag, but raw fetch is safer for today.
+        const token = localStorage.getItem('app_session') ? JSON.parse(localStorage.getItem('app_session')).access_token : '';
+
+        const response = await fetch(`${API_URL}/documents/upload`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+                // Content-Type is left empty so browser sets boundary
+            },
+            body: formData
+        });
+
+        if (!response.ok) throw new Error('Failed to upload file');
+        const data = await response.json();
+        return { success: true, data };
     },
 
-    deleteFile: (id) => {
-        const files = mockDataService.getFiles();
-        const newFiles = files.filter(f => f.id !== id);
-
-        // Clean up memory
-        if (mockDataService.fileBlobStorage.has(id)) {
-            mockDataService.fileBlobStorage.delete(id);
-        }
-
-        localStorage.setItem('erp_mock_files', JSON.stringify(newFiles));
+    deleteFile: async (id) => {
+        const { api } = await import('../lib/api');
+        await api.delete(`/documents/${id}`);
         return { success: true };
     },
 
+    downloadFile: async (file) => {
+        const token = localStorage.getItem('app_session') ? JSON.parse(localStorage.getItem('app_session')).access_token : '';
+
+        const response = await fetch(`${API_URL}/documents/download/${file.id}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Download failed');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = file.name; // Use original name
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    },
+
     // Activity Logs
-    getLogs: () => {
-        return getOrSeed('erp_mock_logs', () => ({
-            id: faker.string.uuid(),
-            user: faker.person.fullName(),
-            action: faker.helpers.arrayElement(['Created Invoice', 'Updated Employee', 'Deleted Product', 'Logged In', 'Exported Report']),
-            module: faker.helpers.arrayElement(['Finance', 'HR', 'Inventory', 'Auth']),
-            timestamp: faker.date.recent().toISOString(),
-            ip: faker.internet.ipv4()
-        }), 25);
+    getLogs: async () => {
+        const { api } = await import('../lib/api');
+        return api.get('/system/logs');
     },
 
     // Attendance

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { ShoppingCart, Users, Package, TrendingUp, Menu, X, Target, HeartHandshake } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import logo from '../../../assets/logo.png';
 
 const SalesHeader = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -22,8 +23,8 @@ const SalesHeader = () => {
                     <div className="flex items-center gap-3">
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
-                            <div className="relative w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-xl border border-white/10 ring-1 ring-white/5">
-                                <span className="bg-gradient-to-br from-orange-400 to-amber-200 bg-clip-text text-transparent transform group-hover:scale-110 transition-transform duration-200">S</span>
+                            <div className="relative w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-xl border border-white/10 ring-1 ring-white/5 overflow-hidden">
+                                <img src={logo} alt="Logo" className="w-full h-full object-cover" />
                             </div>
                         </div>
                         <div className="hidden md:block">

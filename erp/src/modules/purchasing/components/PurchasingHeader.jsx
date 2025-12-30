@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { ShoppingCart, Truck, FileText, ScrollText, Menu, X, ChevronRight } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import logo from '../../../assets/logo.png';
 
 const PurchasingHeader = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,8 +27,8 @@ const PurchasingHeader = () => {
                         <div className="flex items-center gap-4">
                             <div className="relative group cursor-pointer">
                                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                                <div className="relative w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-xl border border-slate-700/50 flex items-center justify-center shadow-2xl">
-                                    <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
+                                <div className="relative w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-xl border border-slate-700/50 flex items-center justify-center shadow-2xl overflow-hidden">
+                                    <img src={logo} alt="Logo" className="w-full h-full object-cover" />
                                 </div>
                             </div>
                             <div>

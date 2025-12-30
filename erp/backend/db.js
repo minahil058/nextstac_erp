@@ -151,6 +151,16 @@ function initSchema() {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
+        db.run(`CREATE TABLE IF NOT EXISTS invoice_items (
+            id TEXT PRIMARY KEY,
+            invoice_id TEXT,
+            product_id TEXT,
+            description TEXT,
+            quantity INTEGER,
+            unit_price REAL,
+            amount REAL
+        )`);
+
         db.run(`CREATE TABLE IF NOT EXISTS payments (
             id TEXT PRIMARY KEY,
             payment_number TEXT UNIQUE,
@@ -219,6 +229,17 @@ function initSchema() {
             module VARCHAR(100),
             ip_address VARCHAR(45),
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        // --- Documents ---
+        db.run(`CREATE TABLE IF NOT EXISTS documents (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            type TEXT,
+            size TEXT,
+            path TEXT NOT NULL,
+            uploaded_by TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
         // Seed Data (Only if empty)

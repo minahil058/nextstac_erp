@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Building2, Users, Network } from 'lucide-react';
 import { clsx } from 'clsx';
+import logo from '../../../assets/logo.png';
 
 const CompanyHeader = () => {
     const navItems = [
@@ -15,16 +16,13 @@ const CompanyHeader = () => {
             <div className="px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                            C
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                            <img src={logo} alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <h1 className="text-lg font-extrabold text-white leading-tight tracking-tight">
-                                Company
+                                Nextstac
                             </h1>
-                            <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest bg-indigo-500/20 px-1.5 py-0.5 rounded border border-indigo-500/30">
-                                Management
-                            </span>
                         </div>
                     </div>
 

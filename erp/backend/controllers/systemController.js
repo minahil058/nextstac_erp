@@ -7,7 +7,17 @@ export const getLogs = (req, res) => {
     const sql = `SELECT * FROM activity_logs ORDER BY timestamp DESC LIMIT 50`;
     db.all(sql, [], (err, rows) => {
         if (err) return res.json([]); // Return empty if table missing
-        res.json(rows);
+
+        const mappedRows = rows.map(row => ({
+            id: row.id,
+            user: row.user_name || 'System',
+            action: row.action,
+            module: row.module,
+            ip: row.ip_address,
+            timestamp: row.timestamp
+        }));
+
+        res.json(mappedRows);
     });
 };
 

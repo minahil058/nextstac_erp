@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/logo.png';
 
 const NAV_ITEMS = [
     { label: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -59,7 +60,7 @@ const NAV_ITEMS = [
         label: 'HR & Employees',
         path: '/hr',
         icon: Users,
-        roles: ['super_admin', 'ecommerce_admin', 'dev_admin', 'user'],
+        roles: ['super_admin', 'ecommerce_admin', 'dev_admin'],
         children: [
             { label: 'Employees', path: '/hr/employees' },
             { label: 'Attendance', path: '/hr/attendance' },
@@ -168,8 +169,8 @@ export default function DashboardLayout() {
                 {/* Sidebar Header / Logo */}
                 <div className="h-20 px-6 flex items-center border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-10">
                     <div className="flex items-center gap-3 group cursor-pointer">
-                        <div className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300">
-                            <span className="font-black text-white text-lg tracking-tight">L</span>
+                        <div className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300 overflow-hidden">
+                            <img src={logo} alt="Logo" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                         <div className="flex flex-col">
@@ -225,10 +226,8 @@ export default function DashboardLayout() {
                 <div className="p-4 border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-xl">
                     <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-indigo-500/30 transition-colors group">
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 p-[2px] shadow-lg shadow-indigo-500/20">
-                                <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-xs uppercase">
-                                    {user?.name?.charAt(0) || 'U'}
-                                </div>
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 p-[2px] shadow-lg shadow-indigo-500/20 overflow-hidden">
+                                <img src={logo} alt="User" className="w-full h-full rounded-full object-cover" />
                             </div>
                             <div className="flex-1 overflow-hidden">
                                 <p className="text-sm font-bold text-white truncate group-hover:text-indigo-400 transition-colors">{user?.name}</p>
@@ -275,10 +274,8 @@ export default function DashboardLayout() {
                                 <p className="text-sm font-bold text-white leading-tight">{user?.name}</p>
                                 <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">{user?.role}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px] shadow-lg shadow-indigo-500/20 cursor-pointer hover:shadow-indigo-500/40 transition-shadow">
-                                <div className="w-full h-full rounded-[10px] bg-slate-900 flex items-center justify-center text-white font-bold">
-                                    {user?.name?.charAt(0) || 'A'}
-                                </div>
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px] shadow-lg shadow-indigo-500/20 cursor-pointer hover:shadow-indigo-500/40 transition-shadow overflow-hidden">
+                                <img src={logo} alt="User" className="w-full h-full rounded-[10px] object-cover" />
                             </div>
                         </div>
                     </div>
@@ -304,7 +301,9 @@ export default function DashboardLayout() {
                             >
                                 <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">L</div>
+                                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30 overflow-hidden">
+                                            <img src={logo} alt="Logo" className="w-full h-full object-cover" />
+                                        </div>
                                         <span className="text-xl font-bold text-white tracking-tight">Office Ledger</span>
                                     </div>
                                     <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">

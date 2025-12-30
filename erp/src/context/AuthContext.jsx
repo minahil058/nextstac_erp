@@ -27,7 +27,7 @@ const fetchUserProfile = async (userId, email) => {
                 id: userId,
                 email: email,
                 name: email.split('@')[0],
-                role: 'super_admin',
+                role: 'user',
                 status: 'Active',
                 permissions: ['all']
             };
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }) => {
             }
 
             if (data.user) {
-                const userProfile = await fetchUserProfile(data.user.id, data.user.email);
+                let userProfile = await fetchUserProfile(data.user.id, data.user.email);
 
                 if (!userProfile) {
                     await supabase.auth.signOut();
@@ -98,9 +98,29 @@ export const AuthProvider = ({ children }) => {
                 }
 
                 // Check user status
-                if (userProfile.status === 'Invited') {
-                    await supabase.auth.signOut();
-                    return { success: false, error: 'Account not activated. Please complete registration.' };
+                // Check if profile needs sync (Invited status or ID mismatch)
+                // If the user exists in Auth, we trust them. We should claim the Invited profile.
+                if (userProfile.status === 'Invited' || userProfile.id !== data.user.id) {
+                    try {
+                        const token = data.session.access_token;
+                        // Call sync-profile to migrate placeholder to real ID
+                        await fetch('/api/auth/sync-profile', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+
+                        // Refetch profile after sync
+                        const updatedProfile = await fetchUserProfile(data.user.id, data.user.email);
+                        if (updatedProfile) {
+                            userProfile = updatedProfile;
+                        }
+                    } catch (err) {
+                        console.error('Auto-sync failed during login:', err);
+                        // Continue if possible, but warn?
+                    }
                 }
 
                 if (userProfile.status === 'Inactive') {

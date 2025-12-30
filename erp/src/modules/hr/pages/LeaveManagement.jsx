@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../context/AuthContext';
+import { api } from '../../../lib/api';
 import {
     Calendar,
     CheckCircle,
@@ -51,24 +52,14 @@ export default function LeaveManagement() {
     const { data: leaves, isLoading } = useQuery({
         queryKey: ['leaves-all'],
         queryFn: async () => {
-            const baseUrl = import.meta.env.VITE_API_URL || '/api';
-            const response = await fetch(`${baseUrl}/hr/leaves`);
-            if (!response.ok) throw new Error('Failed to fetch leaves');
-            return response.json();
+            return await api.get('/hr/leaves');
         },
     });
 
     // Update Request Status (Admin)
     const updateStatusMutation = useMutation({
         mutationFn: async ({ id, status }) => {
-            const baseUrl = import.meta.env.VITE_API_URL || '/api';
-            const response = await fetch(`${baseUrl}/hr/leaves/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status }),
-            });
-            if (!response.ok) throw new Error('Failed to update status');
-            return response.json();
+            return await api.put(`/hr/leaves/${id}/status`, { status });
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['leaves-all']);
@@ -78,24 +69,22 @@ export default function LeaveManagement() {
     // Create New Request (Employee)
     const createRequestMutation = useMutation({
         mutationFn: async (requestData) => {
-            const baseUrl = import.meta.env.VITE_API_URL || '/api';
-            const response = await fetch(`${baseUrl}/hr/leaves`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    employeeId: user.id,
-                    employeeName: user.name,
-                    department: user.department, // Send Department
-                    ...requestData
-                }),
+            return await api.post('/hr/leaves', {
+                employeeId: user.id,
+                employeeName: user.name,
+                email: user.email, // Send Email for lookup
+                department: user.department, // Send Department
+                ...requestData
             });
-            if (!response.ok) throw new Error('Failed to create request');
-            return response.json();
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['leaves-all']);
             setIsModalOpen(false);
             setNewRequest({ type: 'Sick Leave', startDate: '', endDate: '', reason: '' }); // Reset form
+            // You might want to add a success toast here too
+        },
+        onError: (error) => {
+            alert(error.message); // Simple alert for now, or use a toast if available context
         }
     });
 
@@ -140,7 +129,7 @@ export default function LeaveManagement() {
         document.body.removeChild(link);
     };
 
-    const filteredLeaves = leaves?.filter(leave => {
+    const filteredLeaves = (leaves || []).filter(leave => {
         // Implement Search & Filter
         const matchesSearch = leave.employeeName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'All' || leave.status === statusFilter;
@@ -169,6 +158,7 @@ export default function LeaveManagement() {
     });
 
     if (isLoading) return <div className="p-8 text-center animate-pulse text-slate-500">Loading leave requests...</div>;
+    if (!leaves && !isLoading) return <div className="p-8 text-center text-red-400">Failed to load leave requests.</div>;
 
     const getStatusBadge = (status) => {
         switch (status) {
@@ -448,7 +438,13 @@ export default function LeaveManagement() {
 
                             <div className="pt-2 flex justify-end gap-3">
                                 <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">Cancel</Button>
-                                <Button type="submit" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg border-0">Submit Request</Button>
+                                <Button
+                                    type="submit"
+                                    disabled={createRequestMutation.isPending}
+                                    className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg border-0 disabled:opacity-50"
+                                >
+                                    {createRequestMutation.isPending ? 'Submitting...' : 'Submit Request'}
+                                </Button>
                             </div>
                         </form>
                     </div>
