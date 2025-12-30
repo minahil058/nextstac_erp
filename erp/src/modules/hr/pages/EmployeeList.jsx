@@ -66,36 +66,36 @@ export default function EmployeeList() {
     });
 
     const addEmployeeMutation = useMutation({
-        mutationFn: (newEmployee) => {
-            return new Promise((resolve) => {
-                setTimeout(() => resolve(mockDataService.addEmployee(newEmployee)), 300);
-            });
+        mutationFn: async (newEmployee) => {
+            return await mockDataService.addEmployee(newEmployee);
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['employees']);
             setIsFormOpen(false);
             showToast('Employee added successfully', 'success');
+        },
+        onError: (error) => {
+            showToast(error.message || 'Failed to add employee', 'error');
         }
     });
 
     const deleteEmployeeMutation = useMutation({
-        mutationFn: (id) => {
-            return new Promise((resolve) => {
-                setTimeout(() => resolve(mockDataService.deleteEmployee(id)), 300);
-            });
+        mutationFn: async (id) => {
+            return await mockDataService.deleteEmployee(id);
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['employees']);
             showToast('Employee deleted successfully', 'success');
             setDeleteModal({ ...deleteModal, isOpen: false });
+        },
+        onError: (error) => {
+            showToast(error.message || 'Failed to delete employee', 'error');
         }
     });
 
     const updateEmployeeMutation = useMutation({
-        mutationFn: ({ id, updates }) => {
-            return new Promise((resolve) => {
-                setTimeout(() => resolve(mockDataService.updateEmployee(id, updates)), 300);
-            });
+        mutationFn: async ({ id, updates }) => {
+            return await mockDataService.updateEmployee(id, updates);
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['employees']);
@@ -107,6 +107,9 @@ export default function EmployeeList() {
             } else {
                 showToast('Employee status updated', 'success');
             }
+        },
+        onError: (error) => {
+            showToast(error.message || 'Failed to update employee', 'error');
         }
     });
 

@@ -11,6 +11,7 @@ import crmRoutes from './routes/crmRoutes.js';
 import purchasingRoutes from './routes/purchasingRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 
 const app = express();
@@ -29,6 +30,7 @@ app.use('/api/crm', crmRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/purchasing', purchasingRoutes); // Vendors
 app.use('/api/system', systemRoutes);         // Logs, Profile
+app.use('/api/admin', adminRoutes);           // Admin Management
 
 app.get('/', (req, res) => {
     res.send('Financa ERP API is running');

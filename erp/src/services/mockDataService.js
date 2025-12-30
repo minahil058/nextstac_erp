@@ -128,57 +128,27 @@ export const mockDataService = {
         return { success: true, data: newConfig };
     },
 
-    // Employees
-    getEmployees: () => {
-        return getOrSeed(STORAGE_KEYS.EMPLOYEES, () => {
-            // Create a fixed set of employees for testing specific departments
-            const fixedDepts = ['Development', 'Ecommerce'];
-            const dept = faker.helpers.arrayElement([...fixedDepts, faker.commerce.department()]);
-
-            return {
-                id: faker.string.uuid(),
-                firstName: faker.person.firstName(),
-                lastName: faker.person.lastName(),
-                email: faker.internet.email(),
-                position: faker.person.jobTitle(),
-                department: dept, // Mix of fixed and random depts
-                salary: faker.finance.amount({ min: 30000, max: 120000, dec: 0 }),
-                joinDate: faker.date.past({ years: 5 }).toISOString(),
-                status: faker.helpers.arrayElement(['Active', 'On Leave', 'Terminated']),
-                avatar: faker.image.url(),
-                phone: faker.phone.number(),
-                address: faker.location.city() + ', ' + faker.location.country(),
-            };
-        }, 20);
+    // Employees - Backend API Integration
+    getEmployees: async () => {
+        const { api } = await import('../lib/api');
+        return api.get('/hr/employees');
     },
 
-    addEmployee: (employee) => {
-        const employees = mockDataService.getEmployees();
-        const newEmployee = {
-            id: faker.string.uuid(),
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(employee.firstName + ' ' + employee.lastName)}&background=random`,
-            ...employee
-        };
-        employees.unshift(newEmployee);
-        localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-        return { success: true, data: newEmployee };
+    addEmployee: async (employee) => {
+        const { api } = await import('../lib/api');
+        const data = await api.post('/hr/employees', employee);
+        return { success: true, data };
     },
 
-    updateEmployee: (id, updates) => {
-        const employees = mockDataService.getEmployees();
-        const index = employees.findIndex(e => e.id === id);
-        if (index !== -1) {
-            employees[index] = { ...employees[index], ...updates };
-            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-            return { success: true, data: employees[index] };
-        }
-        return { success: false, error: 'Employee not found' };
+    updateEmployee: async (id, updates) => {
+        const { api } = await import('../lib/api');
+        const data = await api.put(`/hr/employees/${id}`, { updates });
+        return { success: true, data };
     },
 
-    deleteEmployee: (id) => {
-        const employees = mockDataService.getEmployees();
-        const newEmployees = employees.filter(e => e.id !== id);
-        localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(newEmployees));
+    deleteEmployee: async (id) => {
+        const { api } = await import('../lib/api');
+        await api.delete(`/hr/employees/${id}`);
         return { success: true };
     },
 
@@ -734,85 +704,34 @@ export const mockDataService = {
         return updatedProfile;
     },
 
-    // Leave Management
-    getAllLeaves: () => {
-        const key = 'erp_mock_all_leaves_v4';
-        const stored = localStorage.getItem(key);
-        if (stored) {
-            try {
-                return JSON.parse(stored);
-            } catch (e) {
-                console.warn('Failed to parse leaves, regenerating.');
-            }
-        }
-
-        const employees = mockDataService.getEmployees() || [];
-        if (employees.length === 0) return [];
-
-        const leaves = [];
-
-        employees.forEach(emp => {
-            const count = faker.number.int({ min: 1, max: 5 });
-            for (let i = 0; i < count; i++) {
-                leaves.push({
-                    id: faker.string.uuid(),
-                    employeeId: emp.id,
-                    employeeName: `${emp.firstName} ${emp.lastName}`,
-                    avatar: emp.avatar,
-                    position: emp.position,
-                    type: faker.helpers.arrayElement(['Sick Leave', 'Vacation', 'Personal', 'Emergency']),
-                    startDate: faker.date.past({ years: 1 }).toISOString(),
-                    endDate: faker.date.past({ years: 1 }).toISOString(),
-                    days: faker.number.int({ min: 1, max: 5 }),
-                    reason: faker.lorem.sentence(),
-                    status: faker.helpers.arrayElement(['Approved', 'Rejected']),
-                    requestedOn: faker.date.past({ years: 1 }).toISOString()
-                });
-            }
-        });
-
-        for (let i = 0; i < 5; i++) {
-            const emp = faker.helpers.arrayElement(employees);
-            leaves.push({
-                id: faker.string.uuid(),
-                employeeId: emp.id,
-                employeeName: `${emp.firstName} ${emp.lastName}`,
-                avatar: emp.avatar,
-                position: emp.position,
-                type: faker.helpers.arrayElement(['Sick Leave', 'Vacation', 'Personal', 'Emergency']),
-                startDate: faker.date.soon({ days: 10 }).toISOString(),
-                endDate: faker.date.soon({ days: 15 }).toISOString(),
-                days: faker.number.int({ min: 1, max: 5 }),
-                reason: faker.lorem.sentence(),
-                status: 'Pending',
-                requestedOn: faker.date.recent({ days: 2 }).toISOString()
-            });
-        }
-
-        const sortedLeaves = leaves.sort((a, b) => new Date(b.requestedOn) - new Date(a.requestedOn));
-        localStorage.setItem(key, JSON.stringify(sortedLeaves));
-        return sortedLeaves;
+    // Leave Management - Backend API Integration
+    getAllLeaves: async () => {
+        const { api } = await import('../lib/api');
+        return api.get('/hr/leaves');
     },
 
-    getLeaveRequests: () => {
-        const all = mockDataService.getAllLeaves();
+    getLeaveRequests: async () => {
+        const { api } = await import('../lib/api');
+        const all = await api.get('/hr/leaves');
         return all.filter(l => l.status === 'Pending');
     },
 
-    getEmployeeLeaves: (employeeId) => {
-        const all = mockDataService.getAllLeaves();
+    getEmployeeLeaves: async (employeeId) => {
+        const { api } = await import('../lib/api');
+        const all = await api.get('/hr/leaves');
         return all.filter(l => l.employeeId === employeeId).sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
     },
 
-    updateLeaveStatus: (id, status) => {
-        const all = mockDataService.getAllLeaves();
-        const index = all.findIndex(l => l.id === id);
-        if (index !== -1) {
-            all[index] = { ...all[index], status };
-            localStorage.setItem('erp_mock_all_leaves_v3', JSON.stringify(all));
-            return all[index];
-        }
-        return null;
+    createLeave: async (leaveData) => {
+        const { api } = await import('../lib/api');
+        const data = await api.post('/hr/leaves', leaveData);
+        return { success: true, data };
+    },
+
+    updateLeaveStatus: async (id, status) => {
+        const { api } = await import('../lib/api');
+        const data = await api.put(`/hr/leaves/${id}/status`, { status });
+        return data;
     },
 
     processPayroll: (period) => {

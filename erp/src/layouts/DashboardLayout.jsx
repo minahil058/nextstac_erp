@@ -15,13 +15,29 @@ import {
     X,
     LogOut,
     Bell,
-    Shield
+    Shield,
+    Terminal
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 
 const NAV_ITEMS = [
     { label: 'Dashboard', path: '/', icon: LayoutDashboard },
+
+    // Super Admin Specific Dashboard Links
+    {
+        label: 'Ecommerce Board',
+        path: '/ecommerce',
+        icon: ShoppingCart,
+        roles: ['super_admin']
+    },
+    {
+        label: 'Dev Console',
+        path: '/dev',
+        icon: Terminal, // Using calculator as placeholder, or code icon if imported
+        roles: ['super_admin']
+    },
+
     {
         label: 'Admin Management',
         path: '/admin/users',

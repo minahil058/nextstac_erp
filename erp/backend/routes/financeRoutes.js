@@ -1,9 +1,13 @@
 import express from 'express';
 import * as financeController from '../controllers/financeController.js';
+import { verifySupabaseToken } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Protect all finance routes with JWT authentication
+router.use(verifySupabaseToken);
 
 // Upload Excel
 router.post('/upload', upload.single('file'), financeController.uploadFinanceData);

@@ -1,7 +1,11 @@
 import express from 'express';
 import * as purchasingController from '../controllers/purchasingController.js';
+import { verifySupabaseToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// Protect all purchasing routes with JWT authentication
+router.use(verifySupabaseToken);
 
 router.get('/vendors', purchasingController.getVendors);
 router.post('/vendors', purchasingController.createVendor);

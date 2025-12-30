@@ -55,28 +55,27 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for existing Supabase session
-        supabase.auth.getSession().then(async ({ data: { session } }) => {
-            if (session?.user) {
-                const userProfile = await fetchUserProfile(session.user.id, session.user.email);
-                setUser(userProfile);
+        // Manual session restoration from localStorage
+        const restoreSession = () => {
+            try {
+                const savedSession = localStorage.getItem('app_session');
+                if (savedSession) {
+                    const sessionData = JSON.parse(savedSession);
+                    // Check if session is still valid (not expired)
+                    if (sessionData.expiresAt && Date.now() < sessionData.expiresAt) {
+                        setUser(sessionData.user);
+                    } else {
+                        localStorage.removeItem('app_session');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to restore session:', error);
+                localStorage.removeItem('app_session');
             }
             setLoading(false);
-        });
-
-        // Listen for auth state changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session?.user) {
-                const userProfile = await fetchUserProfile(session.user.id, session.user.email);
-                setUser(userProfile);
-            } else if (event === 'SIGNED_OUT') {
-                setUser(null);
-            }
-        });
-
-        return () => {
-            subscription.unsubscribe();
         };
+
+        restoreSession();
     }, []);
 
     const login = async (email, password) => {
@@ -110,6 +109,15 @@ export const AuthProvider = ({ children }) => {
                 }
 
                 setUser(userProfile);
+
+                // Manually save session to localStorage
+                const sessionData = {
+                    access_token: data.session.access_token,
+                    user: userProfile,
+                    expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+                };
+                localStorage.setItem('app_session', JSON.stringify(sessionData));
+
                 return { success: true };
             }
 
@@ -138,28 +146,48 @@ export const AuthProvider = ({ children }) => {
             }
 
             if (data.user) {
-                // Create or update user profile in database
-                const { error: profileError } = await supabase
-                    .from('users')
-                    .upsert({
-                        id: data.user.id,
-                        email: email,
-                        name: name,
-                        role: role || 'super_admin',
-                        status: 'Active',
-                        created_at: new Date().toISOString(),
-                    }, {
-                        onConflict: 'email'
-                    });
+                // Call Backend Sync Profile
+                // This will migrate the Invited User (if any) to this new Auth ID
+                // and preserve their role/department.
+                try {
+                    // We need to wait for session to be established? 
+                    // access_token is in data.session usually
+                    // If email confirmation is off, session is there.
 
-                if (profileError) {
-                    console.error('Profile creation error:', profileError);
-                    // Continue anyway - auth was successful
+                    const token = data.session?.access_token;
+                    if (token) {
+                        // Use relative path via Proxy
+                        const response = await fetch('/api/auth/sync-profile', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ name, role })
+                        });
+
+                        if (!response.ok) {
+                            const errData = await response.json();
+                            throw new Error(errData.error || 'Sync Profile Failed');
+                        }
+                    } else {
+                        console.warn('No session token after signup - Email confirmation might be required.');
+                    }
+
+                } catch (syncError) {
+                    console.error('Profile sync error:', syncError);
+                    // We don't fail registration entirely, but user might have issues until they login again
                 }
 
                 const userProfile = await fetchUserProfile(data.user.id, email);
-                setUser(userProfile);
-                return { success: true };
+
+                // If sync worked, we should have a profile.
+                if (userProfile) {
+                    setUser(userProfile);
+                    return { success: true };
+                } else {
+                    return { success: true, warning: 'Account created but profile sync delayed.' };
+                }
             }
 
             return { success: false, error: 'Registration failed' };
@@ -173,11 +201,13 @@ export const AuthProvider = ({ children }) => {
         try {
             await supabase.auth.signOut();
             setUser(null);
+            localStorage.removeItem('app_session'); // Clear manual session
             window.location.href = '/login';
         } catch (error) {
             console.error('Logout error:', error);
             // Force logout even if there's an error
             setUser(null);
+            localStorage.removeItem('app_session'); // Clear manual session
             window.location.href = '/login';
         }
     };

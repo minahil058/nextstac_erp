@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { mockDataService } from '../../../services/mockDataService';
+import { api } from '../../../lib/api';
 import {
     Users,
     Plus,
@@ -28,48 +28,54 @@ export default function UserManagement() {
 
     const { data: admins, isLoading: isLoadingAdmins } = useQuery({
         queryKey: ['admins'],
-        queryFn: mockDataService.getAdmins,
+        queryFn: async () => {
+            try {
+                return await api.get('/admin/users');
+            } catch (e) {
+                console.error('Failed to fetch admins:', e);
+                return [];
+            }
+        }
     });
 
     const { data: config } = useQuery({
         queryKey: ['compensation-config'],
-        queryFn: mockDataService.getCompensationConfig,
+        queryFn: async () => {
+            try {
+                return await api.get('/admin/compensation-config');
+            } catch (e) {
+                console.error('Failed to fetch config:', e);
+                return { basePool: 0 };
+            }
+        }
     });
 
     const basePool = config?.basePool || 0;
 
-    const API_URL = import.meta.env.VITE_API_URL || '/api';
-
     const addAdminMutation = useMutation({
         mutationFn: async (newAdmin) => {
-            const response = await fetch(`${API_URL}/auth/invite`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newAdmin),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to invite admin');
+            console.log('Sending invitation payload:', newAdmin);
+            return await api.post('/auth/invite', newAdmin);
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries(['admins']);
+            setIsModalOpen(false);
+            setFormData({ name: '', email: '', role: 'ecommerce_admin' });
+            setError('');
 
-            // If debug_preview_url exists, log it or alert it (for demo)
+            // Handle debug preview URL if present
             if (data.debug_preview_url) {
                 console.log('Email Preview:', data.debug_preview_url);
                 alert(`Test Mode: View Email at ${data.debug_preview_url}`);
             }
 
-            // Check for warnings (e.g., user created but email failed)
+            // Handle warnings
             if (data.warning) {
                 console.warn(data.warning, data.error);
                 alert(`User created, BUT email failed to send: ${data.error}. Check backend logs.`);
+            } else {
+                alert(`Invitation email sent successfully to ${variables.email}!`);
             }
-
-            return data.user;
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries(['admins']);
-            setIsModalOpen(false);
-            setFormData({ name: '', email: '', role: 'ecommerce_admin' });
-            setError('');
-            alert(`Invitation email sent successfully to ${variables.email}!`);
         },
         onError: (err) => {
             setError(err.message);
@@ -77,43 +83,43 @@ export default function UserManagement() {
     });
 
     const updateAdminMutation = useMutation({
-        mutationFn: ({ id, updates }) => {
-            return new Promise(resolve => {
-                mockDataService.updateAdmin(id, updates);
-                resolve();
-            });
+        mutationFn: async ({ id, updates }) => {
+            return await api.put(`/admin/users/${id}`, updates);
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['admins']);
             setIsModalOpen(false);
             setEditingId(null);
             setFormData({ name: '', email: '', role: 'ecommerce_admin' });
+        },
+        onError: (err) => {
+            console.error('Update admin error:', err);
+            alert('Failed to update admin: ' + err.message);
         }
     });
 
     const updateConfigMutation = useMutation({
-        mutationFn: (updates) => {
-            return new Promise(resolve => {
-                mockDataService.updateCompensationConfig(updates);
-                resolve();
-            });
+        mutationFn: async (updates) => {
+            return await api.put('/admin/compensation-config', updates);
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['compensation-config']);
+        },
+        onError: (err) => {
+            console.error('Update config error:', err);
         }
     });
 
     const deleteAdminMutation = useMutation({
-        mutationFn: (id) => {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    mockDataService.deleteAdmin(id);
-                    resolve();
-                }, 500);
-            });
+        mutationFn: async (id) => {
+            return await api.delete(`/admin/users/${id}`);
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['admins']);
+        },
+        onError: (err) => {
+            console.error('Delete admin error:', err);
+            alert('Failed to delete admin: ' + err.message);
         }
     });
 

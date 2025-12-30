@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { mockDataService } from '../../../services/mockDataService';
+import { api } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
 import {
     Clock,
@@ -20,13 +20,33 @@ export default function EmployeeDashboard() {
         return () => clearInterval(timer);
     }, []);
 
-    // Mock fetching personal data
-    const { data: attendance } = useQuery({ queryKey: ['attendance'], queryFn: mockDataService.getAttendance });
-    const { data: leaves } = useQuery({ queryKey: ['leaves'], queryFn: mockDataService.getLeaveRequests });
+    const { data: attendance = [] } = useQuery({
+        queryKey: ['attendance'],
+        queryFn: async () => {
+            try {
+                return await api.get('/hr/attendance');
+            } catch (e) {
+                console.error('Failed to fetch attendance:', e);
+                return [];
+            }
+        }
+    });
+
+    const { data: leaves = [] } = useQuery({
+        queryKey: ['leaves'],
+        queryFn: async () => {
+            try {
+                return await api.get('/hr/leaves');
+            } catch (e) {
+                console.error('Failed to fetch leaves:', e);
+                return [];
+            }
+        }
+    });
 
     // Filter for "my" records (mock logic: just take first 5)
     const myAttendance = attendance?.slice(0, 5) || [];
-    const myLeaves = leaves?.slice(0, 2) || [];
+    const myLeaves = leaves?.filter(l => l.status === 'Pending')?.slice(0, 2) || [];
 
     return (
         <div className="space-y-6">
