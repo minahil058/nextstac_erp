@@ -82,10 +82,24 @@ export const inviteUser = async (req, res) => {
 
         if (row) {
             if (row.status === 'Invited') {
-                console.log('Resending invitation to:', email);
-                return sendInvitationEmail(email, row.role, row.id, row.status);
+                console.log('Resending invitation to (and updating):', email);
+
+                // UPDATE the existing invite with new Role/Dept if changed
+                let finalDepartment = department;
+                if (!finalDepartment) {
+                    if (role === 'ecommerce_admin') finalDepartment = 'E-commerce';
+                    if (role === 'dev_admin') finalDepartment = 'Web Development';
+                }
+
+                await dbAdapter.updateUser(row.id, {
+                    role: role,
+                    department: finalDepartment,
+                    name: name || row.name
+                });
+
+                return sendInvitationEmail(email, role, row.id, row.status);
             }
-            return res.status(400).json({ error: 'User with this email already exists.' });
+            return res.status(400).json({ error: 'User with this email already exists and is active.' });
         }
 
         // Create Invited User
@@ -116,4 +130,92 @@ export const inviteUser = async (req, res) => {
 // Users sign in directly with Supabase using the SDK in AuthContext.jsx
 //
 // The inviteUser function above is still used for admin-initiated user invitations.
-// TODO: Update inviteUser to use Supabase Admin API to create auth users programmatically.
+
+export const syncProfile = async (req, res) => {
+    // req.user and req.userId came from verifySupabaseToken middleware
+    const authId = req.userId;
+    const authEmail = req.userEmail;
+
+    // Optional: Allow client to pass specific role if creating BRAND NEW user (not invited)
+    // But for invited users, we ignore this and use what's in DB.
+    const { name, role: requestedRole } = req.body;
+
+    console.log(`Syncing profile for: ${authEmail} (Auth ID: ${authId})`);
+
+    try {
+        // 1. Check if there is an existing "Invited" profile for this email with a DIFFERENT ID?
+        // Or any profile.
+        const existingProfile = await dbAdapter.findUserByEmail(authEmail);
+
+        if (existingProfile) {
+            console.log('Found existing profile:', existingProfile);
+
+            // Case A: User was invited (Status = Invited)
+            // They have a placeholder ID in the table. We need to swap it for the real Auth ID.
+            if (existingProfile.status === 'Invited' || existingProfile.id !== authId) {
+                console.log('Migrating invited user to active status...');
+
+                // 1. Delete the old placeholder row
+                await dbAdapter.deleteUser(existingProfile.id);
+
+                // 2. Insert the new row with correct Auth ID and preserved details
+                const newProfile = {
+                    id: authId,
+                    email: authEmail,
+                    name: existingProfile.name || name || 'User',
+                    role: existingProfile.role, // PERMANENTLY KEEP ASSIGNED ROLE
+                    department: existingProfile.department, // KEEP ASSIGNED DEPT
+                    status: 'Active',
+                    password_hash: 'supabased',
+                    created_at: new Date().toISOString()
+                };
+
+                await dbAdapter.createUser(newProfile);
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Profile synchronized and activated',
+                    user: newProfile
+                });
+            } else {
+                // Case B: User already exists with correct ID? Maybe just ensure active?
+                if (existingProfile.status !== 'Active') {
+                    await dbAdapter.updateUser(authId, { status: 'Active' });
+                }
+                return res.status(200).json({ success: true, user: existingProfile });
+            }
+        } else {
+            // Case C: New User (Self Signup without invite?)
+            // If self-signup is allowed.
+            // CAUTION: We probably don't want random people becoming admins.
+            // Default to 'user' role or requested role if safe? 
+            // For now, let's allow it but force role='user' unless maybe locally.
+            // Wait, we removed public signup. Only invited users should usually get here.
+            // But if they clicked "Signup" on login page (which we hid/removed)... 
+
+            console.log('Creating new user profile...');
+            const newProfile = {
+                id: authId,
+                email: authEmail,
+                name: name || 'New User',
+                role: 'user', // Default to basic user, NOT SUPER ADMIN
+                department: null,
+                status: 'Active',
+                password_hash: 'supabased',
+                created_at: new Date().toISOString()
+            };
+
+            await dbAdapter.createUser(newProfile);
+
+            return res.status(201).json({
+                success: true,
+                message: 'New profile created',
+                user: newProfile
+            });
+        }
+
+    } catch (error) {
+        console.error('Sync Profile Error:', error);
+        return res.status(500).json({ error: error.message });
+    }
+};

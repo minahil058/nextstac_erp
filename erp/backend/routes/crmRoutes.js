@@ -1,7 +1,11 @@
 import express from 'express';
 import * as crmController from '../controllers/crmController.js';
+import { verifySupabaseToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// Protect all CRM routes with JWT authentication
+router.use(verifySupabaseToken);
 
 router.get('/customers', crmController.getCustomers);
 router.post('/customers', crmController.createCustomer);

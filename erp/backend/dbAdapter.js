@@ -1,14 +1,15 @@
 import db from './db.js';
 import supabase from './supabaseClient.js';
 
-const isVercel = process.env.VERCEL === '1';
+const isVercel = process.env.VERCEL === '1' || (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
+const useSupabase = !!supabase;
 
 const dbAdapter = {
     // --- User Operations ---
 
     // Find User By Email
     findUserByEmail: async (email) => {
-        if (isVercel) {
+        if (useSupabase) {
             if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
             const { data, error } = await supabase
                 .from('users')
@@ -32,7 +33,7 @@ const dbAdapter = {
 
     // Create User (Invite)
     createUser: async (user) => {
-        if (isVercel) {
+        if (useSupabase) {
             if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
             // Map camelCase to snake_case if necessary, schema seems mixed but let's stick to what authController passed
             // The authController passes object keys that map to DB columns? 
@@ -57,7 +58,7 @@ const dbAdapter = {
 
     // Update User (Register/Activate)
     updateUser: async (id, updates) => {
-        if (isVercel) {
+        if (useSupabase) {
             if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
             const { error } = await supabase
                 .from('users')
@@ -78,6 +79,29 @@ const dbAdapter = {
                 stmt.run(...values, id, function (err) {
                     if (err) reject(err);
                     else resolve({ id, ...updates });
+                });
+                stmt.finalize();
+            });
+        }
+    },
+
+    // Delete User
+    deleteUser: async (id) => {
+        if (useSupabase) {
+            if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
+            const { error } = await supabase
+                .from('users')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw new Error(error.message);
+            return true;
+        } else {
+            return new Promise((resolve, reject) => {
+                const stmt = db.prepare("DELETE FROM users WHERE id = ?");
+                stmt.run(id, function (err) {
+                    if (err) reject(err);
+                    else resolve(true);
                 });
                 stmt.finalize();
             });

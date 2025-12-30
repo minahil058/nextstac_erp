@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { mockDataService } from '../../../services/mockDataService';
+import { api } from '../../../lib/api';
 import {
     ShoppingCart,
     Package,
@@ -22,9 +22,42 @@ import { PremiumCard, PremiumButton, StatCard } from '../../../components/shared
 export default function EcommerceDashboard() {
     const navigate = useNavigate();
     const { showToast } = useToast();
-    const { data: products } = useQuery({ queryKey: ['products'], queryFn: mockDataService.getProducts });
-    const { data: orders } = useQuery({ queryKey: ['orders'], queryFn: mockDataService.getOrders });
-    const { data: customers } = useQuery({ queryKey: ['customers'], queryFn: mockDataService.getCustomers });
+
+    const { data: products = [] } = useQuery({
+        queryKey: ['products'],
+        queryFn: async () => {
+            try {
+                return await api.get('/inventory/products');
+            } catch (e) {
+                console.error('Failed to fetch products:', e);
+                return [];
+            }
+        }
+    });
+
+    const { data: orders = [] } = useQuery({
+        queryKey: ['orders'],
+        queryFn: async () => {
+            try {
+                return await api.get('/sales/orders');
+            } catch (e) {
+                console.error('Failed to fetch orders:', e);
+                return [];
+            }
+        }
+    });
+
+    const { data: customers = [] } = useQuery({
+        queryKey: ['customers'],
+        queryFn: async () => {
+            try {
+                return await api.get('/crm/customers');
+            } catch (e) {
+                console.error('Failed to fetch customers:', e);
+                return [];
+            }
+        }
+    });
 
     const totalRevenue = orders?.reduce((sum, order) => sum + order.amount, 0) || 0;
     const totalOrders = orders?.length || 0;

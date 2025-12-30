@@ -28,22 +28,20 @@ import {
 } from 'lucide-react';
 import { FloatingOrbs, AnimatedGrid } from '../../../components/shared/BackgroundEffects';
 import { PremiumCard, PremiumButton, StatCard } from '../../../components/shared/PremiumComponents';
+import { api } from '../../../lib/api';
 
 const DashboardHome = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const fileInputRef = useRef(null);
 
-    const baseUrl = import.meta.env.VITE_API_URL || '/api';
-
     const { data: transactions = [] } = useQuery({
         queryKey: ['transactions'],
         queryFn: async () => {
             try {
-                const res = await fetch(`${baseUrl}/finance/transactions`);
-                if (!res.ok) return [];
-                return res.json();
+                return await api.get('/finance/transactions');
             } catch (e) {
+                console.error('Failed to fetch transactions:', e);
                 return [];
             }
         },
@@ -53,10 +51,11 @@ const DashboardHome = () => {
         queryKey: ['employees'],
         queryFn: async () => {
             try {
-                const res = await fetch(`${baseUrl}/hr/employees`);
-                if (!res.ok) return [];
-                return res.json();
-            } catch (e) { return []; }
+                return await api.get('/hr/employees');
+            } catch (e) {
+                console.error('Failed to fetch employees:', e);
+                return [];
+            }
         }
     });
 
@@ -64,10 +63,11 @@ const DashboardHome = () => {
         queryKey: ['products'],
         queryFn: async () => {
             try {
-                const res = await fetch(`${baseUrl}/inventory/products`);
-                if (!res.ok) return [];
-                return res.json();
-            } catch (e) { return []; }
+                return await api.get('/inventory/products');
+            } catch (e) {
+                console.error('Failed to fetch products:', e);
+                return [];
+            }
         }
     });
 
@@ -75,10 +75,11 @@ const DashboardHome = () => {
         queryKey: ['orders'],
         queryFn: async () => {
             try {
-                const res = await fetch(`${baseUrl}/sales/orders`);
-                if (!res.ok) return [];
-                return res.json();
-            } catch (e) { return []; }
+                return await api.get('/sales/orders');
+            } catch (e) {
+                console.error('Failed to fetch orders:', e);
+                return [];
+            }
         }
     });
 

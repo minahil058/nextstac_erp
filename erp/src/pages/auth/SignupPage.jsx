@@ -57,7 +57,7 @@ export default function SignupPage() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('super_admin');
+    const [role, setRole] = useState('user');
     const [department, setDepartment] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
