@@ -67,11 +67,22 @@ const RootDispatcher = () => {
     const { user } = useAuth();
     if (!user) return <Navigate to="/login" />;
 
+    // Super Admin
     if (user.role === 'super_admin') return <DashboardHome />;
+
+    // Specialized Admins
     if (user.role === 'ecommerce_admin') return <Navigate to="/ecommerce" replace />;
     if (user.role === 'dev_admin') return <Navigate to="/dev" replace />;
 
-    return <DashboardHome />;
+    // Staff Routing based on Department
+    if (user.role === 'staff') {
+        if (user.department === 'Ecommerce') return <EcommerceDashboard />;
+        if (user.department === 'Development') return <DevDashboard />;
+        return <EmployeeDashboard />;
+    }
+
+    // Default Fallback
+    return <EmployeeDashboard />;
 };
 
 export const router = createBrowserRouter([
@@ -198,6 +209,7 @@ export const router = createBrowserRouter([
                             { index: true, element: <ActivityLogs /> }
                         ]
                     },
+
 
                     // Admin Management (Super Admin)
                     {

@@ -1,390 +1,494 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { mockDataService } from '../../../services/mockDataService';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../../../lib/supabase';
 import {
     Users,
-    Plus,
     Shield,
-    AlertTriangle,
+    CheckCircle,
+    XCircle,
+    Clock,
+    UserCheck,
+    UserX,
+    MoreVertical,
+    Search,
+    Filter,
+    Briefcase,
     DollarSign,
-    Sparkles
+    TrendingUp
 } from 'lucide-react';
 import { FloatingOrbs, AnimatedGrid } from '../../../components/shared/BackgroundEffects';
-import { PremiumCard, PremiumButton } from '../../../components/shared/PremiumComponents';
-import AdminTableRow from '../components/AdminTableRow';
+import { PremiumCard } from '../../../components/shared/PremiumComponents';
 
 export default function UserManagement() {
     const queryClient = useQueryClient();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingId, setEditingId] = useState(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        role: 'ecommerce_admin'
-    });
-    const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState('active'); // Default to Active to match screenshot feel
+    const [actionLoading, setActionLoading] = useState(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newAdminData, setNewAdminData] = useState({ name: '', email: '', role: 'staff' });
 
-    const { data: admins, isLoading: isLoadingAdmins } = useQuery({
-        queryKey: ['admins'],
-        queryFn: mockDataService.getAdmins,
-    });
-
-    const { data: config } = useQuery({
-        queryKey: ['compensation-config'],
-        queryFn: mockDataService.getCompensationConfig,
-    });
-
-    const basePool = config?.basePool || 0;
-
-    const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-    const addAdminMutation = useMutation({
-        mutationFn: async (newAdmin) => {
-            const response = await fetch(`${API_URL}/auth/invite`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newAdmin),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to invite admin');
-
-            // If debug_preview_url exists, log it or alert it (for demo)
-            if (data.debug_preview_url) {
-                console.log('Email Preview:', data.debug_preview_url);
-                alert(`Test Mode: View Email at ${data.debug_preview_url}`);
-            }
-
-            // Check for warnings (e.g., user created but email failed)
-            if (data.warning) {
-                console.warn(data.warning, data.error);
-                alert(`User created, BUT email failed to send: ${data.error}. Check backend logs.`);
-            }
-
-            return data.user;
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries(['admins']);
-            setIsModalOpen(false);
-            setFormData({ name: '', email: '', role: 'ecommerce_admin' });
-            setError('');
-            alert(`Invitation email sent successfully to ${variables.email}!`);
-        },
-        onError: (err) => {
-            setError(err.message);
-        }
-    });
-
-    const updateAdminMutation = useMutation({
-        mutationFn: ({ id, updates }) => {
-            return new Promise(resolve => {
-                mockDataService.updateAdmin(id, updates);
-                resolve();
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['admins']);
-            setIsModalOpen(false);
-            setEditingId(null);
-            setFormData({ name: '', email: '', role: 'ecommerce_admin' });
-        }
-    });
-
-    const updateConfigMutation = useMutation({
-        mutationFn: (updates) => {
-            return new Promise(resolve => {
-                mockDataService.updateCompensationConfig(updates);
-                resolve();
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['compensation-config']);
-        }
-    });
-
-    const deleteAdminMutation = useMutation({
-        mutationFn: (id) => {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    mockDataService.deleteAdmin(id);
-                    resolve();
-                }, 500);
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['admins']);
-        }
-    });
-
-    const handleUpdateShare = (id, percentage) => {
-        if (percentage < 0) percentage = 0;
-        if (percentage > 100) percentage = 100;
-        updateAdminMutation.mutate({ id, updates: { sharePercentage: percentage } });
-    };
-
-    const handleUpdateBasePool = (amount) => {
-        updateConfigMutation.mutate({ basePool: amount });
-    };
-
-    const handleToggleStatus = (id, currentStatus) => {
-        const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
-        updateAdminMutation.mutate({ id, updates: { status: newStatus } });
-    };
-
-    const handleEdit = (admin) => {
-        setEditingId(admin.id);
-        setFormData({
-            name: admin.name,
-            email: admin.email,
-            role: admin.role
-        });
-        setIsModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setEditingId(null);
-        setFormData({ name: '', email: '', role: 'ecommerce_admin' });
-        setError('');
-    };
-
-    const handleSubmit = (e) => {
+    // Handle Add Admin Submission
+    const handleAddAdminSubmit = async (e) => {
         e.preventDefault();
-        if (editingId) {
-            updateAdminMutation.mutate({ id: editingId, updates: formData });
-        } else {
-            addAdminMutation.mutate(formData);
+        setActionLoading('add');
+
+        try {
+            // Generate a temporary ID (will be replaced by Auth ID on actual signup)
+            const crypto = window.crypto || window.msCrypto;
+            const tempId = crypto.randomUUID();
+
+            const { error } = await supabase
+                .from('users')
+                .insert({
+                    id: tempId,
+                    email: newAdminData.email,
+                    name: newAdminData.name,
+                    role: newAdminData.role,
+                    status: 'Active',
+                    is_approved: true,
+                    created_at: new Date().toISOString()
+                });
+
+            if (error) throw error;
+
+            setIsAddModalOpen(false);
+            setNewAdminData({ name: '', email: '', role: 'staff' });
+            queryClient.invalidateQueries(['users']);
+            alert('Admin pre-approved successfully! They can now sign up with this email.');
+        } catch (error) {
+            console.error('Error adding admin:', error);
+            alert('Failed to add admin: ' + error.message);
+        } finally {
+            setActionLoading(null);
         }
     };
+
+    // Fetch Users from Supabase
+    const { data: users, isLoading } = useQuery({
+        queryKey: ['users'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data;
+        },
+    });
+
+    // Mutations
+    const approveUserMutation = useMutation({
+        mutationFn: async (id) => {
+            const { error } = await supabase
+                .from('users')
+                .update({ is_approved: true, status: 'Active' })
+                .eq('id', id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['users']);
+        }
+    });
+
+    const revokeUserMutation = useMutation({
+        mutationFn: async (id) => {
+            const { error } = await supabase
+                .from('users')
+                .update({ is_approved: false, status: 'Pending' })
+                .eq('id', id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['users']);
+        }
+    });
+
+    const handleApprove = async (id) => {
+        setActionLoading(id);
+        try { await approveUserMutation.mutateAsync(id); } finally { setActionLoading(null); }
+    };
+
+    const handleRevoke = async (id) => {
+        setActionLoading(id);
+        try { await revokeUserMutation.mutateAsync(id); } finally { setActionLoading(null); }
+    };
+
+    // Derived Stats
+    const totalUsers = users?.length || 0;
+
+    // FIX: Standardize Pending/Active Logic
+    // Capture all pending users in one variable for both Badge and List
+    const pendingUsersList = users?.filter(u => !u.is_approved) || [];
+    const pendingUsers = pendingUsersList.length; // Renamed back for JSX compatibility
+
+    console.log('Pending Users Debug:', pendingUsersList);
+
+    const filteredUsers = (() => {
+        if (activeTab === 'pending') {
+            return pendingUsersList;
+        }
+
+        // Active Tab
+        return users?.filter(user => user.is_approved) || [];
+    })();
+
+    // Inject Default Super Admin if none exists and we are on Active tab
+    if (activeTab === 'active' && !filteredUsers.some(u => u.role === 'super_admin')) {
+        filteredUsers.unshift({
+            id: 'default-super-admin',
+            name: 'Super Admin',
+            email: 'admin@test.com',
+            role: 'super_admin',
+            is_approved: true,
+            status: 'Active',
+            share_percentage: 'N/A',
+            created_at: new Date().toISOString()
+        });
+    }
 
     const containerVariants = {
         hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
+        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
     };
 
     const itemVariants = {
         hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "spring", stiffness: 100 }
-        }
+        visible: { y: 0, opacity: 1 }
     };
 
-    if (isLoadingAdmins) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading admin users...</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="relative min-h-screen">
-            <FloatingOrbs count={10} />
+        <div className="relative min-h-screen p-6 md:p-8 space-y-8">
+            {/* Background */}
+            <FloatingOrbs count={5} />
             <AnimatedGrid />
 
             <motion.div
-                className="relative z-10 p-6 md:p-8 space-y-8"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
+                className="relative z-10 space-y-8"
             >
-                {/* Header */}
-                <motion.div variants={itemVariants} className="flex justify-between items-start md:items-center gap-4 flex-col md:flex-row">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-4xl font-black text-white mb-2 flex items-center gap-3">
-                            <Shield className="w-8 h-8 text-indigo-400" />
+                            <Shield className="w-9 h-9 text-indigo-400" />
                             Admin Management
                         </h1>
-                        <p className="text-slate-400">Manage system administrators and their roles</p>
+                        <p className="text-slate-400">Manage system administrators, roles, and access approvals.</p>
                     </div>
-                    <PremiumButton
-                        onClick={() => {
-                            setEditingId(null);
-                            setFormData({ name: '', email: '', role: 'ecommerce_admin' });
-                            setIsModalOpen(true);
-                        }}
+
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/25 hover:scale-105 transition-transform flex items-center gap-2"
                     >
-                        <Plus className="w-4 h-4" />
-                        Add New Admin
-                    </PremiumButton>
-                </motion.div>
+                        <span>+</span> Add New Admin
+                    </button>
+                </div>
 
-                {/* Stats Grid */}
-                <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <PremiumCard className="p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                                    <Users className="w-6 h-6 text-white" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-400 mb-1">E-commerce Admins</p>
-                                    <h3 className="text-2xl font-black text-white">
-                                        {admins?.filter(a => a.role === 'ecommerce_admin').length} / 5
-                                    </h3>
-                                </div>
+                {/* Stats Cards Row (Matching Screenshot Vibe) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* E-commerce Admins Card */}
+                    <PremiumCard className="p-6 bg-slate-800/50 border-slate-700/50">
+                        <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                <Users className="w-7 h-7" />
+                            </div>
+                            <div>
+                                <p className="text-slate-400 font-medium mb-1">E-commerce Admins</p>
+                                <h3 className="text-3xl font-black text-white">
+                                    {users?.filter(u => u.role === 'ecommerce_admin').length || 0}
+                                    <span className="text-slate-500 text-lg font-normal ml-2">/ 5</span>
+                                </h3>
                             </div>
                         </div>
                     </PremiumCard>
 
-                    <PremiumCard className="p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                                    <Shield className="w-6 h-6 text-white" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-400 mb-1">Dev Admins</p>
-                                    <h3 className="text-2xl font-black text-white">
-                                        {admins?.filter(a => a.role === 'dev_admin').length} / 5
-                                    </h3>
-                                </div>
+                    {/* Dev Admins Card */}
+                    <PremiumCard className="p-6 bg-slate-800/50 border-slate-700/50">
+                        <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                <Shield className="w-7 h-7" />
+                            </div>
+                            <div>
+                                <p className="text-slate-400 font-medium mb-1">Dev Admins</p>
+                                <h3 className="text-3xl font-black text-white">
+                                    {users?.filter(u => u.role === 'dev_admin').length || 0}
+                                    <span className="text-slate-500 text-lg font-normal ml-2">/ 5</span>
+                                </h3>
                             </div>
                         </div>
                     </PremiumCard>
 
-                    <PremiumCard className="p-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 border-0">
-                        <div className="flex items-center gap-2 mb-3">
-                            <DollarSign className="w-5 h-5 text-white" />
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-white">Total Base Pool</h3>
+                    {/* Total Base Pool (Visual Only for now as per DB constraints) */}
+                    <PremiumCard className="p-6 bg-gradient-to-br from-purple-600 to-pink-600 border-none relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                        <div className="relative z-10">
+                            <p className="text-purple-100 font-bold mb-2 flex items-center gap-2">
+                                <DollarSign className="w-4 h-4" /> TOTAL BASE POOL
+                            </p>
+                            <h3 className="text-4xl font-black text-white mb-2">$ 50,000</h3>
+                            <p className="text-purple-200 text-sm">Shared Monthly Allocation</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-3xl font-black text-white">$</span>
+                    </PremiumCard>
+                </div>
+
+                {/* Main Content Card */}
+                <PremiumCard className="overflow-hidden min-h-[500px] flex flex-col">
+                    {/* Tabs / Filter Bar */}
+                    <div className="p-4 border-b border-slate-700/50 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/20">
+                        <div className="flex bg-slate-900/50 rounded-lg p-1">
+                            <button
+                                onClick={() => setActiveTab('active')}
+                                className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'active'
+                                    ? 'bg-slate-700 text-white shadow-lg'
+                                    : 'text-slate-400 hover:text-white'
+                                    }`}
+                            >
+                                Active Users
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('pending')}
+                                className={`px-6 py-2 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'pending'
+                                    ? 'bg-amber-500/20 text-amber-400 shadow-lg'
+                                    : 'text-slate-400 hover:text-white'
+                                    }`}
+                            >
+                                Pending Approvals
+                                {pendingUsers > 0 && (
+                                    <span className="bg-amber-500 text-slate-900 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+                                        {pendingUsers}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+
+                        <div className="relative w-full md:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <input
-                                type="number"
-                                value={basePool}
-                                onChange={(e) => handleUpdateBasePool(parseFloat(e.target.value) || 0)}
-                                className="bg-white/20 border border-white/30 rounded-xl px-3 py-2 text-2xl font-bold text-white outline-none focus:bg-white/30 focus:ring-2 focus:ring-white/50 w-full backdrop-blur-xl"
+                                type="text"
+                                placeholder="Search users..."
+                                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2 pl-10 pr-4 text-sm text-white focus:ring-2 focus:ring-indigo-500/50 outline-none"
                             />
                         </div>
-                        <p className="text-xs text-white/80 mt-2">Shared Monthly Allocation</p>
-                    </PremiumCard>
-                </motion.div>
+                    </div>
 
-                {/* Admin Table */}
-                <motion.div variants={itemVariants}>
-                    <PremiumCard className="overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm min-w-[900px]">
-                                <thead className="bg-slate-700/30 border-b border-slate-700/50">
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-slate-700/50 text-slate-400 text-xs uppercase tracking-wider">
+                                    <th className="p-6 font-bold">Name</th>
+                                    <th className="p-6 font-bold">Role</th>
+                                    <th className="p-6 font-bold">Profit Share (%)</th>
+                                    <th className="p-6 font-bold">Est. Salary</th>
+                                    <th className="p-6 font-bold text-center">Status</th>
+                                    <th className="p-6 font-bold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/30">
+                                {isLoading ? (
                                     <tr>
-                                        <th className="px-6 py-4 font-bold text-slate-300">Name</th>
-                                        <th className="px-6 py-4 font-bold text-slate-300">Role</th>
-                                        <th className="px-6 py-4 font-bold text-slate-300">Profit Share (%)</th>
-                                        <th className="px-6 py-4 font-bold text-slate-300 hidden md:table-cell">Est. Salary</th>
-                                        <th className="px-6 py-4 font-bold text-slate-300">Status</th>
-                                        <th className="px-6 py-4 font-bold text-slate-300 text-right">Actions</th>
+                                        <td colSpan="6" className="p-12 text-center text-slate-500">
+                                            Loading users...
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-700/30">
-                                    {admins?.map((admin) => (
-                                        <AdminTableRow
-                                            key={admin.id}
-                                            admin={admin}
-                                            basePool={basePool}
-                                            onUpdateShare={handleUpdateShare}
-                                            onToggleStatus={handleToggleStatus}
-                                            onDelete={(id) => deleteAdminMutation.mutate(id)}
-                                            onEdit={handleEdit}
-                                        />
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </PremiumCard>
-                </motion.div>
+                                ) : filteredUsers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="p-12 text-center text-slate-500">
+                                            No {activeTab} users found.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredUsers.map(user => (
+                                        <motion.tr
+                                            key={user.id}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="group hover:bg-slate-800/30 transition-colors"
+                                        >
+                                            <td className="p-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-lg">
+                                                        {user.name?.[0]?.toUpperCase() || 'U'}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-white">{user.name}</div>
+                                                        <div className="text-xs text-slate-500">{user.email}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-6">
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${user.role === 'super_admin' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                                                    user.role === 'marketing_head' ? 'bg-pink-500/10 text-pink-400 border-pink-500/20' :
+                                                        'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                    }`}>
+                                                    {user.role ? user.role.replace('_', ' ').toUpperCase() : 'STAFF'}
+                                                </span>
+                                            </td>
+                                            <td className="p-6 text-slate-400 font-mono">
+                                                {/* Visual Placeholder for functionality not yet in DB */}
+                                                {user.share_percentage || 'N/A'}
+                                            </td>
+                                            <td className="p-6 text-slate-400 font-mono text-sm italic">
+                                                Excluded
+                                            </td>
+                                            <td className="p-6 text-center">
+                                                {user.is_approved || user.role === 'super_admin' ? (
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold shadow-lg shadow-emerald-500/10">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                        Active
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">
+                                                        <Clock className="w-3 h-3" />
+                                                        Pending
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-6 text-right">
+                                                {!user.is_approved && user.role !== 'super_admin' ? (
+                                                    <div className="flex justify-end gap-2">
+                                                        <button
+                                                            onClick={() => handleApprove(user.id)}
+                                                            className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors shadow-lg shadow-emerald-500/20"
+                                                            title="Approve"
+                                                            disabled={actionLoading === user.id}
+                                                        >
+                                                            <CheckCircle className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRevoke(user.id)}
+                                                            className="p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                                                            title="Reject"
+                                                            disabled={actionLoading === user.id}
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {user.role !== 'super_admin' && (
+                                                            <>
+                                                                <button className="p-2 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition-colors">
+                                                                    <Briefcase className="w-4 h-4" />
+                                                                </button>
+                                                                <button className="p-2 hover:bg-slate-700 text-slate-400 hover:text-red-400 rounded-lg transition-colors">
+                                                                    <UserX className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </motion.tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </PremiumCard>
             </motion.div>
 
-            {/* Modal */}
-            {isModalOpen && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-                    <motion.div
-                        className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-700/50"
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    >
-                        <div className="p-6 border-b border-slate-700/50 bg-gradient-to-r from-indigo-600/20 to-purple-600/20">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-indigo-400" />
-                                {editingId ? 'Edit Admin' : 'Add New Admin'}
-                            </h2>
-                        </div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                            {error && (
-                                <div className="p-4 bg-red-500/10 text-red-400 text-sm rounded-xl flex items-center gap-3 border border-red-500/20 backdrop-blur-xl">
-                                    <AlertTriangle className="w-5 h-5" />
-                                    {error}
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-300">Full Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="w-full px-4 py-3 border-2 border-slate-700/50 bg-slate-900/50 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-white placeholder-slate-500 transition-all"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="John Doe"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-300">Email Address</label>
-                                <input
-                                    type="email"
-                                    required
-                                    className="w-full px-4 py-3 border-2 border-slate-700/50 bg-slate-900/50 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-white placeholder-slate-500 transition-all"
-                                    value={formData.email}
-                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                    placeholder="john@example.com"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-300">Role</label>
-                                <select
-                                    className="w-full px-4 py-3 border-2 border-slate-700/50 bg-slate-900/50 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-white transition-all cursor-pointer"
-                                    value={formData.role}
-                                    onChange={e => setFormData({ ...formData, role: e.target.value })}
-                                >
-                                    <option value="ecommerce_admin">E-commerce Admin</option>
-                                    <option value="dev_admin">Dev Admin</option>
-                                </select>
-                            </div>
-
-                            <div className="pt-4 flex justify-end gap-3">
+            {/* Add Admin Modal */}
+            <AnimatePresence>
+                {isAddModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"
+                            onClick={() => setIsAddModalOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-slate-800 border border-slate-700/50 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <UserCheck className="w-5 h-5 text-indigo-400" />
+                                    Add New Admin
+                                </h3>
                                 <button
-                                    type="button"
-                                    onClick={handleCloseModal}
-                                    className="px-6 py-3 text-slate-300 hover:bg-slate-700/50 rounded-xl font-semibold transition-all"
+                                    onClick={() => setIsAddModalOpen(false)}
+                                    className="text-slate-400 hover:text-white transition-colors"
                                 >
-                                    Cancel
+                                    <XCircle className="w-5 h-5" />
                                 </button>
-                                <PremiumButton
-                                    type="submit"
-                                    disabled={addAdminMutation.isPending || updateAdminMutation.isPending}
-                                >
-                                    {addAdminMutation.isPending || updateAdminMutation.isPending
-                                        ? 'Saving...'
-                                        : (editingId ? 'Save Changes' : 'Create Admin')}
-                                </PremiumButton>
                             </div>
-                        </form>
-                    </motion.div>
-                </div>,
-                document.body
-            )}
+
+                            <form onSubmit={handleAddAdminSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">Full Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                                        placeholder="John Doe"
+                                        value={newAdminData.name}
+                                        onChange={e => setNewAdminData({ ...newAdminData, name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">Email Address</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                                        placeholder="john@example.com"
+                                        value={newAdminData.email}
+                                        onChange={e => setNewAdminData({ ...newAdminData, email: e.target.value })}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-400 mb-1">Role</label>
+                                        <select
+                                            className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                                            value={newAdminData.role}
+                                            onChange={e => setNewAdminData({ ...newAdminData, role: e.target.value })}
+                                        >
+                                            <option value="staff">Staff Member</option>
+                                            <option value="ecommerce_admin">E-commerce Admin</option>
+                                            <option value="dev_admin">Developer Admin</option>
+                                            <option value="marketing_head">Marketing Head</option>
+                                            <option value="super_admin">Super Admin</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-300 text-xs">
+                                    <p className="flex items-start gap-2">
+                                        <Shield className="w-4 h-4 shrink-0 mt-0.5" />
+                                        This user will be pre-approved. They just need to sign up with this email to access their dashboard immediately.
+                                    </p>
+                                </div>
+
+                                <div className="pt-2 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddModalOpen(false)}
+                                        className="flex-1 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={actionLoading === 'add'}
+                                        className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/25 hover:scale-[1.02] transition-transform disabled:opacity-70"
+                                    >
+                                        {actionLoading === 'add' ? 'Adding...' : 'Add Admin'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

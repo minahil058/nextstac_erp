@@ -126,12 +126,56 @@ export default function DashboardLayout() {
 
     // Filter and Transform items based on role
     const filteredNavItems = NAV_ITEMS.map(item => {
+        // 1. Dashboard Link Override
         if (item.label === 'Dashboard') {
             return { ...item, path: getDashboardPath() };
         }
+
+        // 2. Staff Role Logic
+        if (user?.role === 'staff') {
+            // Hide Admin Modules
+            const hiddenModules = ['Admin Management', 'Company', 'Finance', 'Sales & CRM', 'Purchasing', 'Documents', 'Audit Logs'];
+            // Special case: Commerce Staff see Inventory (Products only)
+            if (user?.department === 'Ecommerce' && item.label === 'Inventory') {
+                return {
+                    ...item,
+                    children: item.children.filter(child => child.label === 'Products')
+                };
+            }
+            // Special case: Dev Staff see specific Dev links (if any existed in NAV_ITEMS, currently Documents/Audit are Admin/Dev Admin)
+            // User said: "If 'Development' Staff: Show relevant Dev links." -> Let's show Documents for now if they are Dev Staff
+            if (user?.department === 'Development' && item.label === 'Documents') {
+                return item;
+            }
+
+            if (hiddenModules.includes(item.label) && item.label !== 'Inventory') return null; // Hide others
+
+            // Filter HR for Staff (My Attendance, Profile/Leave)
+            if (item.label === 'HR & Employees') {
+                return {
+                    ...item,
+                    children: item.children.filter(child => ['Attendance', 'Leave Requests'].includes(child.label))
+                };
+            }
+        }
+
         return item;
     }).filter(item => {
-        if (!item.roles) return true; // Accessible by all
+        if (!item) return false;
+
+        // Manual Role Check override for Staff variants we just created
+        if (user?.role === 'staff') {
+            if (item.label === 'Inventory' && user?.department === 'Ecommerce') return true;
+            if (item.label === 'Documents' && user?.department === 'Development') return true;
+            if (item.label === 'HR & Employees') return true; // Always allow modified HR
+            if (item.label === 'Dashboard') return true;
+            // If it wasn't hidden by the null check above, and isn't one of these, apply standard role check?
+            // Actually if we returned it from map (not null), it means we want it, UNLESS the standard role check fails.
+            // But existing items have 'roles'. 'staff' isn't in them usually.
+            // So we must explicitly allow these.
+        }
+
+        if (!item.roles) return true;
         return item.roles.includes(user?.role);
     });
 

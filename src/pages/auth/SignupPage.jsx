@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, User, ArrowRight, AlertCircle, Loader2, Eye, EyeOff, Shield, Sparkles, Zap, Star, Rocket } from 'lucide-react';
+import { Lock, Mail, User, Briefcase, Building2, ArrowRight, AlertCircle, Loader2, Eye, EyeOff, Shield, Sparkles, Zap, Globe, Code } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Floating Orbs Component
@@ -11,7 +11,7 @@ const FloatingOrbs = () => {
             {[...Array(15)].map((_, i) => (
                 <motion.div
                     key={i}
-                    className="absolute rounded-full bg-gradient-to-br from-purple-400/20 to-pink-400/20 blur-xl"
+                    className="absolute rounded-full bg-gradient-to-br from-indigo-400/20 to-purple-400/20 blur-xl"
                     style={{
                         width: Math.random() * 300 + 100,
                         height: Math.random() * 300 + 100,
@@ -43,8 +43,8 @@ const AnimatedGrid = () => {
                 className="absolute inset-0"
                 style={{
                     backgroundImage: `
-                        linear-gradient(rgba(168, 85, 247, 0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(168, 85, 247, 0.1) 1px, transparent 1px)
+                        linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px)
                     `,
                     backgroundSize: '50px 50px',
                 }}
@@ -57,12 +57,12 @@ export default function SignupPage() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [role, setRole] = useState('staff');
+    const [department, setDepartment] = useState('');
+
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Default role for new signups
-    const role = 'super_admin';
 
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -73,15 +73,20 @@ export default function SignupPage() {
         setIsSubmitting(true);
 
         try {
-            // Note: register signature is (name, email, password, role)
+            // Register with provided details - new logic sets them as Active immediately
             const result = await register(name, email, password, role);
+
             if (result.success) {
+                // Successful registration and (implicit) login or redirect
+                // Since register function in AuthContext usually logs them in if configured,
+                // or we can redirect to login if auto-login isn't set.
+                // Assuming Direct Login flow:
                 navigate('/');
             } else {
                 setError(result.error);
             }
         } catch (err) {
-            setError('An unexpected error occurred');
+            setError('An unexpected error occurred during registration.');
         } finally {
             setIsSubmitting(false);
         }
@@ -96,20 +101,8 @@ export default function SignupPage() {
     };
 
     const itemVariants = {
-        hidden: { y: 30, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "spring", stiffness: 120, damping: 12 }
-        }
-    };
-
-    const shineVariants = {
-        initial: { backgroundPosition: '-200% 0' },
-        animate: {
-            backgroundPosition: '200% 0',
-            transition: { duration: 3, repeat: Infinity, ease: "linear" }
-        }
+        hidden: { y: 20, opacity: 0 },
+        visible: { y: 0, opacity: 1 }
     };
 
     return (
@@ -126,51 +119,29 @@ export default function SignupPage() {
                     animate="visible"
                 >
                     {/* Header */}
-                    <motion.div variants={itemVariants} className="text-center lg:text-left">
-                        <motion.div
-                            className="w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-2xl flex items-center justify-center mb-6 mx-auto lg:mx-0 relative group"
-                            whileHover={{ scale: 1.05, rotate: -5 }}
-                            animate={{
-                                boxShadow: [
-                                    "0 0 20px rgba(168, 85, 247, 0.5)",
-                                    "0 0 40px rgba(236, 72, 153, 0.6)",
-                                    "0 0 20px rgba(168, 85, 247, 0.5)",
-                                ],
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                        >
-                            <Rocket className="w-8 h-8 text-white" />
-                            <motion.div
-                                className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent"
-                                animate={{ rotate: -360 }}
-                                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                            />
-                        </motion.div>
-
+                    <div className="text-center lg:text-left">
                         <motion.h1
-                            className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 tracking-tight"
-                            animate={{
-                                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                            }}
-                            transition={{ duration: 5, repeat: Infinity }}
-                            style={{ backgroundSize: '200% auto' }}
+                            className="text-4xl font-bold text-white mb-2"
+                            variants={itemVariants}
                         >
-                            NEXTSTAC
+                            Start your journey
                         </motion.h1>
-                        <p className="mt-3 text-slate-400 flex items-center gap-2 justify-center lg:justify-start text-lg">
-                            <Sparkles className="w-5 h-5 text-indigo-400" />
-                            Join the Future of ERP
-                        </p>
-                    </motion.div>
+                        <motion.p
+                            className="text-slate-400"
+                            variants={itemVariants}
+                        >
+                            Join the enterprise management platform
+                        </motion.p>
+                    </div>
 
-                    <motion.form variants={itemVariants} onSubmit={handleSubmit} className="space-y-5">
+                    <motion.form variants={itemVariants} onSubmit={handleSubmit} className="space-y-4">
                         <AnimatePresence>
                             {error && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="p-4 rounded-2xl bg-red-500/10 backdrop-blur-xl text-red-400 text-sm flex items-center gap-3 border border-red-500/20"
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3"
                                 >
                                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                                     {error}
@@ -178,109 +149,122 @@ export default function SignupPage() {
                             )}
                         </AnimatePresence>
 
-                        <div className="space-y-4">
-                            {/* Name */}
-                            <motion.div
-                                className="space-y-2 group"
-                                whileHover={{ scale: 1.01 }}
-                                transition={{ type: "spring", stiffness: 400 }}
-                            >
-                                <label className="text-sm font-bold text-slate-300 ml-1 flex items-center gap-2">
-                                    <User className="w-4 h-4 text-purple-400" />
-                                    Full Name
-                                </label>
+                        {/* Name */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-300 ml-1">Full Name</label>
+                            <div className="relative">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-5 py-4 rounded-2xl border-2 border-slate-700/50 bg-slate-800/50 backdrop-blur-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all outline-none text-white placeholder-slate-500"
+                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 bg-slate-800/50 text-white placeholder-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
                                     placeholder="John Doe"
                                     required
                                 />
-                            </motion.div>
+                            </div>
+                        </div>
 
-                            {/* Email */}
-                            <motion.div
-                                className="space-y-2 group"
-                                whileHover={{ scale: 1.01 }}
-                                transition={{ type: "spring", stiffness: 400 }}
-                            >
-                                <label className="text-sm font-bold text-slate-300 ml-1 flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-purple-400" />
-                                    Email Address
-                                </label>
+                        {/* Role Selection */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-300 ml-1">Role</label>
+                                <div className="relative">
+                                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                                    <select
+                                        value={role}
+                                        onChange={(e) => setRole(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 bg-slate-800/50 text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none appearance-none cursor-pointer"
+                                    >
+                                        <option value="staff">Staff Member</option>
+                                        <option value="super_admin">Super Admin</option>
+                                        <option value="ecommerce_admin">E-commerce Admin</option>
+                                        <option value="dev_admin">Developer Admin</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Department (Conditional) */}
+                            {role === 'staff' && (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-300 ml-1">Department</label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                                        <select
+                                            value={department}
+                                            onChange={(e) => setDepartment(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 bg-slate-800/50 text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none appearance-none cursor-pointer"
+                                            required={role === 'staff'}
+                                        >
+                                            <option value="">Select Dept</option>
+                                            <option value="IT">IT & Dev</option>
+                                            <option value="HR">Human Resources</option>
+                                            <option value="Sales">Sales & Marketing</option>
+                                            <option value="Finance">Finance</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Email */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-300 ml-1">Email Address</label>
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-5 py-4 rounded-2xl border-2 border-slate-700/50 bg-slate-800/50 backdrop-blur-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all outline-none text-white placeholder-slate-500"
+                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 bg-slate-800/50 text-white placeholder-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
                                     placeholder="name@company.com"
                                     required
                                 />
-                            </motion.div>
-
-                            {/* Password */}
-                            <motion.div
-                                className="space-y-2 group"
-                                whileHover={{ scale: 1.01 }}
-                                transition={{ type: "spring", stiffness: 400 }}
-                            >
-                                <label className="text-sm font-bold text-slate-300 ml-1 flex items-center gap-2">
-                                    <Lock className="w-4 h-4 text-purple-400" />
-                                    Password
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full px-5 py-4 rounded-2xl border-2 border-slate-700/50 bg-slate-800/50 backdrop-blur-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all outline-none text-white placeholder-slate-500 pr-14"
-                                        placeholder="••••••••"
-                                        required
-                                        minLength={6}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-400 transition-colors"
-                                    >
-                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                    </button>
-                                </div>
-                            </motion.div>
+                            </div>
                         </div>
 
-                        {/* Submit Button */}
-                        <motion.button
+                        {/* Password */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-300 ml-1">Password</label>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full pl-12 pr-12 py-3.5 rounded-xl border border-slate-700 bg-slate-800/50 text-white placeholder-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
+                                    placeholder="••••••••"
+                                    required
+                                    minLength={6}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white rounded-2xl font-bold shadow-2xl relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed mt-6"
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            className="w-full py-4 mt-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            <motion.div
-                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                                variants={shineVariants}
-                                initial="initial"
-                                animate="animate"
-                            />
-                            <span className="relative z-10 flex items-center justify-center gap-2">
-                                {isSubmitting ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                ) : (
-                                    <>
-                                        <Zap className="w-5 h-5" />
-                                        Create My Account
-                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                    </>
-                                )}
-                            </span>
-                        </motion.button>
+                            {isSubmitting ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    Create Account
+                                    <ArrowRight className="w-5 h-5" />
+                                </>
+                            )}
+                        </button>
 
-                        {/* Sign In Link */}
-                        <p className="mt-8 text-center text-slate-400">
+                        <p className="text-center text-slate-400 mt-6">
                             Already have an account?{' '}
-                            <Link to="/login" className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                            <Link to="/login" className="font-bold text-purple-400 hover:text-purple-300 transition-colors">
                                 Sign In
                             </Link>
                         </p>
@@ -288,48 +272,31 @@ export default function SignupPage() {
                 </motion.div>
             </div>
 
-            {/* Right Side - Showcase */}
-            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center p-12">
-                <div className="relative z-10 w-full max-w-lg text-center space-y-8">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4, type: "spring" }}
-                    >
-                        <h2 className="text-5xl font-black text-white mb-4">
-                            Join 10,000+
-                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400">
-                                Growing Businesses
-                            </span>
-                        </h2>
-                        <p className="text-slate-400 text-xl">
-                            Start scaling your operations today with our all-in-one platform
-                        </p>
-                    </motion.div>
+            {/* Right Side - Visuals (Keeping same vibe as Login) */}
+            <div className="hidden lg:flex lg:w-1/2 relative z-10 items-center justify-center p-12 bg-slate-900/50 backdrop-blur-sm border-l border-white/5">
+                <div className="max-w-lg text-center space-y-8">
+                    <div className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-purple-500/30 rotate-12">
+                        <Shield className="w-12 h-12 text-white" />
+                    </div>
 
-                    <motion.div
-                        className="flex justify-center gap-6"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 }}
-                    >
-                        {[
-                            { value: "99%", label: "Uptime" },
-                            { value: "24/7", label: "Support" },
-                            { value: "1M+", label: "Transactions" }
-                        ].map((stat, i) => (
-                            <motion.div
-                                key={i}
-                                className="text-center"
-                                whileHover={{ scale: 1.1 }}
-                            >
-                                <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                                    {stat.value}
-                                </div>
-                                <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
-                            </motion.div>
+                    <h2 className="text-4xl font-black text-white leading-tight">
+                        Empower Your <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
+                            Digital Workforce
+                        </span>
+                    </h2>
+
+                    <p className="text-lg text-slate-400 leading-relaxed">
+                        Join thousands of teams using NextStac to streamline their enterprise resource planning and boost productivity.
+                    </p>
+
+                    <div className="flex justify-center gap-4 pt-4">
+                        {[Globe, Code, Sparkles].map((Icon, i) => (
+                            <div key={i} className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400">
+                                <Icon className="w-6 h-6" />
+                            </div>
                         ))}
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </div>

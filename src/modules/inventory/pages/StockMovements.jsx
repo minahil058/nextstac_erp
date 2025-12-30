@@ -9,7 +9,8 @@ import {
     Filter,
     History,
     Plus,
-    Trash2
+    Trash2,
+    Edit // Import Edit icon
 } from 'lucide-react';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 
@@ -19,6 +20,7 @@ import StockAdjustmentModal from '../components/StockAdjustmentModal';
 export default function StockMovements() {
     const queryClient = useQueryClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [movementToEdit, setMovementToEdit] = useState(null); // Edit State
 
     // Delete Confirmation State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -53,9 +55,36 @@ export default function StockMovements() {
         }
     });
 
+    const updateMovementMutation = useMutation({
+        mutationFn: ({ id, data }) => new Promise(resolve => setTimeout(() => resolve(mockDataService.updateStockMovement(id, data)), 300)),
+        onSuccess: () => {
+            queryClient.invalidateQueries(['stock_movements']);
+            setIsModalOpen(false);
+            setMovementToEdit(null);
+        }
+    });
+
     const handleDeleteClick = (movement) => {
         setMovementToDelete(movement);
         setIsDeleteModalOpen(true);
+    };
+
+    const handleEditClick = (movement) => {
+        setMovementToEdit(movement);
+        setIsModalOpen(true);
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setMovementToEdit(null);
+    };
+
+    const handleModalSubmit = (data) => {
+        if (movementToEdit) {
+            updateMovementMutation.mutate({ id: movementToEdit.id, data });
+        } else {
+            addMovementMutation.mutate(data);
+        }
     };
 
     const handleConfirmDelete = () => {
@@ -80,9 +109,11 @@ export default function StockMovements() {
             className="min-h-screen"
         >
             <StockAdjustmentModal
+                key={movementToEdit ? movementToEdit.id : 'new-entry'}
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={(data) => addMovementMutation.mutate(data)}
+                onClose={handleModalClose}
+                onSubmit={handleModalSubmit}
+                initialData={movementToEdit}
             />
 
             <ConfirmationModal
@@ -102,7 +133,10 @@ export default function StockMovements() {
                         <p className="text-slate-400 text-sm mt-1">Track inventory logs and transfers</p>
                     </div>
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => {
+                            setMovementToEdit(null);
+                            setIsModalOpen(true);
+                        }}
                         className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-white rounded-xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-teal-500/20 active:scale-95 border border-teal-400/20">
                         <Plus className="w-4 h-4" />
                         New Adjustment
@@ -217,13 +251,22 @@ export default function StockMovements() {
                                             {move.warehouse}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button
-                                                onClick={() => handleDeleteClick(move)}
-                                                className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-lg transition-all active:scale-90"
-                                                title="Delete Log"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleEditClick(move)}
+                                                    className="text-slate-500 hover:text-indigo-400 p-2 hover:bg-indigo-500/10 rounded-lg transition-all active:scale-90"
+                                                    title="Edit Log"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(move)}
+                                                    className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-lg transition-all active:scale-90"
+                                                    title="Delete Log"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 ))}

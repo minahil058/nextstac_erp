@@ -67,6 +67,26 @@ export const mockDataService = {
                 role: 'dev_admin',
                 status: 'Active',
                 avatar: 'https://ui-avatars.com/api/?name=Dev+Admin&background=f59e0b&color=fff'
+            },
+            {
+                id: '4',
+                name: 'Ecommerce Staff',
+                email: 'staff.ecom@test.com',
+                password: 'password',
+                role: 'staff',
+                department: 'Ecommerce',
+                status: 'Active',
+                avatar: 'https://ui-avatars.com/api/?name=Ecom+Staff&background=10b981&color=fff'
+            },
+            {
+                id: '5',
+                name: 'Dev Staff',
+                email: 'staff.dev@test.com',
+                password: 'password',
+                role: 'staff',
+                department: 'Development',
+                status: 'Active',
+                avatar: 'https://ui-avatars.com/api/?name=Dev+Staff&background=f59e0b&color=fff'
             }
         ];
 
@@ -183,38 +203,47 @@ export const mockDataService = {
     },
 
     // --- INVENTORY ---
-    getProducts: async () => {
-        const response = await fetch(`${API_URL}/inventory/products`);
-        if (!response.ok) throw new Error('Failed to fetch products');
-        return response.json();
+    getProducts: () => {
+        return getOrSeed('erp_mock_products_v2', () => ({
+            id: faker.string.uuid(),
+            name: faker.commerce.productName(),
+            sku: `SKU-${faker.string.alphanumeric(6).toUpperCase()}`,
+            category: faker.commerce.department(),
+            price: parseFloat(faker.commerce.price({ min: 10, max: 1000 })),
+            stock: faker.number.int({ min: 0, max: 100 }),
+            minStock: faker.number.int({ min: 5, max: 20 }),
+            status: faker.helpers.arrayElement(['Active', 'Draft', 'Low Stock'])
+        }), 20);
     },
 
-    addProduct: async (product) => {
-        const response = await fetch(`${API_URL}/inventory/products`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(product),
-        });
-        if (!response.ok) throw new Error('Failed to add product');
-        return { success: true, data: await response.json() };
+    addProduct: (product) => {
+        const products = mockDataService.getProducts();
+        const newProduct = {
+            id: faker.string.uuid(),
+            status: 'Active',
+            stock: 0,
+            ...product
+        };
+        products.unshift(newProduct);
+        localStorage.setItem('erp_mock_products_v1', JSON.stringify(products));
+        return { success: true, data: newProduct };
     },
 
-    updateProduct: async (id, updates) => {
-        // Frontend sends { id, data: updates } or similar. Adjust to API expectations.
-        const response = await fetch(`${API_URL}/inventory/products/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ updates }),
-        });
-        if (!response.ok) throw new Error('Failed to update product');
-        return { success: true, data: await response.json() };
+    updateProduct: (id, updates) => {
+        const products = mockDataService.getProducts();
+        const index = products.findIndex(p => p.id === id);
+        if (index !== -1) {
+            products[index] = { ...products[index], ...updates };
+            localStorage.setItem('erp_mock_products_v1', JSON.stringify(products));
+            return { success: true, data: products[index] };
+        }
+        return { success: false, error: 'Product not found' };
     },
 
-    deleteProduct: async (id) => {
-        const response = await fetch(`${API_URL}/inventory/products/${id}`, {
-            method: 'DELETE',
-        });
-        if (!response.ok) throw new Error('Failed to delete product');
+    deleteProduct: (id) => {
+        const products = mockDataService.getProducts();
+        const newProducts = products.filter(p => p.id !== id);
+        localStorage.setItem('erp_mock_products_v1', JSON.stringify(newProducts));
         return { success: true };
     },
 
@@ -1023,7 +1052,7 @@ export const mockDataService = {
 
     // --- Stock Movements ---
     getStockMovements: () => {
-        return getOrSeed('erp_mock_stock_movements', () => {
+        return getOrSeed('erp_mock_stock_movements_v2', () => {
             const products = mockDataService.getProducts();
             const product = faker.helpers.arrayElement(products);
             return {
@@ -1034,6 +1063,7 @@ export const mockDataService = {
                 type: faker.helpers.arrayElement(['In', 'Out', 'Adjustment']),
                 quantity: faker.number.int({ min: 1, max: 100 }),
                 date: faker.date.recent().toISOString(),
+                warehouse: faker.helpers.arrayElement(['Main Warehouse', 'North Warehouse', 'South Depot']),
                 reason: faker.helpers.arrayElement(['Purchase', 'Sale', 'Damage', 'Correction']),
                 reference: `REF-${faker.string.alphanumeric(6).toUpperCase()}`
             };
@@ -1088,8 +1118,26 @@ export const mockDataService = {
             ...movement
         };
         movements.unshift(newMovement);
-        localStorage.setItem('erp_mock_stock_movements', JSON.stringify(movements));
+        localStorage.setItem('erp_mock_stock_movements_v2', JSON.stringify(movements));
         return { success: true, data: newMovement };
+    },
+
+    updateStockMovement: (id, updates) => {
+        const movements = mockDataService.getStockMovements();
+        const index = movements.findIndex(m => m.id === id);
+        if (index !== -1) {
+            movements[index] = { ...movements[index], ...updates };
+            localStorage.setItem('erp_mock_stock_movements_v2', JSON.stringify(movements));
+            return { success: true, data: movements[index] };
+        }
+        return { success: false, error: 'Movement not found' };
+    },
+
+    deleteStockMovement: (id) => {
+        const movements = mockDataService.getStockMovements();
+        const newMovements = movements.filter(m => m.id !== id);
+        localStorage.setItem('erp_mock_stock_movements_v2', JSON.stringify(newMovements));
+        return { success: true };
     },
 
     // --- Accounting / Journal ---

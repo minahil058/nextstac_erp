@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { mockDataService } from '../services/mockDataService';
 
 const AuthContext = createContext(null);
 
@@ -81,6 +82,20 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
+            // 0. Mock Data Fallback (For Development/Testing routing)
+            // This allows us to test the Staff Routing without creating real Supabase users
+            const mockUsers = mockDataService.getUsers();
+            const mockUser = mockUsers.find(u => u.email === email && u.password === password);
+            if (mockUser) {
+                console.log("Logged in with Mock User:", mockUser);
+                setUser({
+                    ...mockUser,
+                    permissions: ['all'],
+                    department: mockUser.department // Explicitly ensure department is passed
+                });
+                return { success: true };
+            }
+
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
@@ -138,6 +153,13 @@ export const AuthProvider = ({ children }) => {
             }
 
             if (data.user) {
+                // Check if user was pre-provisioned by Admin
+                const { data: existingProfile } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('email', email)
+                    .single();
+
                 // Create or update user profile in database
                 const { error: profileError } = await supabase
                     .from('users')
@@ -145,9 +167,12 @@ export const AuthProvider = ({ children }) => {
                         id: data.user.id,
                         email: email,
                         name: name,
-                        role: role || 'super_admin',
-                        status: 'Active',
-                        created_at: new Date().toISOString(),
+                        // Use existing role if provisioned, otherwise use provided role or default to 'staff'
+                        role: existingProfile?.role || role || 'staff',
+                        // Use existing status if provisioned, otherwise default to Active (auto-approve)
+                        status: existingProfile?.status || 'Active',
+                        is_approved: existingProfile?.is_approved !== undefined ? existingProfile.is_approved : true,
+                        created_at: existingProfile?.created_at || new Date().toISOString(),
                     }, {
                         onConflict: 'email'
                     });

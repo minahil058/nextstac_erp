@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, AlertCircle, Loader2, Eye, EyeOff, Shield, BarChart3, Globe, Users, Code, Sparkles, Zap, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import finalLogo from '../../assets/final_logo.jpg';
 
 // Floating Orbs Component
 const FloatingOrbs = () => {
@@ -147,7 +148,7 @@ export default function LoginPage() {
                     {/* Logo & Title */}
                     <motion.div variants={itemVariants} className="text-center lg:text-left">
                         <motion.div
-                            className="w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 mx-auto lg:mx-0 relative group"
+                            className="w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 mx-auto lg:mx-0 relative group overflow-hidden"
                             whileHover={{ scale: 1.05, rotate: 5 }}
                             animate={{
                                 boxShadow: [
@@ -158,7 +159,7 @@ export default function LoginPage() {
                             }}
                             transition={{ duration: 2, repeat: Infinity }}
                         >
-                            <Shield className="w-8 h-8 text-white" />
+                            <img src={finalLogo} alt="Logo" className="w-full h-full object-cover" />
                             <motion.div
                                 className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent"
                                 animate={{ rotate: 360 }}
@@ -293,9 +294,6 @@ export default function LoginPage() {
                         </p>
                     </motion.form>
 
-
-
-                    {/* Signup removed - login-only system */}
                 </motion.div>
             </div>
 

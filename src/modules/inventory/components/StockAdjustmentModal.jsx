@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, AlertCircle } from 'lucide-react';
 
-export default function StockAdjustmentModal({ isOpen, onClose, onSubmit }) {
+export default function StockAdjustmentModal({ isOpen, onClose, onSubmit, initialData = null }) {
     const [formData, setFormData] = useState({
         productName: '',
         type: 'In',
@@ -12,6 +12,31 @@ export default function StockAdjustmentModal({ isOpen, onClose, onSubmit }) {
         notes: ''
     });
 
+    useEffect(() => {
+        if (isOpen) {
+            if (initialData) {
+                setFormData({
+                    productName: initialData.productName || '',
+                    type: initialData.type || 'In',
+                    quantity: initialData.quantity || '',
+                    warehouse: initialData.warehouse || 'Main Warehouse',
+                    reference: initialData.reference || 'MANUAL-ADJ',
+                    notes: initialData.notes || ''
+                });
+            } else {
+                // Reset for new entry
+                setFormData({
+                    productName: '',
+                    type: 'In',
+                    quantity: '',
+                    warehouse: 'Main Warehouse',
+                    reference: 'MANUAL-ADJ',
+                    notes: ''
+                });
+            }
+        }
+    }, [isOpen, initialData]);
+
     if (!isOpen) return null;
 
     const handleSubmit = (e) => {
@@ -20,21 +45,14 @@ export default function StockAdjustmentModal({ isOpen, onClose, onSubmit }) {
             ...formData,
             quantity: parseInt(formData.quantity) || 0
         });
-        setFormData({
-            productName: '',
-            type: 'In',
-            quantity: '',
-            warehouse: 'Main Warehouse',
-            reference: 'MANUAL-ADJ',
-            notes: ''
-        });
+        // Form reset happens in useEffect on next open
     };
 
     return createPortal(
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-slate-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-800">
                 <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
-                    <h3 className="font-bold text-white">New Stock Adjustment</h3>
+                    <h3 className="font-bold text-white">{initialData ? 'Edit Stock Adjustment' : 'New Stock Adjustment'}</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
                         <X className="w-5 h-5" />
                     </button>
@@ -63,6 +81,7 @@ export default function StockAdjustmentModal({ isOpen, onClose, onSubmit }) {
                             >
                                 <option value="In">Stock In (+)</option>
                                 <option value="Out">Stock Out (-)</option>
+                                <option value="Adjustment">Adjustment</option>
                             </select>
                         </div>
                         <div className="space-y-1.5">
