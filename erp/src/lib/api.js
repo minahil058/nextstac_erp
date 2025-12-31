@@ -18,11 +18,11 @@ const getAuthToken = async () => {
         const session = JSON.parse(sessionData);
 
         // Check if session is expired
-        if (session.expiresAt && session.expiresAt < Date.now()) {
-            console.warn('Session expired');
-            localStorage.removeItem('app_session');
-            return '';
-        }
+        // if (session.expiresAt && session.expiresAt < Date.now()) {
+        //     console.warn('Session expired');
+        //     localStorage.removeItem('app_session');
+        //     return '';
+        // }
 
         return session.access_token || '';
     } catch (error) {
@@ -36,6 +36,7 @@ const getAuthToken = async () => {
  */
 export const apiRequest = async (endpoint, options = {}) => {
     const token = await getAuthToken();
+    console.log(`[API DEBUG] Request to ${endpoint} with token: ${token ? token.substring(0, 10) + '...' : 'NONE'}`);
 
     // Default headers only set Content-Type if it's not being overridden/cleared
     const headers = {

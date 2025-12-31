@@ -73,8 +73,11 @@ export default function OrderList() {
     };
 
     const filteredOrders = orders?.filter(o => {
-        const matchesSearch = o.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            o.customer.toLowerCase().includes(searchTerm.toLowerCase());
+        const orderNumber = o.orderNumber || '';
+        const customer = o.customer || '';
+
+        const matchesSearch = orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            customer.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'All' || o.status === statusFilter;
         const matchesPayment = paymentFilter === 'All' || o.paymentStatus === paymentFilter;
         return matchesSearch && matchesStatus && matchesPayment;

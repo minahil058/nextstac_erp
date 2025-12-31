@@ -398,31 +398,34 @@ export const mockDataService = {
     },
 
     // Orders (Sales)
-    getOrders: () => {
-        return getOrSeed('erp_mock_orders', () => ({
-            id: faker.string.uuid(),
-            orderNumber: `ORD-${faker.string.numeric(6)}`,
-            customer: faker.person.fullName(),
-            date: faker.date.recent({ days: 60 }).toISOString(),
-            formattedDate: faker.date.recent().toLocaleDateString(),
-            amount: parseFloat(faker.finance.amount({ min: 50, max: 3000, dec: 2 })),
-            status: faker.helpers.arrayElement(['Processing', 'Shipped', 'Delivered', 'Cancelled']),
-            paymentStatus: faker.helpers.arrayElement(['Paid', 'Unpaid'])
-        }), 20);
+    getOrders: async () => {
+        const { api } = await import('../lib/api');
+        const orders = await api.get('/sales/orders');
+        // Map backend invoice fields to frontend order fields
+        return orders.map(o => ({
+            id: o.id,
+            orderNumber: o.invoice_number || o.invoiceNumber, // Handle both snake_case and camelCase
+            customer: o.customer_name || o.customer,
+            date: o.date,
+            amount: o.amount,
+            status: o.status,
+            paymentStatus: o.status === 'Paid' ? 'Paid' : 'Pending', // Infer payment status from order status for now
+            formattedDate: new Date(o.date).toLocaleDateString()
+        }));
     },
 
-    // Leads
-    getLeads: () => {
-        return getOrSeed('erp_mock_leads', () => ({
-            id: faker.string.uuid(),
-            name: faker.person.fullName(),
-            company: faker.company.name(),
-            email: faker.internet.email(),
-            phone: faker.phone.number(),
-            source: faker.helpers.arrayElement(['Website', 'Referral', 'Social Media', 'Cold Call']),
-            status: faker.helpers.arrayElement(['New', 'Contacted', 'Qualified', 'Lost']),
-            value: parseFloat(faker.finance.amount({ min: 1000, max: 50000, dec: 0 }))
-        }), 15);
+    addOrder: async (order) => {
+        const { api } = await import('../lib/api');
+        // Map frontend order fields to backend invoice fields
+        const payload = {
+            customer_name: order.customer, // Map customer -> customer_name
+            amount: order.amount,
+            status: order.paymentStatus || 'Pending', // Use paymentStatus because backend 'invoices' table has CHECK constraint (Paid, Pending, Overdue)
+            date: order.date || new Date().toISOString(),
+            due_date: order.dueDate || new Date().toISOString()
+        };
+        const response = await api.post('/sales/orders', payload);
+        return { success: true, data: response };
     },
 
     addLead: (lead) => {
@@ -1065,47 +1068,5 @@ export const mockDataService = {
     },
 
     // Orders Actions
-    addOrder: (order) => {
-        const orders = mockDataService.getOrders();
-        const newOrder = {
-            id: faker.string.uuid(),
-            orderNumber: `ORD-${faker.string.numeric(6)}`,
-            status: 'Processing',
-            paymentStatus: 'Pending',
-            date: new Date().toISOString(),
-            ...order
-        };
-        orders.unshift(newOrder);
-        localStorage.setItem('erp_mock_orders', JSON.stringify(orders));
-        return { success: true, data: newOrder };
-    },
 
-    updateOrderStatus: (id, status) => {
-        const orders = mockDataService.getOrders();
-        const index = orders.findIndex(o => o.id === id);
-        if (index !== -1) {
-            orders[index] = { ...orders[index], status };
-            localStorage.setItem('erp_mock_orders', JSON.stringify(orders));
-            return { success: true, data: orders[index] };
-        }
-        return { success: false, error: 'Order not found' };
-    },
-
-    updateOrderPaymentStatus: (id, status) => {
-        const orders = mockDataService.getOrders();
-        const index = orders.findIndex(o => o.id === id);
-        if (index !== -1) {
-            orders[index] = { ...orders[index], paymentStatus: status };
-            localStorage.setItem('erp_mock_orders', JSON.stringify(orders));
-            return { success: true, data: orders[index] };
-        }
-        return { success: false, error: 'Order not found' };
-    },
-
-    deleteOrder: (id) => {
-        const orders = mockDataService.getOrders();
-        const newOrders = orders.filter(o => o.id !== id);
-        localStorage.setItem('erp_mock_orders', JSON.stringify(newOrders));
-        return { success: true };
-    }
 };
