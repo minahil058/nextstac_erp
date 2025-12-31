@@ -286,12 +286,7 @@ export default function LoginPage() {
                             </span>
                         </motion.button>
 
-                        <p className="mt-8 text-center text-slate-400">
-                            Don't have an account?{' '}
-                            <Link to="/signup" className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
-                                Sign Up
-                            </Link>
-                        </p>
+
                     </motion.form>
 
                 </motion.div>
