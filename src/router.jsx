@@ -9,7 +9,7 @@ import PurchasingLayout from './modules/purchasing/layouts/PurchasingLayout';
 import DocumentsLayout from './modules/documents/layouts/DocumentsLayout';
 import AuditLayout from './modules/audit/layouts/AuditLayout';
 import LoginPage from './pages/auth/LoginPage';
-import SignupPage from './pages/auth/SignupPage';
+
 import DashboardHome from './modules/dashboard/pages/DashboardHome';
 import EcommerceDashboard from './modules/dashboard/pages/EcommerceDashboard';
 import DevDashboard from './modules/dashboard/pages/DevDashboard';
@@ -224,8 +224,9 @@ export const router = createBrowserRouter([
         path: '/login',
         element: <LoginPage />
     },
-    {
-        path: '/signup',
-        element: <SignupPage />
-    }
+    // Signup removed - Admin only
+    // {
+    //     path: '/signup',
+    //     element: <SignupPage />
+    // }
 ]);
