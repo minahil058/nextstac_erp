@@ -95,8 +95,74 @@ export const createEmployee = async (req, res) => {
                 });
 
                 if (authError) {
-                    console.warn('[HR] Failed to create Supabase Auth User:', authError.message);
-                    userCreationNote = ` (Warning: Login account creation failed: ${authError.message})`;
+                    // Check if user already exists
+                    if (authError.message.includes('already') || authError.status === 422) {
+                        console.log('[HR] User already exists in Auth. Updating credentials...');
+                        try {
+                            // 1. Find User ID (Try public.users first)
+                            let existingUserId = null;
+                            const { data: publicUser } = await supabaseAdmin.from('users').select('id').eq('email', email).single();
+
+                            if (publicUser) {
+                                existingUserId = publicUser.id;
+                            } else {
+                                // Fallback: List users (expensive but necessary if sync failed)
+                                const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+                                const found = users.find(u => u.email === email);
+                                if (found) existingUserId = found.id;
+                            }
+
+                            if (existingUserId) {
+                                // 2. Update Password = CNIC
+                                const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingUserId, {
+                                    password: cnic,
+                                    email_confirm: true,
+                                    user_metadata: {
+                                        name: `${firstName} ${lastName}`,
+                                        department: userDept
+                                    }
+                                });
+
+                                if (updateError) {
+                                    console.warn('[HR] Failed to update existing user credentials:', updateError.message);
+                                    userCreationNote = ` (Warning: Could not update existing login password)`;
+                                } else {
+                                    console.log('[HR] Existing user credentials updated to match CNIC.');
+                                    userCreationNote = ' (Existing Login Account Updated)';
+
+                                    // 3. Ensure Local Sync
+                                    const userRecord = {
+                                        id: existingUserId,
+                                        name: `${firstName} ${lastName}`,
+                                        email: email,
+                                        role: 'staff',
+                                        status: 'Active',
+                                        department: userDept,
+                                        password_hash: 'supabased'
+                                    };
+
+                                    // Check if exists in local DB
+                                    db.get("SELECT id FROM users WHERE email = ?", [email], (err, row) => {
+                                        if (!row) {
+                                            const insertUserSql = `INSERT INTO users (id, name, email, role, status, department, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+                                            db.run(insertUserSql, [userRecord.id, userRecord.name, userRecord.email, userRecord.role, userRecord.status, userRecord.department, userRecord.password_hash], (e) => {
+                                                if (e) console.error('[HR] Failed to insert existing user into local users table:', e.message);
+                                                else console.log('[HR] Synced existing user to local table successfully.');
+                                            });
+                                        }
+                                    });
+                                }
+                            } else {
+                                console.warn('[HR] Could not find ID for existing user.');
+                                userCreationNote = ' (Error: User exists but ID not found)';
+                            }
+                        } catch (findErr) {
+                            console.error('[HR] Error handling existing user:', findErr);
+                        }
+                    } else {
+                        console.warn('[HR] Failed to create Supabase Auth User:', authError.message);
+                        userCreationNote = ` (Warning: Login account creation failed: ${authError.message})`;
+                    }
                 } else if (authData.user) {
                     console.log('[HR] Supabase Auth User Created/Found:', authData.user.id);
 
@@ -105,7 +171,7 @@ export const createEmployee = async (req, res) => {
                         id: authData.user.id,
                         name: `${firstName} ${lastName}`,
                         email: email,
-                        role: 'user', // Default Role
+                        role: 'staff', // HR created employees default to staff
                         status: 'Active',
                         department: userDept,
                         password_hash: 'supabased',
@@ -128,14 +194,14 @@ export const createEmployee = async (req, res) => {
                     // SYNC TO SUPABASE PUBLIC.USERS TABLE
                     const { error: dbError } = await supabaseAdmin
                         .from('users')
-                        .insert([{
+                        .upsert({
                             id: userRecord.id,
                             name: userRecord.name,
                             email: userRecord.email,
                             role: userRecord.role,
                             status: userRecord.status,
                             department: userRecord.department
-                        }]);
+                        });
 
                     if (dbError) {
                         // Keep going even if sync fails (it triggers on signup anyway usually, but duplicate key ignore is fine if manual)

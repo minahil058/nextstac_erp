@@ -69,7 +69,7 @@ const RootDispatcher = () => {
     if (user.role === 'super_admin') return <DashboardHome />;
     if (user.role === 'ecommerce_admin') return <Navigate to="/ecommerce" replace />;
     if (user.role === 'dev_admin') return <Navigate to="/dev" replace />;
-    if (user.role === 'user') return <EmployeeDashboard />;
+    if (user.role === 'user' || user.role === 'staff') return <EmployeeDashboard />;
 
     return <DashboardHome />;
 };

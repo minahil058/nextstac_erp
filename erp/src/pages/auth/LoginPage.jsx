@@ -5,6 +5,7 @@ import { Lock, Mail, ArrowRight, AlertCircle, Loader2, Eye, EyeOff, Shield, BarC
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Floating Orbs Component
+import logo from '../../assets/logo.png';
 const FloatingOrbs = () => {
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -158,7 +159,7 @@ export default function LoginPage() {
                             }}
                             transition={{ duration: 2, repeat: Infinity }}
                         >
-                            <Shield className="w-8 h-8 text-white" />
+                            <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
                             <motion.div
                                 className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent"
                                 animate={{ rotate: 360 }}
@@ -174,7 +175,7 @@ export default function LoginPage() {
                             transition={{ duration: 5, repeat: Infinity }}
                             style={{ backgroundSize: '200% auto' }}
                         >
-                            Welcome Back
+                            NextStac
                         </motion.h1>
                         <p className="mt-3 text-slate-400 flex items-center gap-2 justify-center lg:justify-start">
                             <Sparkles className="w-4 h-4 text-indigo-400" />
@@ -286,36 +287,7 @@ export default function LoginPage() {
                         </motion.button>
                     </motion.form>
 
-                    {/* Quick Access Cards */}
-                    <motion.div variants={itemVariants} className="pt-6 border-t border-slate-700/50">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <Sparkles className="w-3 h-3" />
-                            Quick Demo Access
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {[
-                                { email: 'admin@test.com', label: 'Super Admin', icon: Shield, color: 'indigo' },
-                                { email: 'ecom@test.com', label: 'E-commerce', icon: Globe, color: 'pink' },
-                                { email: 'dev@test.com', label: 'Developer', icon: Code, color: 'amber', span: true }
-                            ].map((account, i) => (
-                                <motion.button
-                                    key={i}
-                                    onClick={() => { setEmail(account.email); setPassword('password'); }}
-                                    className={`flex items-center gap-3 p-4 rounded-xl bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 hover:border-${account.color}-500/50 hover:shadow-lg hover:shadow-${account.color}-500/20 transition-all group ${account.span ? 'sm:col-span-2' : ''}`}
-                                    whileHover={{ scale: 1.02, y: -2 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    <div className={`w-10 h-10 rounded-xl bg-${account.color}-500/20 flex items-center justify-center text-${account.color}-400 group-hover:bg-${account.color}-500 group-hover:text-white transition-all`}>
-                                        <account.icon className="w-5 h-5" />
-                                    </div>
-                                    <div className="text-left">
-                                        <div className="text-sm font-bold text-white">{account.label}</div>
-                                        <div className="text-xs text-slate-500 font-mono">{account.email}</div>
-                                    </div>
-                                </motion.button>
-                            ))}
-                        </div>
-                    </motion.div>
+
 
                     {/* Signup removed - login-only system */}
                 </motion.div>
