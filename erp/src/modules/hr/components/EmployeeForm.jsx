@@ -6,8 +6,8 @@ export default function EmployeeForm({ isOpen, onClose, onSubmit, initialData = 
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
-        cnic: '',
         email: '',
+        cnic: '',
         position: '',
         department: '',
         salary: '',
@@ -106,15 +106,17 @@ export default function EmployeeForm({ isOpen, onClose, onSubmit, initialData = 
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-300">CNIC (National ID)</label>
+                            <label className="text-sm font-semibold text-slate-300">CNIC (Password)</label>
                             <input
                                 type="text"
                                 name="cnic"
+                                required
                                 value={formData.cnic || ''}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 border border-slate-700/50 bg-slate-800/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none placeholder-slate-500 transition-all shadow-inner"
                                 placeholder="00000-0000000-0"
                             />
+                            <p className="text-xs text-slate-400 mt-1">This will be used as the login password.</p>
                         </div>
                     </div>
 

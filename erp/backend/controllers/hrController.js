@@ -85,7 +85,7 @@ export const createEmployee = async (req, res) => {
                 // Admin Create User (Confirmed automatically)
                 const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
                     email: email,
-                    password: cnic,
+                    password: cnic, // Password is the CNIC
                     email_confirm: true, // Bypass verification
                     user_metadata: {
                         name: `${firstName} ${lastName}`,
