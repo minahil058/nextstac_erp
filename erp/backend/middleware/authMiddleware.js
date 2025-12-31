@@ -18,13 +18,16 @@ export const verifySupabaseToken = async (req, res, next) => {
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
         if (error || !user) {
-            return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+            console.error('[AUTH DEBUG] Token verification failed:', error?.message || 'No user', 'Token:', token.substring(0, 10) + '...');
+            return res.status(401).json({ error: `Unauthorized - ${error?.message || 'Invalid token or User not found'}` });
         }
 
         // Attach user to request object for use in route handlers
         req.user = user;
         req.userId = user.id;
         req.userEmail = user.email;
+
+        console.log('[AUTH DEBUG] Token verified for user:', user.email);
 
         next();
     } catch (error) {
