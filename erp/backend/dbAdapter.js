@@ -7,6 +7,49 @@ const useSupabase = !!supabase;
 const dbAdapter = {
     // --- User Operations ---
 
+    // Get All Users
+    getAllUsers: async () => {
+        if (useSupabase) {
+            if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw new Error(error.message);
+            return data || [];
+        } else {
+            return new Promise((resolve, reject) => {
+                db.all("SELECT * FROM users ORDER BY created_at DESC", [], (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows);
+                });
+            });
+        }
+    },
+
+    // Find User By ID
+    findUserById: async (id) => {
+        if (useSupabase) {
+            if (!supabase) throw new Error('Supabase client not initialized (Missing Env Vars)');
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error) throw new Error(error.message);
+            return data;
+        } else {
+            return new Promise((resolve, reject) => {
+                db.get("SELECT * FROM users WHERE id = ?", [id], (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                });
+            });
+        }
+    },
+
     // Find User By Email
     findUserByEmail: async (email) => {
         if (useSupabase) {

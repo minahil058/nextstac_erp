@@ -85,8 +85,14 @@ export default function AdminTableRow({
                             min="0"
                             max="100"
                             step="0.5"
-                            value={admin.sharePercentage || 0}
-                            onChange={(e) => onUpdateShare(admin.id, parseFloat(e.target.value))}
+                            defaultValue={admin.sharePercentage || 0}
+                            onBlur={(e) => onUpdateShare(admin.id, parseFloat(e.target.value))}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    onUpdateShare(admin.id, parseFloat(e.currentTarget.value));
+                                    e.currentTarget.blur();
+                                }
+                            }}
                             className="w-16 px-2 py-1 bg-white border border-slate-200 rounded text-sm font-semibold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-center"
                         />
                         <span className="text-slate-400 font-medium text-xs">%</span>

@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Users, Calendar, Banknote, Clock } from 'lucide-react';
 import { clsx } from 'clsx';
+import logo from '../../../assets/logo.png';
 
 const HRHeader = () => {
     const navItems = [
@@ -17,8 +18,8 @@ const HRHeader = () => {
             <div className="px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg border border-emerald-400/20">
-                            H
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg border border-emerald-400/20 overflow-hidden">
+                            <img src={logo} alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <h1 className="text-xl font-black text-white leading-tight tracking-tight">

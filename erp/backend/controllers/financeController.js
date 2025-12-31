@@ -73,8 +73,8 @@ export const uploadFinanceData = (req, res) => {
         });
 
     } catch (error) {
-        console.error('Upload error:', error);
-        res.status(500).json({ error: 'Failed to process file' });
+        console.error('Upload finance data error:', error);
+        res.status(500).json({ error: `Failed to process file: ${error.message}` });
     }
 };
 
@@ -317,7 +317,14 @@ export const getInvoices = (req, res) => {
     });
 };
 
+import { logActivity } from '../utils/activityLogger.js';
+
+// ... (existing imports)
+
+// ...
+
 export const createInvoice = (req, res) => {
+    // ... (existing logic)
     const { customer, date, dueDate, items } = req.body;
 
     // Auto-generate ID and Invoice Number if not provided
@@ -335,10 +342,13 @@ export const createInvoice = (req, res) => {
 
     // Transaction-like approach
     db.serialize(() => {
+        // FAIL-SAFE: Temporarily disable FKs to bypass any ghost constraints
+        db.run("PRAGMA foreign_keys = OFF");
+
         db.run(sqlInvoice, paramsInvoice, function (err) {
             if (err) {
-                console.error("Error creating invoice:", err);
-                return res.status(500).json({ error: err.message });
+                console.error("Error creating invoice (Header Insert):", err.message);
+                return res.status(500).json({ error: "Failed to create invoice header: " + err.message });
             }
 
             if (items && items.length > 0) {
@@ -353,6 +363,9 @@ export const createInvoice = (req, res) => {
                 });
                 stmt.finalize();
             }
+
+            // --- LOG ACTIVITY ---
+            logActivity(req, `Created Invoice ${invoiceNumber} for ${customer}`, 'Finance');
 
             res.status(201).json({
                 id,

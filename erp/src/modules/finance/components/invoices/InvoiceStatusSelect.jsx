@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export default function InvoiceStatusSelect({ currentStatus, onUpdate }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
     const containerRef = useRef(null);
 
     const statuses = ['Paid', 'Pending', 'Overdue'];
@@ -26,16 +28,43 @@ export default function InvoiceStatusSelect({ currentStatus, onUpdate }) {
         }
     };
 
+    const toggleOpen = () => {
+        if (!isOpen) {
+            const rect = containerRef.current.getBoundingClientRect();
+            setPosition({
+                top: rect.bottom + window.scrollY + 8,
+                left: rect.left + window.scrollX,
+                width: 140 // Fixed width for dropdown
+            });
+        }
+        setIsOpen(!isOpen);
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (containerRef.current && !containerRef.current.contains(event.target)) {
+                // Check if click is inside the portal dropdown (which is outside containerRef)
+                const dropdown = document.getElementById(`dropdown-${currentStatus}-${position.top}`);
+                if (dropdown && dropdown.contains(event.target)) return;
+
                 setIsOpen(false);
             }
         };
 
+        const handleScroll = () => {
+            if (isOpen) setIsOpen(false); // Close on scroll to prevent misalignment
+        };
+
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        window.addEventListener('scroll', handleScroll, true);
+        window.addEventListener('resize', handleScroll);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', handleScroll, true);
+            window.removeEventListener('resize', handleScroll);
+        };
+    }, [isOpen, currentStatus, position.top]);
 
     const handleSelect = (status) => {
         if (status !== currentStatus) {
@@ -47,7 +76,7 @@ export default function InvoiceStatusSelect({ currentStatus, onUpdate }) {
     return (
         <div className="relative" ref={containerRef}>
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={toggleOpen}
                 className={clsx(
                     "flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold uppercase transition-all min-w-[110px] justify-between group",
                     getStatusColor(currentStatus),
@@ -61,8 +90,16 @@ export default function InvoiceStatusSelect({ currentStatus, onUpdate }) {
                 <ChevronDown className={clsx("w-3 h-3 transition-transform duration-200", isOpen && "rotate-180")} />
             </button>
 
-            {isOpen && (
-                <div className="absolute top-full left-0 mt-2 w-[140px] bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-200">
+            {isOpen && createPortal(
+                <div
+                    id={`dropdown-${currentStatus}-${position.top}`}
+                    className="fixed z-[9999] bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-1.5 animate-in fade-in zoom-in-95 duration-200"
+                    style={{
+                        top: position.top - window.scrollY, // Use fixed positioning relative to viewport
+                        left: position.left,
+                        width: position.width
+                    }}
+                >
                     {statuses.map((status) => (
                         <button
                             key={status}
@@ -81,7 +118,8 @@ export default function InvoiceStatusSelect({ currentStatus, onUpdate }) {
                             {status === currentStatus && <Check className="w-3.5 h-3.5 text-white" />}
                         </button>
                     ))}
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Package, Truck, Warehouse, History } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion } from 'framer-motion';
+import logo from '../../../assets/logo.png';
 
 const InventoryHeader = () => {
     const navItems = [
@@ -17,8 +18,8 @@ const InventoryHeader = () => {
             <div className="px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg border border-teal-400/20">
-                            I
+                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg border border-teal-400/20 overflow-hidden">
+                            <img src={logo} alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <h1 className="text-xl font-black text-white leading-tight tracking-tight">
@@ -64,8 +65,8 @@ const InventoryHeader = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 text-white flex items-center justify-center text-xs font-bold ring-2 ring-slate-700/50">
-                        U
+                    <div className="w-9 h-9 rounded-full bg-slate-900 border border-slate-700/50 flex items-center justify-center overflow-hidden ring-2 ring-slate-700/50">
+                        <img src={logo} alt="User" className="w-full h-full object-cover" />
                     </div>
                 </div>
             </div>

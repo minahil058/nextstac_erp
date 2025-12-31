@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { FloatingOrbs, AnimatedGrid } from '../../../components/shared/BackgroundEffects';
 import { PremiumCard, PremiumButton } from '../../../components/shared/PremiumComponents';
+import logo from '../../../assets/logo.png';
 
 export default function CompanyProfile() {
     const [isEditing, setIsEditing] = useState(false);
@@ -104,7 +105,7 @@ export default function CompanyProfile() {
                                 {/* Logo */}
                                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-slate-700 p-2 shadow-xl border-2 border-slate-600/50 shrink-0 -mt-12 md:-mt-16 relative">
                                     <img
-                                        src={company.logo}
+                                        src={logo}
                                         alt="Logo"
                                         className="w-full h-full object-cover rounded-xl"
                                     />

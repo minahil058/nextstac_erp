@@ -18,4 +18,21 @@ if (supabaseUrl && supabaseKey) {
     console.warn('Supabase URL or Key missing. Database operations will fail if VERCEL=1.');
 }
 
+const serviceRoleKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabaseAdmin = null;
+
+if (supabaseUrl && serviceRoleKey) {
+    try {
+        supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        });
+    } catch (e) {
+        console.error('Failed to initialize Supabase Admin client:', e);
+    }
+}
+
+export { supabaseAdmin };
 export default supabase;
