@@ -80,6 +80,7 @@ function initSchema() {
             avatar_url TEXT,
             phone TEXT,
             address TEXT,
+            cnic TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);

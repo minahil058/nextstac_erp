@@ -156,6 +156,12 @@ export default function EmployeeDetailModal({ isOpen, onClose, employee }) {
                                                     <p className="text-xs text-slate-500 mb-1">Annual Salary</p>
                                                     <p className="font-semibold text-slate-900">${Number(employee.salary).toLocaleString()}</p>
                                                 </div>
+                                                {employee.cnic && (
+                                                    <div className="group">
+                                                        <p className="text-xs text-slate-500 mb-1">CNIC (Login Password)</p>
+                                                        <p className="font-semibold text-slate-900 font-mono tracking-wider">{employee.cnic}</p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
