@@ -1,70 +1,61 @@
-import db from '../db.js';
+import dbAdapter from '../dbAdapter.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- Vendors ---
-export const getVendors = (req, res) => {
-    const sql = `SELECT 
-        id, 
-        company_name as companyName, 
-        contact_person as contactPerson, 
-        email, 
-        phone, 
-        address, 
-        rating, 
-        status 
-    FROM vendors ORDER BY created_at DESC`;
-
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+export const getVendors = async (req, res) => {
+    try {
+        const rows = await dbAdapter.purchasing.getVendors();
+        const vendors = rows.map(r => ({
+            id: r.id,
+            companyName: r.company_name || r.companyName,
+            contactPerson: r.contact_person || r.contactPerson,
+            email: r.email,
+            phone: r.phone,
+            address: r.address,
+            rating: r.rating,
+            status: r.status,
+            createdAt: r.created_at
+        }));
+        res.json(vendors);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const createVendor = (req, res) => {
+export const createVendor = async (req, res) => {
     const { companyName, contactPerson, email, phone, address, rating, status } = req.body;
     const id = uuidv4();
+    const newVendor = {
+        id, companyName, contactPerson, email, phone, address, rating: rating || 5, status: status || 'Active'
+    };
 
-    const sql = `INSERT INTO vendors (id, company_name, contact_person, email, phone, address, rating, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    const params = [id, companyName, contactPerson, email, phone, address, rating || 5, status || 'Active'];
-
-    db.run(sql, params, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id, companyName, contactPerson, email, phone, address, rating, status });
-    });
+    try {
+        const result = await dbAdapter.purchasing.createVendor(newVendor);
+        res.status(201).json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const updateVendor = (req, res) => {
-    const { updates } = req.body;
-    // Simplified update logic similar to products/customers
+export const updateVendor = async (req, res) => {
     const data = req.body.updates || req.body;
+    if (!data || Object.keys(data).length === 0) return res.json({});
 
-    const keys = Object.keys(data);
-    if (keys.length === 0) return res.json({});
-
-    const fields = keys.map((key) => {
-        if (key === 'companyName') return 'company_name = ?';
-        if (key === 'contactPerson') return 'contact_person = ?';
-        return `${key} = ?`;
-    });
-
-    const values = keys.map(k => data[k]);
-    values.push(req.params.id);
-
-    const sql = `UPDATE vendors SET ${fields.join(', ')} WHERE id = ?`;
-
-    db.run(sql, values, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: req.params.id, ...data });
-    });
+    try {
+        const result = await dbAdapter.purchasing.updateVendor(req.params.id, data);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const deleteVendor = (req, res) => {
-    db.run("DELETE FROM vendors WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+export const deleteVendor = async (req, res) => {
+    try {
+        await dbAdapter.purchasing.deleteVendor(req.params.id);
         res.json({ message: 'Deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
 // ... POs and Bills logic to be added if strictly required, but for "Complete Backend" 
@@ -72,126 +63,115 @@ export const deleteVendor = (req, res) => {
 // The task plan lists "Implement Purchasing Module (Vendors, POs)".
 
 // --- Purchase Orders (POs) ---
-export const getPurchaseOrders = (req, res) => {
-    const sql = `SELECT 
-        id, 
-        po_number as poNumber, 
-        vendor, 
-        date, 
-        expected_date as expectedDate, 
-        amount, 
-        status 
-    FROM purchase_orders ORDER BY date DESC`;
-
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+export const getPurchaseOrders = async (req, res) => {
+    try {
+        const rows = await dbAdapter.purchasing.getPurchaseOrders();
+        // adapter returns snake_case from supabase usually, or whatever select returns.
+        // Controller expects camelCase for frontend.
+        const pos = rows.map(r => ({
+            id: r.id,
+            poNumber: r.po_number || r.poNumber,
+            vendor: r.vendor,
+            date: r.date,
+            expectedDate: r.expected_date || r.expectedDate,
+            amount: r.amount,
+            status: r.status
+        }));
+        res.json(pos);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const createPurchaseOrder = (req, res) => {
+export const createPurchaseOrder = async (req, res) => {
     const { vendor, date, expectedDate, amount, status } = req.body;
     const id = uuidv4();
     const poNumber = `PO-${Math.floor(10000 + Math.random() * 90000)}`;
+    const newPO = {
+        id, poNumber, vendor, date, expectedDate, amount, status: status || 'Draft'
+    };
 
-    const sql = `INSERT INTO purchase_orders (id, po_number, vendor, date, expected_date, amount, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`;
-
-    // vendor might be ID or name depending on frontend
-    const params = [id, poNumber, vendor, date, expectedDate, amount, status || 'Draft'];
-
-    db.run(sql, params, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id, poNumber, vendor, date, expectedDate, amount, status });
-    });
+    try {
+        const result = await dbAdapter.purchasing.createPurchaseOrder(newPO);
+        res.status(201).json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const updatePurchaseOrder = (req, res) => {
+export const updatePurchaseOrder = async (req, res) => {
     const data = req.body.updates || req.body;
-    const keys = Object.keys(data);
-    if (keys.length === 0) return res.json({});
+    if (!data || Object.keys(data).length === 0) return res.json({});
 
-    const fields = keys.map((key) => {
-        if (key === 'expectedDate') return 'expected_date = ?';
-        return `${key} = ?`;
-    });
-
-    const values = keys.map(k => data[k]);
-    values.push(req.params.id);
-
-    const sql = `UPDATE purchase_orders SET ${fields.join(', ')} WHERE id = ?`;
-
-    db.run(sql, values, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: req.params.id, ...data });
-    });
+    try {
+        const result = await dbAdapter.purchasing.updatePurchaseOrder(req.params.id, data);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const deletePurchaseOrder = (req, res) => {
-    db.run("DELETE FROM purchase_orders WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+export const deletePurchaseOrder = async (req, res) => {
+    try {
+        await dbAdapter.purchasing.deletePurchaseOrder(req.params.id);
         res.json({ message: 'Deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
 // --- Bills ---
-export const getBills = (req, res) => {
-    const sql = `SELECT 
-       id, 
-       bill_number as billNumber, 
-       vendor, 
-       date, 
-       due_date as dueDate, 
-       amount, 
-       status 
-   FROM bills ORDER BY date DESC`;
-
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+export const getBills = async (req, res) => {
+    try {
+        const rows = await dbAdapter.purchasing.getBills();
+        const bills = rows.map(r => ({
+            id: r.id,
+            billNumber: r.bill_number || r.billNumber,
+            vendor: r.vendor,
+            date: r.date,
+            dueDate: r.due_date || r.dueDate,
+            amount: r.amount,
+            status: r.status
+        }));
+        res.json(bills);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const createBill = (req, res) => {
+export const createBill = async (req, res) => {
     const { vendor, date, dueDate, amount, status } = req.body;
     const id = uuidv4();
     const billNumber = `BILL-${Math.floor(10000 + Math.random() * 90000)}`;
+    const newBill = {
+        id, billNumber, vendor, date, dueDate, amount, status: status || 'Pending'
+    };
 
-    const sql = `INSERT INTO bills (id, bill_number, vendor, date, due_date, amount, status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)`;
-
-    const params = [id, billNumber, vendor, date, dueDate, amount, status || 'Pending'];
-
-    db.run(sql, params, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id, billNumber, vendor, date, dueDate, amount, status });
-    });
+    try {
+        const result = await dbAdapter.purchasing.createBill(newBill);
+        res.status(201).json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const updateBill = (req, res) => {
+export const updateBill = async (req, res) => {
     const data = req.body.updates || req.body;
-    const keys = Object.keys(data);
-    if (keys.length === 0) return res.json({});
+    if (!data || Object.keys(data).length === 0) return res.json({});
 
-    const fields = keys.map((key) => {
-        if (key === 'dueDate') return 'due_date = ?';
-        return `${key} = ?`;
-    });
-
-    const values = keys.map(k => data[k]);
-    values.push(req.params.id);
-
-    const sql = `UPDATE bills SET ${fields.join(', ')} WHERE id = ?`;
-
-    db.run(sql, values, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: req.params.id, ...data });
-    });
+    try {
+        const result = await dbAdapter.purchasing.updateBill(req.params.id, data);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const deleteBill = (req, res) => {
-    db.run("DELETE FROM bills WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+export const deleteBill = async (req, res) => {
+    try {
+        await dbAdapter.purchasing.deleteBill(req.params.id);
         res.json({ message: 'Deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };

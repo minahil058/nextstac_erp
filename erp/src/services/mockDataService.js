@@ -147,7 +147,7 @@ export const mockDataService = {
 
     updateEmployee: async (id, updates) => {
         const { api } = await import('../lib/api');
-        const data = await api.put(`/hr/employees/${id}`, { updates });
+        const data = await api.put(`/hr/employees/${id}`, updates);
         return { success: true, data };
     },
 
@@ -546,6 +546,18 @@ export const mockDataService = {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+    },
+
+    approveFile: async (id) => {
+        const { api } = await import('../lib/api');
+        await api.put(`/documents/${id}/approve`);
+        return { success: true };
+    },
+
+    rejectFile: async (id) => {
+        const { api } = await import('../lib/api');
+        await api.put(`/documents/${id}/reject`);
+        return { success: true };
     },
 
     // Activity Logs

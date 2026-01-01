@@ -50,8 +50,8 @@ export default function EmployeeList() {
 
     // Helper to get default filter based on role
     const getRoleBasedFilter = () => {
-        if (user?.role === 'dev_admin') return 'Development';
-        if (user?.role === 'ecommerce_admin') return 'Ecommerce';
+        if (user?.role === 'dev_admin') return 'Web Development';
+        if (user?.role === 'ecommerce_admin') return 'E-commerce';
         return 'All Departments';
     };
 
@@ -223,7 +223,7 @@ export default function EmployeeList() {
                     {/* Department Tabs */}
                     {user?.role === 'super_admin' && (
                         <div className="flex p-1.5 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl w-full sm:w-fit overflow-x-auto no-scrollbar shadow-lg">
-                            {['All Departments', 'Development', 'Ecommerce'].map((dept) => (
+                            {['All Departments', 'Web Development', 'E-commerce'].map((dept) => (
                                 <Button
                                     key={dept}
                                     variant={departmentFilter === dept ? 'secondary' : 'ghost'}

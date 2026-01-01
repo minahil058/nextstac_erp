@@ -121,7 +121,7 @@ const NAV_ITEMS = [
             { label: 'Contracts', path: '/purchasing/contracts' },
         ]
     },
-    { label: 'Documents', path: '/documents', icon: FolderOpen, roles: ['super_admin', 'dev_admin'] },
+    { label: 'Documents', path: '/documents', icon: FolderOpen, roles: ['super_admin', 'dev_admin', 'ecommerce_admin'] },
     { label: 'Audit Logs', path: '/audit', icon: Menu, roles: ['super_admin', 'dev_admin'] },
 ];
 

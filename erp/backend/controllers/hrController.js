@@ -1,359 +1,261 @@
-import db from '../db.js';
+import dbAdapter from '../dbAdapter.js';
 import { v4 as uuidv4 } from 'uuid';
+import { supabaseAdmin } from '../supabaseClient.js';
 
-export const getAllEmployees = (req, res) => {
-    const sql = `SELECT 
-        id, 
-        first_name as firstName, 
-        last_name as lastName, 
-        email, 
-        cnic,
-        position, 
-        department_name as department, 
-        salary, 
-        status, 
-        avatar_url as avatar, 
-        phone, 
-        address, 
-        join_date as joinDate,
-        updated_at as updatedAt
-    FROM employees ORDER BY created_at DESC`;
+export const getAllEmployees = async (req, res) => {
+    try {
+        const rows = await dbAdapter.hr.getAllEmployees();
+        let employees = rows.map(r => ({
+            id: r.id,
+            firstName: r.first_name || r.firstName,
+            lastName: r.last_name || r.lastName,
+            email: r.email,
+            position: r.position,
+            department: r.department_name || r.department,
+            salary: r.salary,
+            status: r.status,
+            avatar: r.avatar_url || r.avatar,
+            phone: r.phone,
+            address: r.address,
+            joinDate: r.join_date || r.joinDate,
+            updatedAt: r.updated_at || r.updatedAt
+        }));
 
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
-};
+        const userRole = (req.user?.role || 'user').toLowerCase();
 
-export const getEmployeeById = (req, res) => {
-    const sql = `SELECT 
-        id, 
-        first_name as firstName, 
-        last_name as lastName, 
-        email, 
-        cnic,
-        position, 
-        department_name as department, 
-        salary, 
-        status, 
-        avatar_url as avatar, 
-        phone, 
-        address, 
-        join_date as joinDate,
-        updated_at as updatedAt
-    FROM employees WHERE id = ?`;
-
-    db.get(sql, [req.params.id], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (!row) return res.status(404).json({ error: 'Employee not found' });
-        res.json(row);
-    });
-};
-
-import supabase, { supabaseAdmin } from '../supabaseClient.js';
-
-export const createEmployee = async (req, res) => {
-    const { firstName, lastName, email, cnic, position, department, salary, status, avatar, phone, address } = req.body;
-    const id = uuidv4();
-    const joinDate = new Date().toISOString();
-
-    console.log(`[HR] Creating employee: ${firstName} ${lastName} (${email})`);
-
-    // 1. Create Employee Record in HR Module
-    const sql = `INSERT INTO employees (id, first_name, last_name, email, cnic, position, department_name, salary, status, avatar_url, phone, address, join_date) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    const params = [id, firstName, lastName, email, cnic, position, department, salary, status || 'Active', avatar, phone, address, joinDate];
-
-    db.run(sql, params, async function (err) {
-        if (err) {
-            if (err.message.includes('UNIQUE constraint failed: employees.email')) {
-                return res.status(400).json({ message: 'This email address is already registered to another employee.' });
-            }
-            return res.status(500).json({ error: err.message });
+        if (userRole === 'ecommerce_admin') {
+            employees = employees.filter(e => e.department === 'E-commerce');
+        } else if (userRole === 'dev_admin') {
+            employees = employees.filter(e => e.department === 'Web Development');
         }
 
-        // 2. Auto-Create User Account in Supabase (and Users Table)
-        let userCreationNote = '';
-        if (cnic && supabaseAdmin) { // Use supabaseAdmin
-            try {
-                // Determine Dept for User
-                let userDept = department;
+        res.json(employees);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
 
-                console.log(`[HR] Attempting to auto-create Auth User for ${email}...`);
+export const getEmployeeById = async (req, res) => {
+    try {
+        const row = await dbAdapter.hr.getEmployeeById(req.params.id);
+        if (!row) return res.status(404).json({ error: 'Employee not found' });
 
-                // Admin Create User (Confirmed automatically)
+        const employee = {
+            id: row.id,
+            firstName: row.first_name || row.firstName,
+            lastName: row.last_name || row.lastName,
+            email: row.email,
+            position: row.position,
+            department: row.department_name || row.department,
+            salary: row.salary,
+            status: row.status,
+            avatar: row.avatar_url || row.avatar,
+            phone: row.phone,
+            address: row.address,
+            joinDate: row.join_date || row.joinDate,
+            updatedAt: row.updated_at || row.updatedAt
+        };
+        res.json(employee);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const createEmployee = async (req, res) => {
+    const { firstName, lastName, email, position, department, salary, status, avatar, phone, address, cnic } = req.body;
+    const id = uuidv4(); // Employee ID
+    const joinDate = new Date().toISOString();
+
+    const newEmpPayload = { id, firstName, lastName, email, position, department, salary, status: status || 'Active', avatar, phone, address, cnic, joinDate };
+
+    try {
+        // 1. Create Employee Record
+        const savedEmp = await dbAdapter.hr.createEmployee(newEmpPayload);
+
+        // 2. Auto-Create User Account (Login Access)
+        // Check if user already exists to avoid duplicates/errors
+        const existingUser = await dbAdapter.findUserByEmail(email);
+
+        if (!existingUser) {
+            const userPassword = cnic || '12345678'; // Default to CNIC or fallback
+            let userId = uuidv4(); // Default new ID
+            let userHash = 'PENDING_REGISTRATION';
+
+            // Create in Supabase Auth
+            if (supabaseAdmin) {
                 const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-                    email: email,
-                    password: cnic, // Password is the CNIC
-                    email_confirm: true, // Bypass verification
-                    user_metadata: {
-                        name: `${firstName} ${lastName}`,
-                        role: 'user',
-                        department: userDept
-                    }
+                    email,
+                    password: userPassword,
+                    email_confirm: true,
+                    user_metadata: { name: `${firstName} ${lastName}` }
                 });
 
                 if (authError) {
-                    // Check if user already exists
-                    if (authError.message.includes('already') || authError.status === 422) {
-                        console.log('[HR] User already exists in Auth. Updating credentials...');
-                        try {
-                            // 1. Find User ID (Try public.users first)
-                            let existingUserId = null;
-                            const { data: publicUser } = await supabaseAdmin.from('users').select('id').eq('email', email).single();
-
-                            if (publicUser) {
-                                existingUserId = publicUser.id;
-                            } else {
-                                // Fallback: List users (expensive but necessary if sync failed)
-                                const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-                                const found = users.find(u => u.email === email);
-                                if (found) existingUserId = found.id;
-                            }
-
-                            if (existingUserId) {
-                                // 2. Update Password = CNIC
-                                const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingUserId, {
-                                    password: cnic,
-                                    email_confirm: true,
-                                    user_metadata: {
-                                        name: `${firstName} ${lastName}`,
-                                        department: userDept
-                                    }
-                                });
-
-                                if (updateError) {
-                                    console.warn('[HR] Failed to update existing user credentials:', updateError.message);
-                                    userCreationNote = ` (Warning: Could not update existing login password)`;
-                                } else {
-                                    console.log('[HR] Existing user credentials updated to match CNIC.');
-                                    userCreationNote = ' (Existing Login Account Updated)';
-
-                                    // 3. Ensure Local Sync
-                                    const userRecord = {
-                                        id: existingUserId,
-                                        name: `${firstName} ${lastName}`,
-                                        email: email,
-                                        role: 'staff',
-                                        status: 'Active',
-                                        department: userDept,
-                                        password_hash: 'supabased'
-                                    };
-
-                                    // Check if exists in local DB
-                                    db.get("SELECT id FROM users WHERE email = ?", [email], (err, row) => {
-                                        if (!row) {
-                                            const insertUserSql = `INSERT INTO users (id, name, email, role, status, department, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-                                            db.run(insertUserSql, [userRecord.id, userRecord.name, userRecord.email, userRecord.role, userRecord.status, userRecord.department, userRecord.password_hash], (e) => {
-                                                if (e) console.error('[HR] Failed to insert existing user into local users table:', e.message);
-                                                else console.log('[HR] Synced existing user to local table successfully.');
-                                            });
-                                        }
-                                    });
-                                }
-                            } else {
-                                console.warn('[HR] Could not find ID for existing user.');
-                                userCreationNote = ' (Error: User exists but ID not found)';
-                            }
-                        } catch (findErr) {
-                            console.error('[HR] Error handling existing user:', findErr);
-                        }
-                    } else {
-                        console.warn('[HR] Failed to create Supabase Auth User:', authError.message);
-                        userCreationNote = ` (Warning: Login account creation failed: ${authError.message})`;
-                    }
+                    console.error('Failed to auto-create Auth user for employee:', authError);
                 } else if (authData.user) {
-                    console.log('[HR] Supabase Auth User Created/Found:', authData.user.id);
-
-                    // Create entry in 'users' table matching this Auth ID
-                    const userRecord = {
-                        id: authData.user.id,
-                        name: `${firstName} ${lastName}`,
-                        email: email,
-                        role: 'staff', // HR created employees default to staff
-                        status: 'Active',
-                        department: userDept,
-                        password_hash: 'supabased',
-                    };
-
-                    // Check if exists
-                    db.get("SELECT id FROM users WHERE email = ?", [email], (err, row) => {
-                        if (!row) {
-                            // Insert new user record
-                            const insertUserSql = `INSERT INTO users (id, name, email, role, status, department, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-                            db.run(insertUserSql, [userRecord.id, userRecord.name, userRecord.email, userRecord.role, userRecord.status, userRecord.department, userRecord.password_hash], (e) => {
-                                if (e) console.error('[HR] Failed to insert into users table:', e.message);
-                                else console.log('[HR] Synced to users table successfully.');
-                            });
-                        } else {
-                            console.log('[HR] User record already exists in users table. Skipping insert.');
-                        }
-                    });
-
-                    // SYNC TO SUPABASE PUBLIC.USERS TABLE
-                    const { error: dbError } = await supabaseAdmin
-                        .from('users')
-                        .upsert({
-                            id: userRecord.id,
-                            name: userRecord.name,
-                            email: userRecord.email,
-                            role: userRecord.role,
-                            status: userRecord.status,
-                            department: userRecord.department
-                        });
-
-                    if (dbError) {
-                        // Keep going even if sync fails (it triggers on signup anyway usually, but duplicate key ignore is fine if manual)
-                        console.error('[HR] Failed to sync to Supabase DB:', dbError.message);
-                    } else {
-                        console.log('[HR] Synced to Supabase DB users table successfully.');
-                    }
-
-                    userCreationNote = ' (Login Account Created)';
+                    userId = authData.user.id;
+                    userHash = 'SUPABASE_AUTH';
                 }
-
-            } catch (autoCreateErr) {
-                console.error('[HR] Auto-create user error:', autoCreateErr);
-                userCreationNote = ' (Error creating login account)';
             }
-        } else if (cnic && !supabaseAdmin) {
-            console.warn('[HR] Supabase Admin client not available. Cannot auto-create user.');
-            userCreationNote = ' (Backend config missing for user creation)';
+
+            // Create in Local Users Table
+            const newUser = {
+                id: userId,
+                name: `${firstName} ${lastName}`,
+                email,
+                password_hash: userHash,
+                role: 'staff',
+                status: 'Active',
+                department: department
+            };
+
+            await dbAdapter.createUser(newUser);
+            console.log(`Auto-created user account for employee: ${email}`);
         }
 
-        const newEmp = { id, firstName, lastName, email, cnic, position, department, salary, status, avatar, phone, address, joinDate };
-        res.status(201).json({ ...newEmp, message: 'Employee created successfully' + userCreationNote });
-    });
-};
-
-export const updateEmployee = (req, res) => {
-    const { updates } = req.body;
-
-    if (!updates || Object.keys(updates).length === 0) {
-        return res.json({});
+        res.status(201).json(savedEmp);
+    } catch (err) {
+        console.error('Create Employee Error:', err);
+        res.status(500).json({ error: err.message });
     }
-
-    const keys = Object.keys(updates);
-    const fields = keys.map((key) => {
-        let col = key;
-        if (key === 'firstName') col = 'first_name';
-        if (key === 'lastName') col = 'last_name';
-        if (key === 'department') col = 'department_name';
-        if (key === 'avatar') col = 'avatar_url';
-        // cnic matches key 'cnic' so no mapping needed
-        return `${col} = ?`;
-    });
-
-    const values = keys.map(k => updates[k]);
-    values.push(req.params.id);
-
-    const sql = `UPDATE employees SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
-
-    console.log('Update SQL:', sql, values);
-
-    db.run(sql, values, function (err) {
-        if (err) {
-            console.error('Update Error:', err);
-            return res.status(500).json({ error: err.message });
-        }
-
-        const returnSql = `SELECT 
-            id, 
-            first_name as firstName, 
-            last_name as lastName, 
-            email, 
-            cnic,
-            position, 
-            department_name as department, 
-            salary, 
-            status, 
-            avatar_url as avatar, 
-            phone, 
-            address, 
-            join_date as joinDate,
-            updated_at as updatedAt
-        FROM employees WHERE id = ?`;
-
-        db.get(returnSql, [req.params.id], (err, row) => {
-            res.json(row);
-        });
-    });
 };
 
-export const deleteEmployee = (req, res) => {
-    db.run("DELETE FROM employees WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Deleted successfully' });
-    });
+export const updateEmployee = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const updatedEmp = await dbAdapter.hr.updateEmployee(id, updates);
+        res.json(updatedEmp);
+    } catch (err) {
+        console.error('Update Employee Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const deleteEmployee = async (req, res) => {
+    res.status(501).json({ error: "Delete not yet implemented in Vercel mode" });
 };
 
 // --- Leave Management ---
 
-export const getAllLeaves = (req, res) => {
-    const sql = `
-        SELECT l.*, e.first_name, e.last_name, e.department_name
-        FROM leaves l
-        LEFT JOIN employees e ON l.employee_id = e.id
-        ORDER BY l.created_at DESC
-    `;
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+export const getAllLeaves = async (req, res) => {
+    try {
+        const [leaveRows, employeeRows] = await Promise.all([
+            dbAdapter.hr.getAllLeaves(),
+            dbAdapter.hr.getAllEmployees()
+        ]);
 
-        // Transform for frontend consistency if needed
-        const leaves = rows.map(leave => {
-            const fullName = leave.first_name ? `${leave.first_name} ${leave.last_name}` : 'Unknown Employee';
-            return {
-                id: leave.id,
-                employeeId: leave.employee_id,
-                employeeName: fullName,
-                department: leave.department_name || 'Unassigned',
-                type: leave.type,
-                startDate: leave.start_date,
-                endDate: leave.end_date,
-                days: Math.ceil((new Date(leave.end_date) - new Date(leave.start_date)) / (1000 * 60 * 60 * 24)) + 1,
-                reason: leave.reason,
-                status: leave.status,
-                requestedOn: leave.created_at,
-                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`
-            };
+        // Map employee ID to department for filtering
+        const empMap = {};
+        employeeRows.forEach(emp => {
+            empMap[emp.id] = emp.department_name || emp.department;
         });
-        res.json(leaves);
-    });
-};
 
-export const createLeave = (req, res) => {
-    const { employeeId, email, type, startDate, endDate, reason } = req.body;
-    const id = uuidv4();
+        let leaves = leaveRows.map(leave => ({
+            id: leave.id,
+            employeeId: leave.employee_id || leave.employeeId,
+            employeeName: leave.employee_name || leave.employeeName,
+            department: empMap[leave.employee_id || leave.employeeId] || 'Unassigned',
+            type: leave.type,
+            startDate: leave.start_date || leave.startDate,
+            endDate: leave.end_date || leave.endDate,
+            days: Math.ceil((new Date(leave.end_date || leave.endDate) - new Date(leave.start_date || leave.startDate)) / (1000 * 60 * 60 * 24)) + 1,
+            reason: leave.reason,
+            status: leave.status,
+            requestedOn: leave.created_at || leave.createdAt,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(leave.employee_name || leave.employeeName)}&background=random`
+        }));
 
-    // First, resolve the correct employee_id
-    const findEmployeeSql = `SELECT id FROM employees WHERE id = ? OR email = ?`;
+        const userRole = (req.user?.role || 'user').toLowerCase();
+        console.log('DEBUG getAllLeaves:', { user: req.user, rawRole: req.user?.role, normalizedRole: userRole });
 
-    db.get(findEmployeeSql, [employeeId, email], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        if (!row) {
-            return res.status(400).json({
-                error: 'Employee profile not found. Please ensure you have an employee record created in HR.'
-            });
+        // 1. Employees: See only OWN requests
+        if (userRole !== 'super_admin' && !userRole.includes('admin')) {
+            console.log('DEBUG: Treating as Employee');
+            const employee = await dbAdapter.hr.getEmployeeByEmail(req.user.email);
+            if (employee) {
+                leaves = leaves.map(l => ({ ...l, employeeId: l.employeeId })); // Ensure structure matches
+                leaves = leaves.filter(l => l.employeeId === employee.id);
+            } else {
+                console.log('DEBUG: Employee record not found for email:', req.user.email);
+                leaves = [];
+            }
+        }
+        // 2. E-commerce Admin
+        else if (userRole === 'ecommerce_admin') {
+            console.log('DEBUG: Treating as Ecommerce Admin');
+            leaves = leaves.filter(l => l.department === 'E-commerce');
+        }
+        // 3. Web Dev Admin
+        else if (userRole === 'dev_admin') {
+            console.log('DEBUG: Treating as Dev Admin');
+            leaves = leaves.filter(l => l.department === 'Web Development');
+        }
+        // 4. Super Admin: Sees EVERYTHING
+        else {
+            console.log('DEBUG: Treating as Super Admin (Access All)');
         }
 
-        const validEmployeeId = row.id;
-        const insertSql = `INSERT INTO leaves (id, employee_id, type, start_date, end_date, reason) VALUES (?, ?, ?, ?, ?, ?)`;
-
-        db.run(insertSql, [id, validEmployeeId, type, startDate, endDate, reason], function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.status(201).json({ id, status: 'Pending', message: 'Leave requested successfully' });
-        });
-    });
+        res.json(leaves);
+    } catch (err) {
+        console.error('Get All Leaves Error:', err);
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const updateLeaveStatus = (req, res) => {
-    const { status } = req.body;
-    const sql = `UPDATE leaves SET status = ? WHERE id = ?`;
+export const createLeave = async (req, res) => {
+    const { type, startDate, endDate, reason } = req.body;
 
-    db.run(sql, [status, req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, status });
-    });
+    let targetEmployeeId = req.body.employeeId;
+    let targetEmployeeName = req.body.employeeName;
+
+    try {
+        if (req.user && req.user.email) {
+            const employee = await dbAdapter.hr.getEmployeeByEmail(req.user.email);
+            if (employee) {
+                targetEmployeeId = employee.id;
+                targetEmployeeName = `${employee.first_name || employee.firstName} ${employee.last_name || employee.lastName}`;
+            } else if (!targetEmployeeId) {
+                return res.status(404).json({ error: "No employee record found for your account. Please contact HR." });
+            }
+        }
+
+        if (!targetEmployeeId) {
+            return res.status(400).json({ error: "Employee identification failed." });
+        }
+
+        const id = uuidv4();
+        const leavePayload = {
+            id,
+            employeeId: targetEmployeeId,
+            employeeName: targetEmployeeName || 'Unknown',
+            type,
+            startDate,
+            endDate,
+            reason
+        };
+
+        await dbAdapter.hr.createLeave(leavePayload);
+        res.status(201).json({ id, status: 'Pending', message: 'Leave requested successfully' });
+    } catch (err) {
+        console.error('Create Leave Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const updateLeaveStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!['Approved', 'Rejected', 'Pending'].includes(status)) {
+            return res.status(400).json({ error: "Invalid status" });
+        }
+
+        const result = await dbAdapter.hr.updateLeaveStatus(id, status);
+        res.json(result);
+    } catch (err) {
+        console.error('Update Leave Status Error:', err);
+        res.status(500).json({ error: err.message });
+    }
 };

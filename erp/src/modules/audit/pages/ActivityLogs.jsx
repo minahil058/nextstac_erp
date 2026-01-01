@@ -42,8 +42,8 @@ export default function ActivityLogs() {
     );
 
     const filteredLogs = logs?.filter(log => {
-        const matchesSearch = log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.action.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (log.user || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (log.action || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesModule = moduleFilter === 'All' || log.module === moduleFilter;
         return matchesSearch && matchesModule;
     });
@@ -157,9 +157,9 @@ export default function ActivityLogs() {
                         >
                             {/* Timeline Dot */}
                             <div className={`absolute left-0 sm:left-4 top-6 -translate-y-1/2 -translate-x-[5px] w-3 h-3 rounded-full border-2 border-slate-900 ring-2 ring-slate-800 transition-all duration-300 group-hover:scale-125 ${log.action.includes('Deleted') ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' :
-                                    log.action.includes('Created') ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' :
-                                        log.action.includes('Logged') ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' :
-                                            'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                                log.action.includes('Created') ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' :
+                                    log.action.includes('Logged') ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' :
+                                        'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
                                 }`}></div>
 
                             {/* Card Content */}
@@ -176,8 +176,8 @@ export default function ActivityLogs() {
                                             <div className="flex items-center gap-2 text-sm">
                                                 <span className="text-slate-400">performed</span>
                                                 <span className={`font-bold ${log.action.includes('Deleted') ? 'text-rose-400' :
-                                                        log.action.includes('Created') ? 'text-emerald-400' :
-                                                            log.action.includes('Logged') ? 'text-indigo-400' : 'text-blue-400'
+                                                    log.action.includes('Created') ? 'text-emerald-400' :
+                                                        log.action.includes('Logged') ? 'text-indigo-400' : 'text-blue-400'
                                                     }`}>{log.action}</span>
                                                 <span className="bg-slate-700/50 border border-slate-600/50 px-2 py-0.5 rounded text-xs text-slate-300 font-mono">
                                                     {log.module}

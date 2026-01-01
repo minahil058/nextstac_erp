@@ -1,128 +1,131 @@
-import db from '../db.js';
+import dbAdapter from '../dbAdapter.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export const getCustomers = (req, res) => {
-    const sql = `SELECT 
-        id, 
-        name, 
-        company, 
-        email, 
-        phone, 
-        address, 
-        status, 
-        notes,
-        total_orders as totalOrders,
-        last_order_date as lastOrderDate
-    FROM customers ORDER BY created_at DESC`;
-
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+export const getCustomers = async (req, res) => {
+    try {
+        const rows = await dbAdapter.crm.getCustomers();
+        const customers = rows.map(r => ({
+            id: r.id,
+            name: r.name,
+            company: r.company,
+            email: r.email,
+            phone: r.phone,
+            address: r.address,
+            status: r.status,
+            notes: r.notes,
+            totalOrders: r.total_orders || r.totalOrders || 0,
+            lastOrderDate: r.last_order_date || r.lastOrderDate,
+            createdAt: r.created_at
+        }));
+        res.json(customers);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const createCustomer = (req, res) => {
+export const createCustomer = async (req, res) => {
     const { name, company, email, phone, address, status, notes } = req.body;
     const id = uuidv4();
+    const newCustomer = { id, name, company, email, phone, address, status: status || 'Active', notes };
 
-    const sql = `INSERT INTO customers (id, name, company, email, phone, address, status, notes) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    // Default status 'Active'
-    const params = [id, name, company, email, phone, address, status || 'Active', notes];
-
-    db.run(sql, params, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id, name, company, email, phone, address, status, notes, totalOrders: 0 });
-    });
+    try {
+        const result = await dbAdapter.crm.createCustomer(newCustomer);
+        res.status(201).json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const updateCustomer = (req, res) => {
-    // Similar to products, expect dynamic updates
+export const updateCustomer = async (req, res) => {
     const data = req.body.updates || req.body;
+    if (!data || Object.keys(data).length === 0) return res.json({});
 
-    const keys = Object.keys(data);
-    if (keys.length === 0) return res.json({});
-
-    const fields = keys.map((key) => {
-        let col = key;
-        if (key === 'totalOrders') col = 'total_orders';
-        if (key === 'lastOrderDate') col = 'last_order_date';
-        return `${col} = ?`;
-    });
-
-    const values = keys.map(k => data[k]);
-    values.push(req.params.id);
-
-    const sql = `UPDATE customers SET ${fields.join(', ')} WHERE id = ?`;
-
-    db.run(sql, values, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-
-        db.get("SELECT id, name, company, email, phone, address, status, notes, total_orders as totalOrders, last_order_date as lastOrderDate FROM customers WHERE id = ?", [req.params.id], (err, row) => {
-            res.json(row);
+    try {
+        const result = await dbAdapter.crm.updateCustomer(req.params.id, data);
+        res.json({
+            id: result.id,
+            name: result.name,
+            company: result.company,
+            email: result.email,
+            phone: result.phone,
+            address: result.address,
+            status: result.status,
+            notes: result.notes,
+            totalOrders: result.total_orders || result.totalOrders,
+            lastOrderDate: result.last_order_date || result.lastOrderDate
         });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const deleteCustomer = (req, res) => {
-    db.run("DELETE FROM customers WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+export const deleteCustomer = async (req, res) => {
+    try {
+        await dbAdapter.crm.deleteCustomer(req.params.id);
         res.json({ message: 'Deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
 // --- Leads ---
-export const getLeads = (req, res) => {
-    const sql = `SELECT * FROM leads ORDER BY created_at DESC`;
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+export const getLeads = async (req, res) => {
+    try {
+        const rows = await dbAdapter.crm.getLeads();
+        // Standardize output if needed.
+        // Assuming rows are already in reasonable format (sqlite returns snake_case if table defined so? 
+        // Table: id, name, company, email, phone, source, status, estimated_value
+        const leads = rows.map(r => ({
+            id: r.id,
+            name: r.name,
+            company: r.company,
+            email: r.email,
+            phone: r.phone,
+            source: r.source,
+            status: r.status,
+            estimatedValue: r.estimated_value || r.estimatedValue || 0,
+            createdAt: r.created_at
+        }));
+        res.json(leads);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const createLead = (req, res) => {
+export const createLead = async (req, res) => {
     const { name, company, email, phone, source, status, estimatedValue } = req.body;
     const id = uuidv4();
-
-    const sql = `INSERT INTO leads (id, name, company, email, phone, source, status, estimated_value) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    // estimatedValue often sent as 'value' from frontend mock
     const val = estimatedValue || req.body.value || 0;
 
-    const params = [id, name, company, email, phone, source, status || 'New', val];
+    const newLead = {
+        id, name, company, email, phone, source, status: status || 'New', estimatedValue: val
+    };
 
-    db.run(sql, params, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id, name, company, email, phone, source, status, estimatedValue: val });
-    });
+    try {
+        const result = await dbAdapter.crm.createLead(newLead);
+        res.status(201).json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const updateLead = (req, res) => {
+export const updateLead = async (req, res) => {
     const data = req.body.updates || req.body;
-    const keys = Object.keys(data);
-    if (keys.length === 0) return res.json({});
+    if (!data || Object.keys(data).length === 0) return res.json({});
 
-    const fields = keys.map((key) => {
-        if (key === 'estimatedValue' || key === 'value') return 'estimated_value = ?';
-        return `${key} = ?`;
-    });
-
-    const values = keys.map(k => data[k]);
-    values.push(req.params.id);
-
-    const sql = `UPDATE leads SET ${fields.join(', ')} WHERE id = ?`;
-
-    db.run(sql, values, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: req.params.id, ...data });
-    });
+    try {
+        const result = await dbAdapter.crm.updateLead(req.params.id, data);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const deleteLead = (req, res) => {
-    db.run("DELETE FROM leads WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+export const deleteLead = async (req, res) => {
+    try {
+        await dbAdapter.crm.deleteLead(req.params.id);
         res.json({ message: 'Deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };

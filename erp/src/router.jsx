@@ -184,7 +184,7 @@ export const router = createBrowserRouter([
                     // Documents (Super Admin + Dev)
                     {
                         path: 'documents',
-                        element: <RoleRoute allowed={['super_admin', 'dev_admin']}><DocumentsLayout /></RoleRoute>,
+                        element: <RoleRoute allowed={['super_admin', 'dev_admin', 'ecommerce_admin']}><DocumentsLayout /></RoleRoute>,
                         children: [
                             { index: true, element: <FileManager /> }
                         ]

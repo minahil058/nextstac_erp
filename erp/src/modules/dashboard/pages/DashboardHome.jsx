@@ -167,6 +167,50 @@ const DashboardHome = () => {
         }
     };
 
+    // --- Trend Calculations ---
+    const calculateTrend = (data, dateKey = 'date', amountKey = null) => {
+        if (!data || data.length === 0) return 0;
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+        let currentTotal = 0;
+        let lastTotal = 0;
+
+        data.forEach(item => {
+            const date = new Date(item[dateKey] || item.created_at);
+            if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                currentTotal += amountKey ? (Number(item[amountKey]) || 0) : 1;
+            } else if (date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear) {
+                lastTotal += amountKey ? (Number(item[amountKey]) || 0) : 1;
+            }
+        });
+
+        if (lastTotal === 0) return currentTotal > 0 ? 100 : 0;
+        return ((currentTotal - lastTotal) / lastTotal) * 100;
+    };
+
+    // Revenue Trend (Transactions where type is 'Income' or amount > 0)
+    // Note: transactions array items have 'date' and 'amount'
+    const incomeTransactions = transactions.filter(t => (Number(t.amount) || 0) > 0);
+    const revenueTrend = calculateTrend(incomeTransactions, 'date', 'amount');
+
+    // Orders Trend (New Orders this month vs last month)
+    const ordersTrend = calculateTrend(orders, 'date'); // Assuming orders have 'date' or 'created_at'
+
+    // Employees Trend (New Joinees this month vs last month)
+    const employeeTrend = calculateTrend(employees, 'joinDate');
+
+    // Low Stock Trend - Snapshot only, can't calculate trend without history. 
+    // We'll show 0 or maybe random fluctuation if demo? No, let's keep it 0 as "No change info" or valid logic.
+    // User asked "does these changes", implying they want real data. 
+    // Real data for inventory snapshot trend is impossible without history table. 
+    // I will disable the trend indicator for Low Stock or just show 0 explicitly.
+    const lowStockTrend = 0;
+
+
     return (
         <div className="relative min-h-screen">
             <FloatingOrbs count={12} />
@@ -216,28 +260,28 @@ const DashboardHome = () => {
                         icon={DollarSign}
                         label="Total Revenue"
                         value={`$${totalRevenue.toLocaleString()}`}
-                        trend={12.5}
+                        trend={revenueTrend}
                         color="emerald"
                     />
                     <StatCard
                         icon={ShoppingCart}
                         label="Active Orders"
                         value={activeOrders.toString()}
-                        trend={3.2}
+                        trend={ordersTrend}
                         color="blue"
                     />
                     <StatCard
                         icon={Package}
                         label="Low Stock Items"
                         value={lowStockCount.toString()}
-                        trend={-5}
+                        trend={lowStockTrend}
                         color="amber"
                     />
                     <StatCard
                         icon={Users}
                         label="Total Employees"
                         value={totalEmployees.toString()}
-                        trend={0}
+                        trend={employeeTrend}
                         color="indigo"
                     />
                 </motion.div>

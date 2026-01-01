@@ -131,30 +131,11 @@ export default function LeaveManagement() {
 
     const filteredLeaves = (leaves || []).filter(leave => {
         // Implement Search & Filter
-        const matchesSearch = leave.employeeName.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (leave.employeeName || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'All' || leave.status === statusFilter;
         const matchesType = typeFilter === 'All' || leave.type === typeFilter;
 
-        // Implement Role-Based Access Control
-        // 1. Super Admin: Sees EVERYTHING.
-        // 2. E-com Admin: Sees ONLY E-commerce department.
-        // 3. Dev Admin: Sees ONLY Web Development department.
-        // 4. Employee: Sees ONLY their own requests.
-
-        let isAuthorized = false;
-
-        if (user?.role === 'super_admin') {
-            isAuthorized = true; // Super Admin sees all
-        } else if (user?.role === 'ecommerce_admin') {
-            isAuthorized = leave.department === 'E-commerce';
-        } else if (user?.role === 'dev_admin') {
-            isAuthorized = leave.department === 'Web Development';
-        } else {
-            // Regular User / Employee
-            isAuthorized = leave.employeeId === user?.id;
-        }
-
-        return matchesSearch && matchesStatus && matchesType && isAuthorized;
+        return matchesSearch && matchesStatus && matchesType;
     });
 
     if (isLoading) return <div className="p-8 text-center animate-pulse text-slate-500">Loading leave requests...</div>;
@@ -277,7 +258,7 @@ export default function LeaveManagement() {
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-9 w-9 border border-slate-600/50 shadow-sm">
                                                 <AvatarImage src={request.avatar} />
-                                                <AvatarFallback className="bg-slate-700 text-slate-300">{request.employeeName[0]}</AvatarFallback>
+                                                <AvatarFallback className="bg-slate-700 text-slate-300">{(request.employeeName || '?')[0]}</AvatarFallback>
                                             </Avatar>
                                             <div>
                                                 <div className="font-semibold text-white">{request.employeeName}</div>

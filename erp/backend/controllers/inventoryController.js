@@ -1,86 +1,91 @@
-import db from '../db.js';
+import dbAdapter from '../dbAdapter.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export const getProducts = (req, res) => {
-    // frontend expects: name, sku, category, price, stock, minStock, status, supplier
-    const sql = `SELECT 
-        id, 
-        name, 
-        sku, 
-        category, 
-        price, 
-        stock, 
-        min_stock as minStock, 
-        supplier, 
-        status, 
-        last_updated as lastUpdated 
-    FROM products ORDER BY created_at DESC`;
+export const getProducts = async (req, res) => {
+    try {
+        const rows = await dbAdapter.inventory.getProducts();
 
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+        const products = rows.map(r => ({
+            id: r.id,
+            name: r.name,
+            sku: r.sku,
+            category: r.category,
+            price: r.price,
+            stock: r.stock,
+            minStock: r.min_stock || r.minStock,
+            supplier: r.supplier,
+            status: r.status,
+            lastUpdated: r.last_updated || r.lastUpdated || r.created_at
+        }));
+
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const createProduct = (req, res) => {
+export const createProduct = async (req, res) => {
     const { name, sku, category, price, stock, minStock, status, supplier } = req.body;
     const id = uuidv4();
     const lastUpdated = new Date().toISOString();
 
-    const sql = `INSERT INTO products (id, name, sku, category, price, stock, min_stock, supplier, status, last_updated) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const newProduct = {
+        id,
+        name,
+        sku,
+        category,
+        price,
+        stock: stock || 0,
+        minStock: minStock || 10,
+        status: status || 'Active',
+        supplier,
+        lastUpdated
+    };
 
-    // minStock default 10 if not provided
-    const params = [id, name, sku, category, price, stock || 0, minStock || 10, supplier, status || 'Active', lastUpdated];
-
-    db.run(sql, params, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id, name, sku, category, price, stock, minStock, supplier, status, lastUpdated });
-    });
+    try {
+        const savedProduct = await dbAdapter.inventory.createProduct(newProduct);
+        res.status(201).json(savedProduct);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const updateProduct = (req, res) => {
-    const { updates } = req.body; // mockDataService sends { id, data: updates } or just updates as body? 
-    // In ProductList.jsx: updateProductMutation.mutate({ id: selectedProduct.id, data });
-    // So req.body likely contains the data object directly if we coordinate with updated service.
-
-    // Let's assume req.body IS the updates object for simplicity, or we check if 'updates' key exists.
-    // Standard Rest: PUT/PATCH /api/products/:id -> body is the data.
-
+export const updateProduct = async (req, res) => {
+    // Expect updates in req.body.updates or req.body directly
     const data = req.body.updates || req.body;
 
-    // Dynamic update query
-    const keys = Object.keys(data);
-    if (keys.length === 0) return res.json({});
+    if (!data || Object.keys(data).length === 0) {
+        return res.json({});
+    }
 
-    const fields = keys.map((key) => {
-        let col = key;
-        if (key === 'minStock') col = 'min_stock';
-        if (key === 'lastUpdated') col = 'last_updated';
-        return `${col} = ?`;
-    });
+    try {
+        const updatedProduct = await dbAdapter.inventory.updateProduct(req.params.id, data);
 
-    const values = keys.map(k => data[k]);
-    values.push(new Date().toISOString()); // Always update last_updated
-    fields.push('last_updated = ?');
+        // Normalize return
+        const normalized = {
+            id: updatedProduct.id,
+            name: updatedProduct.name,
+            sku: updatedProduct.sku,
+            category: updatedProduct.category,
+            price: updatedProduct.price,
+            stock: updatedProduct.stock,
+            minStock: updatedProduct.min_stock || updatedProduct.minStock,
+            supplier: updatedProduct.supplier,
+            status: updatedProduct.status,
+            lastUpdated: updatedProduct.last_updated || updatedProduct.lastUpdated
+        };
 
-    values.push(req.params.id);
-
-    const sql = `UPDATE products SET ${fields.join(', ')} WHERE id = ?`;
-
-    db.run(sql, values, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-
-        // Return updated object
-        db.get("SELECT id, name, sku, category, price, stock, min_stock as minStock, supplier, status, last_updated as lastUpdated FROM products WHERE id = ?", [req.params.id], (err, row) => {
-            res.json(row);
-        });
-    });
+        res.json(normalized);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
-export const deleteProduct = (req, res) => {
-    db.run("DELETE FROM products WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+export const deleteProduct = async (req, res) => {
+    try {
+        await dbAdapter.inventory.deleteProduct(req.params.id);
         res.json({ message: 'Deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };

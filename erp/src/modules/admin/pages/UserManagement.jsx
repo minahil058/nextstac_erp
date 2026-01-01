@@ -357,6 +357,20 @@ export default function UserManagement() {
                                 />
                             </div>
 
+                            {!editingId && (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-300">Initial Password</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full px-4 py-3 border-2 border-slate-700/50 bg-slate-900/50 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-white placeholder-slate-500 transition-all"
+                                        value={formData.password || ''}
+                                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                        placeholder="Set initial password (e.g. CNIC)"
+                                    />
+                                </div>
+                            )}
+
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-slate-300">Role</label>
                                 <select

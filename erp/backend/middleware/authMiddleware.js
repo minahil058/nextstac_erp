@@ -1,4 +1,5 @@
 import supabase from '../supabaseClient.js';
+import dbAdapter from '../dbAdapter.js';
 
 /**
  * Middleware to verify Supabase JWT tokens
@@ -22,12 +23,26 @@ export const verifySupabaseToken = async (req, res, next) => {
             return res.status(401).json({ error: `Unauthorized - ${error?.message || 'Invalid token or User not found'}` });
         }
 
+        // Fetch user profile from database to get the Role
+        // Supabase Auth user object doesn't have our app-specific 'role' field by default
+        let userRole = 'user';
+        try {
+            const profile = await dbAdapter.findUserByEmail(user.email);
+            if (profile) {
+                userRole = profile.role || 'user';
+            } else {
+                console.warn('[AUTH DEBUG] User profile not found in DB for email:', user.email);
+            }
+        } catch (dbError) {
+            console.error('[AUTH DEBUG] DB Profile fetch failed:', dbError);
+        }
+
         // Attach user to request object for use in route handlers
-        req.user = user;
+        req.user = { ...user, role: userRole };
         req.userId = user.id;
         req.userEmail = user.email;
 
-        console.log('[AUTH DEBUG] Token verified for user:', user.email);
+        console.log('[AUTH DEBUG] Token verified for:', user.email, 'Role:', userRole);
 
         next();
     } catch (error) {

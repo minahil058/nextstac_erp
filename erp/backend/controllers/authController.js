@@ -32,8 +32,12 @@ const createTransporter = async () => {
     }
 };
 
+import { supabaseAdmin } from '../supabaseClient.js';
+
+// ... existing imports ...
+
 export const inviteUser = async (req, res) => {
-    const { email, role, name, department } = req.body;
+    const { email, role, name, department, password } = req.body;
 
     if (!email || !role) {
         return res.status(400).json({ error: 'Email and Role are required' });
@@ -41,71 +45,81 @@ export const inviteUser = async (req, res) => {
 
     // Helper to send email
     const sendInvitationEmail = async (targetEmail, targetRole, targetId, targetStatus) => {
+        // ... (keep existing email logic or simplify if password provided)
+        // If password provided, we might not need to send "Invite" link, but rather "Credentials" email.
+        // For minimal change, we keep the invite email logic but maybe suppress it or tweak it?
+        // Actually, let's keep it as is, but maybe the user won't use the link if they just login.
+
         try {
             const transporter = await createTransporter();
+            const text = password
+                ? `You have been added to Financa ERP. Your login credentials are: Email: ${targetEmail}, Password: ${password}.`
+                : `You have been invited to join Financa ERP. Please sign up using this email.`;
+
             const info = await transporter.sendMail({
                 from: '"Financa ERP" <no-reply@financa.com>',
                 to: targetEmail,
-                subject: 'Invitation to Join Financa ERP',
-                text: `You have been invited to join Financa ERP as a ${targetRole}. Please sign up using this email address to access your account.`,
+                subject: 'Welcome to Financa ERP',
+                text: text,
                 html: `
                     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
                         <h2 style="color: #4F46E5;">Welcome to Financa ERP</h2>
-                        <p>You have been invited to join the platform as a <strong>${targetRole}</strong>.</p>
-                        <p>To get started, please click the link below to create your account:</p>
-                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/signup" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Create Account</a>
-                        <p style="margin-top: 20px; font-size: 12px; color: #666;">This invitation was sent by an administrator.</p>
+                        <p>You have been assigned the role: <strong>${targetRole}</strong>.</p>
+                        ${password ? `<p>Your temporary password is: <strong>${password}</strong></p>` : `<p>Please sign up via the portal.</p>`}
+                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Login Here</a>
                     </div>
                 `
             });
 
             console.log('Message sent: %s', info.messageId);
+            // ... (keep existing debug return)
             if (!process.env.SMTP_HOST) {
-                console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
                 return res.status(201).json({
-                    message: 'Invitation sent successfully',
+                    message: 'User created successfully',
                     user: { id: targetId, email: targetEmail, role: targetRole, status: targetStatus },
                     debug_preview_url: nodemailer.getTestMessageUrl(info)
                 });
             }
-
-            res.status(201).json({ message: 'Invitation sent successfully', user: { id: targetId, email: targetEmail, role: targetRole, status: targetStatus } });
+            res.status(201).json({ message: 'User created successfully', user: { id: targetId, email: targetEmail, role: targetRole, status: targetStatus } });
 
         } catch (emailError) {
             console.error('Email sending failed:', emailError);
-            res.status(201).json({ warning: 'User created/updated but email failed to send', error: emailError.message });
+            res.status(201).json({ warning: 'User created but email failed', error: emailError.message });
         }
     };
 
     try {
         const row = await dbAdapter.findUserByEmail(email);
+        if (row) return res.status(400).json({ error: 'User with this email already exists.' });
 
-        if (row) {
-            if (row.status === 'Invited') {
-                console.log('Resending invitation to (and updating):', email);
+        let id = uuidv4();
+        let status = 'Invited';
+        let password_hash = 'PENDING_REGISTRATION';
 
-                // UPDATE the existing invite with new Role/Dept if changed
-                let finalDepartment = department;
-                if (!finalDepartment) {
-                    if (role === 'ecommerce_admin') finalDepartment = 'E-commerce';
-                    if (role === 'dev_admin') finalDepartment = 'Web Development';
-                }
+        // Create in Supabase Auth if password provided
+        if (password && supabaseAdmin) {
+            const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+                email,
+                password,
+                email_confirm: true
+            });
 
-                await dbAdapter.updateUser(row.id, {
-                    role: role,
-                    department: finalDepartment,
-                    name: name || row.name
-                });
-
-                return sendInvitationEmail(email, role, row.id, row.status);
+            if (authError) {
+                console.error('Supabase Auth Create Error:', authError);
+                return res.status(400).json({ error: 'Failed to create user in Auth system: ' + authError.message });
             }
-            return res.status(400).json({ error: 'User with this email already exists and is active.' });
-        }
 
-        // Create Invited User
-        const id = uuidv4();
-        const status = 'Invited';
-        const password_hash = 'PENDING_REGISTRATION';
+            if (authData.user) {
+                id = authData.user.id; // Use Supabase ID
+                status = 'Active';
+                password_hash = 'SUPABASE_AUTH'; // Placeholder
+            }
+        } else if (password && !supabaseAdmin) {
+            console.warn('Backend missing SUPABASE_SERVICE_ROLE_KEY. Cannot create Auth user.');
+            // We proceed to create in local DB, but they can't login via Supabase Auth.
+            // Notify frontend?
+            return res.status(500).json({ error: 'Server misconfiguration: Cannot create login credentials. Missing Service Role Key.' });
+        }
 
         let finalDepartment = department;
         if (!finalDepartment) {
@@ -114,7 +128,7 @@ export const inviteUser = async (req, res) => {
         }
 
         // Insert into DB
-        const newUser = { id, name: name || 'Invited User', email, password_hash, role, status, department: finalDepartment };
+        const newUser = { id, name: name || 'Admin User', email, password_hash, role, status, department: finalDepartment };
         await dbAdapter.createUser(newUser);
 
         sendInvitationEmail(email, role, id, status);
@@ -125,97 +139,56 @@ export const inviteUser = async (req, res) => {
     }
 };
 
+export const syncProfile = async (req, res) => {
+    try {
+        const { id, email, name, avatar_url } = req.body;
+
+        if (!id || !email) {
+            return res.status(400).json({ error: 'User ID and Email are required for sync' });
+        }
+
+        // Check if user exists
+        const existingUser = await dbAdapter.findUserByEmail(email);
+
+        if (existingUser) {
+            // Update existing user
+            await dbAdapter.updateUser(existingUser.id, {
+                name: name || existingUser.name,
+                avatar_url: avatar_url || existingUser.avatar_url,
+                // Don't overwrite role if not provided or restricted
+            });
+            // Return updated user
+            const updated = await dbAdapter.findUserByEmail(email);
+            return res.json({ message: 'Profile synced', user: updated });
+        } else {
+            // Create new user (Role defaults to 'user' if not specified, but usually first user is admin? 
+            // In sync flow, we assume invite flow created them OR they signed up. 
+            // If they signed up via Supabase directly, we create them here.)
+
+            // Note: In strict mode, we might want to ONLY allow invited users.
+            // But for now, let's allow JIT creation for authenticated users.
+            const newUser = {
+                id: id, // Use Supabase ID
+                email,
+                name: name || 'New User',
+                password_hash: 'SUPABASE_AUTH', // Placeholder
+                role: 'user', // Default role
+                status: 'Active',
+                avatar_url
+            };
+
+            await dbAdapter.createUser(newUser);
+            return res.status(201).json({ message: 'User created via sync', user: newUser });
+        }
+    } catch (error) {
+        console.error('Sync Profile Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // NOTE: login and register functions have been removed.
 // Authentication is now handled by Supabase Auth on the frontend.
 // Users sign in directly with Supabase using the SDK in AuthContext.jsx
 //
 // The inviteUser function above is still used for admin-initiated user invitations.
-
-export const syncProfile = async (req, res) => {
-    // req.user and req.userId came from verifySupabaseToken middleware
-    const authId = req.userId;
-    const authEmail = req.userEmail;
-
-    // Optional: Allow client to pass specific role if creating BRAND NEW user (not invited)
-    // But for invited users, we ignore this and use what's in DB.
-    const { name, role: requestedRole } = req.body;
-
-    console.log(`Syncing profile for: ${authEmail} (Auth ID: ${authId})`);
-
-    try {
-        // 1. Check if there is an existing "Invited" profile for this email with a DIFFERENT ID?
-        // Or any profile.
-        const existingProfile = await dbAdapter.findUserByEmail(authEmail);
-
-        if (existingProfile) {
-            console.log('Found existing profile:', existingProfile);
-
-            // Case A: User was invited (Status = Invited)
-            // They have a placeholder ID in the table. We need to swap it for the real Auth ID.
-            if (existingProfile.status === 'Invited' || existingProfile.id !== authId) {
-                console.log('Migrating invited user to active status...');
-
-                // 1. Delete the old placeholder row
-                await dbAdapter.deleteUser(existingProfile.id);
-
-                // 2. Insert the new row with correct Auth ID and preserved details
-                const newProfile = {
-                    id: authId,
-                    email: authEmail,
-                    name: existingProfile.name || name || 'User',
-                    role: existingProfile.role, // PERMANENTLY KEEP ASSIGNED ROLE
-                    department: existingProfile.department, // KEEP ASSIGNED DEPT
-                    status: 'Active',
-                    password_hash: 'supabased',
-                    created_at: new Date().toISOString()
-                };
-
-                await dbAdapter.createUser(newProfile);
-
-                return res.status(200).json({
-                    success: true,
-                    message: 'Profile synchronized and activated',
-                    user: newProfile
-                });
-            } else {
-                // Case B: User already exists with correct ID? Maybe just ensure active?
-                if (existingProfile.status !== 'Active') {
-                    await dbAdapter.updateUser(authId, { status: 'Active' });
-                }
-                return res.status(200).json({ success: true, user: existingProfile });
-            }
-        } else {
-            // Case C: New User (Self Signup without invite?)
-            // If self-signup is allowed.
-            // CAUTION: We probably don't want random people becoming admins.
-            // Default to 'user' role or requested role if safe? 
-            // For now, let's allow it but force role='user' unless maybe locally.
-            // Wait, we removed public signup. Only invited users should usually get here.
-            // But if they clicked "Signup" on login page (which we hid/removed)... 
-
-            console.log('Creating new user profile...');
-            const newProfile = {
-                id: authId,
-                email: authEmail,
-                name: name || 'New User',
-                role: 'user', // Default to basic user, NOT SUPER ADMIN
-                department: null,
-                status: 'Active',
-                password_hash: 'supabased',
-                created_at: new Date().toISOString()
-            };
-
-            await dbAdapter.createUser(newProfile);
-
-            return res.status(201).json({
-                success: true,
-                message: 'New profile created',
-                user: newProfile
-            });
-        }
-
-    } catch (error) {
-        console.error('Sync Profile Error:', error);
-        return res.status(500).json({ error: error.message });
-    }
-};
+// TODO: Update inviteUser to use Supabase Admin API to create auth users programmatically.
